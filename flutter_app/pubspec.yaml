@@ -67,6 +67,8 @@ dependencies:
   flutter_sms: ^3.0.1
   equatable: ^2.0.8
   path: ^1.9.1
+  http: ^1.6.0
+  html: ^0.15.6
   
 dev_dependencies:
   flutter_test:

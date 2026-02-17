@@ -5,6 +5,8 @@ import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.d
 import 'package:offline_survival_companion/presentation/screens/maps_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/guide_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/vault_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/webpage_saver_screen.dart';
+import 'package:offline_survival_companion/presentation/widgets/low_battery_toggle.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -131,6 +133,13 @@ class HomeScreenContent extends StatelessWidget {
                   onTap: () =>
                       context.read<AppBloc>().add(const SyncRequested()),
                 ),
+                _ActionCard(
+                  icon: Icons.save_alt,
+                  label: 'Web Saver',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const WebpageSaverScreen()),
+                  ),
+                ),
               ],
             ),
           ],
@@ -217,14 +226,16 @@ class SettingsScreenContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          Icon(Icons.settings, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text('Settings Screen'),
-          const SizedBox(height: 8),
-          const Text('Configure your preferences'),
+          const Text(
+            'Power Management',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          const LowBatteryToggle(),
+          // Add more settings as needed
         ],
       ),
     );

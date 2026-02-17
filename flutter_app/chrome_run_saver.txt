@@ -1,0 +1,48 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 67.0.0 (94.0.0 available)
+  analyzer 6.4.1 (10.0.2 available)
+  archive 4.0.7 (4.0.8 available)
+  build 2.4.1 (4.0.4 available)
+  build_config 1.1.2 (1.2.0 available)
+  build_resolvers 2.4.2 (3.0.4 available)
+  build_runner 2.4.13 (2.11.1 available)
+  build_runner_core 7.3.2 (9.3.2 available)
+  characters 1.4.0 (1.4.1 available)
+  dart_style 2.3.6 (3.1.5 available)
+  js 0.6.7 (0.7.2 available)
+  json_annotation 4.9.0 (4.10.0 available)
+  json_serializable 6.8.0 (6.12.0 available)
+  matcher 0.12.17 (0.12.18 available)
+  material_color_utilities 0.11.1 (0.13.0 available)
+  meta 1.17.0 (1.18.1 available)
+  pointycastle 3.9.1 (4.0.0 available)
+  shelf_web_socket 2.0.1 (3.0.0 available)
+  source_gen 1.5.0 (4.2.0 available)
+  source_helper 1.3.5 (1.3.10 available)
+  test_api 0.7.7 (0.7.9 available)
+Got dependencies!
+21 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Launching lib/main.dart on Chrome in debug mode...
+Failed to bind web development server:
+SocketException: Failed to create server socket (OS Error: Address already in use, errno = 48), address = 0.0.0.0, port = 8080
+#0      _NativeSocket.bind (dart:io-patch/socket_patch.dart:1220:7)
+<asynchronous suspension>
+#1      _RawServerSocket.bind.<anonymous closure> (dart:io-patch/socket_patch.dart:2166:12)
+<asynchronous suspension>
+#2      _ServerSocket.bind.<anonymous closure> (dart:io-patch/socket_patch.dart:2489:12)
+<asynchronous suspension>
+#3      _HttpServer.bind.<anonymous closure> (dart:_http/http_impl.dart:3472:24)
+<asynchronous suspension>
+#4      WebAssetServer.start (package:flutter_tools/src/isolated/web_asset_server.dart:226:24)
+<asynchronous suspension>
+#5      WebDevFS.create (package:flutter_tools/src/isolated/devfs_web.dart:201:22)
+<asynchronous suspension>
+#6      ResidentWebRunner.run.<anonymous closure> (package:flutter_tools/src/isolated/resident_web_runner.dart:321:19)
+<asynchronous suspension>
+#7      asyncGuard.<anonymous closure> (package:flutter_tools/src/base/async_guard.dart:108:24)
+<asynchronous suspension>
+
+Failed to bind web development server:
+SocketException: Failed to create server socket (OS Error: Address already in use, errno = 48), address = 0.0.0.0, port = 8080
