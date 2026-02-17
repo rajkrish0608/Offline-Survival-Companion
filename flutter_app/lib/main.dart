@@ -1,0 +1,98 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:offline_survival_companion/core/constants/app_constants.dart';
+import 'package:offline_survival_companion/core/encryption/encryption_service.dart';
+import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
+import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
+import 'package:offline_survival_companion/services/sync/sync_engine.dart';
+import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
+import 'package:offline_survival_companion/presentation/navigation/app_router.dart';
+import 'package:offline_survival_companion/core/theme/app_theme.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await dotenv.load().timeout(const Duration(seconds: 1));
+  } catch (e) {
+    debugPrint('Failed to load .env: $e');
+  }
+  try {
+    await Hive.initFlutter().timeout(const Duration(seconds: 2));
+  } catch (e) {
+    debugPrint('Failed to initialize Hive: $e');
+  }
+
+  final storageService = LocalStorageService();
+  try {
+    await storageService.initialize().timeout(const Duration(seconds: 3));
+  } catch (e) {
+    debugPrint('Failed to initialize storage service (or timed out): $e');
+  }
+
+  final encryptionService = EncryptionService();
+  try {
+    await encryptionService.initialize().timeout(const Duration(seconds: 2));
+  } catch (e) {
+    debugPrint('Failed to initialize encryption service (or timed out): $e');
+  }
+
+  final emergencyService = EmergencyService();
+  try {
+    await emergencyService.initialize().timeout(const Duration(seconds: 2));
+  } catch (e) {
+    debugPrint('Failed to initialize emergency service (or timed out): $e');
+  }
+
+  final syncEngine = SyncEngine(storageService);
+
+  debugPrint('Calling runApp...');
+  runApp(
+    OfflineSurvivalApp(
+      storageService: storageService,
+      encryptionService: encryptionService,
+      emergencyService: emergencyService,
+      syncEngine: syncEngine,
+    ),
+  );
+}
+
+class OfflineSurvivalApp extends StatelessWidget {
+  final LocalStorageService storageService;
+  final EncryptionService encryptionService;
+  final EmergencyService emergencyService;
+  final SyncEngine syncEngine;
+
+  const OfflineSurvivalApp({
+    required this.storageService,
+    required this.encryptionService,
+    required this.emergencyService,
+    required this.syncEngine,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AppBloc>(
+          create: (_) => AppBloc(
+            storageService,
+            encryptionService,
+            emergencyService,
+            syncEngine,
+          )..add(const AppInitialized()),
+        ),
+      ],
+      child: MaterialApp.router(
+        title: 'Offline Survival Companion',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.dark,
+        routerConfig: AppRouter.router,
+        debugShowCheckedModeBanner: false,
+      ),
+    );
+  }
+}

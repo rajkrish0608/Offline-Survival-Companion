@@ -1,0 +1,27 @@
+Launching integration_test/app_test.dart on iPhone 17 Pro in debug mode...
+Running Xcode build...                                          
+Xcode build done.                                           10.9s
+Failed to build iOS app
+Error output from Xcode build:
+↳
+    ** BUILD FAILED **
+
+
+Xcode's output:
+↳
+    Writing result bundle at path:
+    	/var/folders/sf/mm_h2mdj1q16dww8p4dlmf9c0000gn/T/flutter_tools.zUGJJL/flutter_ios_build_temp_dirK6ki16/temporary_xcresult_bundle
+
+    integration_test/app_test.dart:11:26: Error: The method 'traceAction' isn't defined for the type 'TestWidgetsFlutterBinding'.
+     - 'TestWidgetsFlutterBinding' is from 'package:flutter_test/src/binding.dart' ('../../../Development/flutter/packages/flutter_test/lib/src/binding.dart').
+    Try correcting the name to the name of an existing method, or defining a method named 'traceAction'.
+        await tester.binding.traceAction(() async {
+                             ^^^^^^^^^^^
+    Target kernel_snapshot_program failed: Exception
+    Failed to package /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app.
+    Command PhaseScriptExecution failed with a nonzero exit code
+    note: Run script build phase 'Run Script' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+    note: Run script build phase 'Thin Binary' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+
+Could not build the application for the simulator.
+Error launching application on iPhone 17 Pro.

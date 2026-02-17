@@ -1,0 +1,32 @@
+[
+    {
+        "id": "cpr",
+        "title": "CPR (Cardiopulmonary Resuscitation)",
+        "category": "First Aid",
+        "content": "1. Call emergency number.\n2. Push hard and fast in the center of the chest.\n3. Give rescue breaths if trained.\n4. Continue until help arrives."
+    },
+    {
+        "id": "snake_bite",
+        "title": "Snake Bite Treatment",
+        "category": "First Aid",
+        "content": "1. Keep the patient calm and still.\n2. Remove jewelry and tight clothing.\n3. Position the bite below heart level.\n4. Clean the wound with water.\n5. Do NOT cut or suck the wound."
+    },
+    {
+        "id": "dehydration",
+        "title": "Dehydration & Heatstroke",
+        "category": "Survival",
+        "content": "Signs: Dry mouth, dizziness, dark urine.\nAction: Drink water in small sips. Move to a cool, shaded area. Loosen clothing. Cool the body with water."
+    },
+    {
+        "id": "fire_starting",
+        "title": "Starting a Fire",
+        "category": "Survival",
+        "content": "1. Gather tinder (dry grass, leaves), kindling (small twigs), and fuel (logs).\n2. Create a tepee or log cabin structure.\n3. Light the tinder from upwind.\n4. Gradually add larger wood."
+    },
+    {
+        "id": "water_purification",
+        "title": "Water Purification",
+        "category": "Survival",
+        "content": "1. Boiling: Boil water for at least 1 minute.\n2. Chemical: Use iodine or chlorine tablets.\n3. Filtration: Use a portable water filter or cloth layers for debris."
+    }
+]

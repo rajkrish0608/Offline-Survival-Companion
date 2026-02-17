@@ -1,0 +1,80 @@
+Launching integration_test/app_test.dart on iPhone 17 Pro in debug mode...
+Running Xcode build...                                          
+Xcode build done.                                           16.8s
+Target native_assets required define SdkRoot but it was not provided
+Syncing files to device iPhone 17 Pro...                        
+flutter: 00:00 +0: End-to-End App Test: Phase 2 Features
+flutter: Failed to load .env: Instance of 'FileNotFoundError'
+Syncing files to device iPhone 17 Pro...                           334ms
+
+Flutter run key commands.
+r Hot reload. 🔥🔥🔥
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on iPhone 17 Pro is available at: http://127.0.0.1:53571/nUlkqCXT930=/
+The Flutter DevTools debugger and profiler on iPhone 17 Pro is available at: http://127.0.0.1:53571/nUlkqCXT930=/devtools/?uri=ws://127.0.0.1:53571/nUlkqCXT930=/ws
+flutter: Failed to enable WAL mode: DatabaseException(Error Domain=SqfliteDarwinDatabase Code=0 "not an error" UserInfo={NSLocalizedDescription=not an error}) sql 'PRAGMA journal_mode=WAL' args []
+flutter: Failed to initialize emergency service (or timed out): TimeoutException after 0:00:02.000000: Future not completed
+flutter: Calling runApp...
+flutter: \^[[38;5;12m┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\^[[0m
+flutter: \^[[38;5;12m│ #0   AppBloc._onAppInitialized (package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart:37:15)\^[[0m
+flutter: \^[[38;5;12m│ #1   Bloc.on.<anonymous closure>.handleEvent (package:bloc/src/bloc.dart:226:26)\^[[0m
+flutter: \^[[38;5;12m├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\^[[0m
+flutter: \^[[38;5;12m│ 💡 Initializing app...\^[[0m
+flutter: \^[[38;5;12m└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\^[[0m
+flutter: \^[[38;5;12m┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\^[[0m
+flutter: \^[[38;5;12m│ #0   SyncEngine._onConnectivityChanged (package:offline_survival_companion/services/sync/sync_engine.dart:155:15)\^[[0m
+flutter: \^[[38;5;12m│ #1   _rootRunUnary (dart:async/zone.dart:1538:47)\^[[0m
+flutter: \^[[38;5;12m├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\^[[0m
+flutter: \^[[38;5;12m│ 💡 Connectivity restored\^[[0m
+flutter: \^[[38;5;12m└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\^[[0m
+flutter: \^[[38;5;12m┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\^[[0m
+flutter: \^[[38;5;12m│ #0   SyncEngine.performSync (package:offline_survival_companion/services/sync/sync_engine.dart:59:17)\^[[0m
+flutter: \^[[38;5;12m│ #1   <asynchronous suspension>\^[[0m
+flutter: \^[[38;5;12m├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\^[[0m
+flutter: \^[[38;5;12m│ 💡 No pending changes to sync\^[[0m
+flutter: \^[[38;5;12m└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\^[[0m
+flutter: \^[[38;5;12m┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\^[[0m
+flutter: \^[[38;5;12m│ #0   SyncEngine.initialize (package:offline_survival_companion/services/sync/sync_engine.dart:33:15)\^[[0m
+flutter: \^[[38;5;12m│ #1   <asynchronous suspension>\^[[0m
+flutter: \^[[38;5;12m├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\^[[0m
+flutter: \^[[38;5;12m│ 💡 Sync engine initialized\^[[0m
+flutter: \^[[38;5;12m└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\^[[0m
+flutter: \^[[38;5;12m┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\^[[0m
+flutter: \^[[38;5;12m│ #0   SyncEngine.performSync (package:offline_survival_companion/services/sync/sync_engine.dart:59:17)\^[[0m
+flutter: \^[[38;5;12m│ #1   <asynchronous suspension>\^[[0m
+flutter: \^[[38;5;12m├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄\^[[0m
+flutter: \^[[38;5;12m│ 💡 No pending changes to sync\^[[0m
+flutter: \^[[38;5;12m└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\^[[0m
+flutter: ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+flutter: The following TestFailure was thrown running a test:
+flutter: Expected: exactly one matching candidate
+flutter:   Actual: _TextWidgetFinder:<Found 0 widgets with text "Offline Maps": []>
+flutter:    Which: means none were found but one was expected
+flutter:
+flutter: When the exception was thrown, this was the stack:
+flutter: #4      main.<anonymous closure> (file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/integration_test/app_test.dart:27:5)
+flutter: <asynchronous suspension>
+flutter: #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+flutter: <asynchronous suspension>
+flutter: #6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1059:5)
+flutter: <asynchronous suspension>
+flutter: #7      TestWidgetsFlutterBinding._createTestCompletionHandler.<anonymous closure> (package:flutter_test/src/binding.dart:814:12)
+flutter: <asynchronous suspension>
+flutter:
+flutter: This was caught by the test expectation on the following line:
+flutter:   file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/integration_test/app_test.dart line 27
+flutter: The test description was:
+flutter:   End-to-End App Test: Phase 2 Features
+flutter: ════════════════════════════════════════════════════════════════════════════════════════════════════
+flutter: 00:11 +0: End-to-End App Test: Phase 2 Features [E]
+flutter:   Test failed. See exception logs above.
+  The test description was: End-to-End App Test: Phase 2 Features
+flutter:
+flutter: 00:11 +0 -1: (tearDownAll)
+flutter: 00:11 +1 -1: Some tests failed.
+Lost connection to device.

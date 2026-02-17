@@ -1,0 +1,105 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:equatable/equatable.dart';
+import 'package:offline_survival_companion/core/encryption/encryption_service.dart';
+import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
+import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
+import 'package:offline_survival_companion/services/sync/sync_engine.dart';
+import 'package:logger/logger.dart';
+
+part 'app_event.dart';
+part 'app_state.dart';
+
+class AppBloc extends Bloc<AppEvent, AppState> {
+  final LocalStorageService _storageService;
+  final EncryptionService _encryptionService;
+  final EmergencyService _emergencyService;
+  final SyncEngine _syncEngine;
+  final Logger _logger = Logger();
+
+  AppBloc(
+    this._storageService,
+    this._encryptionService,
+    this._emergencyService,
+    this._syncEngine,
+  ) : super(const AppInitializing()) {
+    on<AppInitialized>(_onAppInitialized);
+    on<AppResumed>(_onAppResumed);
+    on<AppPaused>(_onAppPaused);
+    on<SyncRequested>(_onSyncRequested);
+    on<BatteryLevelChanged>(_onBatteryLevelChanged);
+  }
+
+  Future<void> _onAppInitialized(
+    AppInitialized event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      _logger.i('Initializing app...');
+
+      // Initialize sync engine
+      await _syncEngine.initialize();
+
+      // Check if user is onboarded
+      final isOnboarded = _storageService.getSetting('is_onboarded') ?? false;
+
+      if (isOnboarded) {
+        emit(const AppReady());
+      } else {
+        emit(const AppOnboardingRequired());
+      }
+    } catch (e) {
+      _logger.e('App initialization failed: $e');
+      emit(AppError(message: 'Failed to initialize app: $e'));
+    }
+  }
+
+  Future<void> _onAppResumed(AppResumed event, Emitter<AppState> emit) async {
+    try {
+      // Start sync engine
+      if (!_syncEngine.isSyncing) {
+        await _syncEngine.performSync();
+      }
+
+      _logger.i('App resumed');
+    } catch (e) {
+      _logger.e('Failed to resume app: $e');
+    }
+  }
+
+  Future<void> _onAppPaused(AppPaused event, Emitter<AppState> emit) async {
+    try {
+      _logger.i('App paused');
+    } catch (e) {
+      _logger.e('Failed to pause app: $e');
+    }
+  }
+
+  Future<void> _onSyncRequested(
+    SyncRequested event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await _syncEngine.performSync(isManual: true);
+    } catch (e) {
+      _logger.e('Sync failed: $e');
+    }
+  }
+
+  Future<void> _onBatteryLevelChanged(
+    BatteryLevelChanged event,
+    Emitter<AppState> emit,
+  ) async {
+    final isLowBattery = await _emergencyService.isLowBattery();
+    if (isLowBattery) {
+      _logger.w('Low battery mode activated');
+    }
+  }
+
+  @override
+  Future<void> close() async {
+    await _syncEngine.dispose();
+    await _storageService.close();
+    await _emergencyService.dispose();
+    return super.close();
+  }
+}

@@ -1,0 +1,30 @@
+00:00 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:01 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:02 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:03 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:04 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  Running Xcode build...                                          00:05 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:06 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:07 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:08 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:09 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:10 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:11 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:12 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:13 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:14 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:15 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:16 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  00:17 +0: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart                                                                                  
+Xcode build done.                                           12.8s
+Failed to build iOS app
+Error output from Xcode build:
+↳
+    ** BUILD FAILED **
+
+
+Xcode's output:
+↳
+    Writing result bundle at path:
+    	/var/folders/sf/mm_h2mdj1q16dww8p4dlmf9c0000gn/T/flutter_tools.4XhdOT/flutter_ios_build_temp_dirWztqmp/temporary_xcresult_bundle
+
+    integration_test/app_test.dart:11:26: Error: The method 'traceAction' isn't defined for the type 'TestWidgetsFlutterBinding'.
+     - 'TestWidgetsFlutterBinding' is from 'package:flutter_test/src/binding.dart' ('../../../Development/flutter/packages/flutter_test/lib/src/binding.dart').
+    Try correcting the name to the name of an existing method, or defining a method named 'traceAction'.
+        await tester.binding.traceAction(() async {
+                             ^^^^^^^^^^^
+    Target kernel_snapshot_program failed: Exception
+    Failed to package /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app.
+    Command PhaseScriptExecution failed with a nonzero exit code
+    note: Run script build phase 'Run Script' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+    note: Run script build phase 'Thin Binary' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+
+Could not build the application for the simulator.
+00:17 +0 -1: loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart [E]                                                                           
+  Failed to load "/Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart": Unable to start the app on the device.
+
+To run this test again: /Users/rajkrish0608/Development/flutter/bin/cache/dart-sdk/bin/dart test /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart -p vm --plain-name 'loading /Users/rajkrish0608/PROJECT DETAILS/OFFLINE SURVIVAL APP/flutter_app/integration_test/app_test.dart'
+00:17 +0 -1: Some tests failed.                                                                                                                                                                        

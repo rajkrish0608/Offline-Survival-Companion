@@ -1,0 +1,97 @@
+name: offline_survival_companion
+description: Production-ready offline-first emergency preparedness app
+publish_to: none
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_bloc: ^9.0.0
+  bloc: ^9.0.0
+  
+  # Navigation
+  go_router: ^17.1.0
+  
+  # Local Storage
+  sqflite: ^2.3.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  shared_preferences: ^2.2.0
+  
+  # Maps & Location
+  maplibre_gl: ^0.25.0
+  geolocator: ^14.0.2
+  
+  # Network
+  dio: ^5.4.0
+  connectivity_plus: ^7.0.0
+  
+  # Encryption & Security
+  encrypt: ^5.0.3
+  local_auth: ^3.0.0
+  flutter_secure_storage: ^10.0.0
+  crypto: ^3.0.3
+  
+  # UI & Design
+  cupertino_icons: ^1.0.0
+  custom_refresh_indicator: ^4.0.1
+  intl: ^0.20.2
+  
+  # Permissions
+  permission_handler: ^12.0.1
+  
+  # Sensors & Hardware
+  sensors_plus: ^7.0.0
+  device_info_plus: ^12.3.0
+  battery_plus: ^7.0.0
+  # torch_light: ^0.8.0
+  wakelock_plus: ^1.1.0
+  
+  # File Handling
+  image_picker: ^1.0.0
+  file_picker: ^10.3.10
+  path_provider: ^2.1.0
+  
+  # Utilities
+  uuid: ^4.0.0
+  json_annotation: ^4.8.0
+  flutter_dotenv: ^6.0.0
+  logger: ^2.2.0
+  flutter_sms: ^3.0.1
+  equatable: ^2.0.8
+  path: ^1.9.1
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.0
+  json_serializable: ^6.7.0
+  hive_generator: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/guide_content.json
+  #   - assets/images/
+  #   - assets/icons/
+  #   - assets/maps/
+  #   - .env
+
+  # fonts:
+  #   - family: Inter
+  #     fonts:
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #       - asset: assets/fonts/Inter-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Inter-SemiBold.ttf
+  #         weight: 600
