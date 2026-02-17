@@ -6,6 +6,7 @@ import 'package:offline_survival_companion/presentation/screens/maps_screen.dart
 import 'package:offline_survival_companion/presentation/screens/guide_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/vault_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/webpage_saver_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/saved_qr_codes_screen.dart';
 import 'package:offline_survival_companion/presentation/widgets/low_battery_toggle.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -138,6 +139,13 @@ class HomeScreenContent extends StatelessWidget {
                   label: 'Web Saver',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const WebpageSaverScreen()),
+                  ),
+                ),
+                _ActionCard(
+                  icon: Icons.qr_code,
+                  label: 'QR Storage',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SavedQrCodesScreen()),
                   ),
                 ),
               ],

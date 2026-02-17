@@ -1,0 +1,11 @@
+Launching lib/main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...          
+lib/presentation/screens/qr_scanner_screen.dart:115:27: Error: The argument type 'Center Function(BuildContext, MobileScannerException, dynamic)' can't be assigned to the parameter type 'Widget Function(BuildContext, MobileScannerException)?'.
+ - 'Center' is from 'package:flutter/src/widgets/basic.dart' ('../../../Development/flutter/packages/flutter/lib/src/widgets/basic.dart').
+ - 'BuildContext' is from 'package:flutter/src/widgets/framework.dart' ('../../../Development/flutter/packages/flutter/lib/src/widgets/framework.dart').
+ - 'MobileScannerException' is from 'package:mobile_scanner/src/mobile_scanner_exception.dart' ('../../../.pub-cache/hosted/pub.dev/mobile_scanner-7.1.4/lib/src/mobile_scanner_exception.dart').
+ - 'Widget' is from 'package:flutter/src/widgets/framework.dart' ('../../../Development/flutter/packages/flutter/lib/src/widgets/framework.dart').
+            errorBuilder: (context, error, child) {
+                          ^
+Waiting for connection from debug service on Chrome...             13.3s
+Failed to compile application.
