@@ -50,7 +50,9 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs access to microphone for recording audio notes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs access to photo library for saving maps and documents.</string>
+	<string>This app needs access to photo library to allow you to save emergency photos and documents to the secure vault.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>This app needs Face ID to unlock your secure vault and protect your sensitive documents.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

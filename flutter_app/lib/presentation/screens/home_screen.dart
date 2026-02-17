@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/presentation/screens/maps_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/guide_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/vault_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -51,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return const MapsScreen();
       case 2:
-        return const VaultScreenContent();
+        return const VaultScreen();
       case 3:
         return const GuideScreen();
       case 4:
@@ -189,25 +190,6 @@ class MapsScreenContent extends StatelessWidget {
   }
 }
 
-class VaultScreenContent extends StatelessWidget {
-  const VaultScreenContent({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.lock, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text('Vault Screen'),
-          const SizedBox(height: 8),
-          const Text('Store encrypted documents here'),
-        ],
-      ),
-    );
-  }
-}
 
 class GuideScreenContent extends StatelessWidget {
   const GuideScreenContent({Key? key}) : super(key: key);
