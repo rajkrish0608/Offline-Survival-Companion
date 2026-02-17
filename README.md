@@ -46,16 +46,22 @@ Built with modern, industry-standard technologies to ensure reliability, perform
 
 ---
 
-## 🏗️ Architecture Overview
+### System Architecture
 
-The app follows a strict **Clean Architecture** pattern to ensure scalability and maintainability.
+The application is built using a strict **Clean Architecture** pattern, ensuring the codebase is scalable, maintainable, and independent of external frameworks.
 
 ```mermaid
 graph TD
-    UI[Presentation Layer<br>(Widgets & BLoCs)] --> Domain[Domain Layer<br>(Use Cases & Entities)]
-    Domain --> Data[Data Layer<br>(Repositories & Data Sources)]
-    Data --> Local[Local Storage<br>(Hive & File System)]
+    UI["<b>Presentation Layer</b><br/>(Widgets & BLoCs)"] --> Domain["<b>Domain Layer</b><br/>(Business Logic & Entities)"]
+    Domain --> Data["<b>Data Layer</b><br/>(Repositories & Data Sources)"]
+    Data --> Local["<b>Local Storage</b><br/>(Hive & Secure Storage)"]
 ```
+
+#### Layer Responsibilities:
+- **Presentation Layer**: Handles UI rendering and state management using the BLoC pattern.
+- **Domain Layer**: The core of the application, containing pure Dart business logic and entity definitions.
+- **Data Layer**: Manages data flow from local databases (Hive) and secure hardware storage.
+
 
 ### Folder Structure
 ```
