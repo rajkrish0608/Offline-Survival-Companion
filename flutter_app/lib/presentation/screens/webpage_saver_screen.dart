@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:offline_survival_companion/services/webpage/webpage_service.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
-import 'dart:io';
 
 class WebpageSaverScreen extends StatefulWidget {
-  const WebpageSaverScreen({Key? key}) : super(key: key);
+  const WebpageSaverScreen({super.key});
 
   @override
   State<WebpageSaverScreen> createState() => _WebpageSaverScreenState();
@@ -22,28 +21,18 @@ class _WebpageSaverScreenState extends State<WebpageSaverScreen> {
     _loadSavedPages();
   }
 
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadSavedPages() async {
-    // In a real app we'd load from database. 
-    // Here we'll simulate loading pre-saved or session-based pages.
+    // Load only actually-saved pages from the service (no mock data)
+    final pages = await _webpageService.getSavedPages();
     if (mounted) {
       setState(() {
-        // Mock data for demo until DB is fully wired
-        _savedPages = [
-          SavedWebpage(
-            id: '1',
-            url: 'https://www.ready.gov/kit',
-            title: 'Build A Kit | Ready.gov',
-            filePath: '/path/to/mock/file.html',
-            savedAt: DateTime.now().subtract(const Duration(days: 1)),
-          ),
-          SavedWebpage(
-            id: '2',
-            url: 'https://www.redcross.org/get-help.html',
-            title: 'Get Help | Red Cross',
-            filePath: '/path/to/mock/file2.html',
-            savedAt: DateTime.now().subtract(const Duration(hours: 5)),
-          ),
-        ];
+        _savedPages = pages;
       });
     }
   }
@@ -60,20 +49,9 @@ class _WebpageSaverScreenState extends State<WebpageSaverScreen> {
     }
 
     setState(() => _isLoading = true);
-    
-    // Simulate network delay and improved validation for demo
+
     try {
-      // In production this would call _webpageService.saveWebpage(url)
-      // For now we simulate a successful save to avoid network errors in emulator without internet.
-      await Future.delayed(const Duration(seconds: 2)); 
-      
-      final newPage = SavedWebpage(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        url: url,
-        title: 'New Offline Page (${url.length > 20 ? url.substring(0, 20) : url}...)',
-        filePath: '/mock/path',
-        savedAt: DateTime.now(),
-      );
+      final newPage = await _webpageService.saveWebpage(url);
 
       if (mounted) {
         setState(() {
@@ -95,31 +73,62 @@ class _WebpageSaverScreenState extends State<WebpageSaverScreen> {
     }
   }
 
+  void _deletePage(SavedWebpage page) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Page'),
+        content: Text('Remove "${page.title}" from offline storage?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() => _savedPages.remove(page));
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Page removed.')),
+              );
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _openPage(SavedWebpage page) {
-    // Navigate to a reader view
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => Scaffold(
           appBar: AppBar(title: Text(page.title)),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(page.url, style: const TextStyle(color: Colors.grey)),
-                const SizedBox(height: 16),
-                const Text(
-                  'This is a simplified view of the saved content. In a full implementation, this would render the sanitized HTML body.',
-                  style: TextStyle(fontStyle: FontStyle.italic),
+          body: FutureBuilder<String>(
+            future: _webpageService.loadPageContent(page.filePath),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error loading page: ${snapshot.error}'));
+              }
+
+              return SingleChildScrollView(
+                // Explicit physics ensures scrolling always works on iOS
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(page.url, style: const TextStyle(color: Colors.grey)),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    Text(snapshot.data ?? 'No content available'),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                // Placeholder content
-                Text(
-                  'Saved Content Preview:\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -139,6 +148,8 @@ class _WebpageSaverScreenState extends State<WebpageSaverScreen> {
                 Expanded(
                   child: TextField(
                     controller: _urlController,
+                    keyboardType: TextInputType.url,
+                    autocorrect: false,
                     decoration: InputDecoration(
                       hintText: 'Enter URL to save (https://...)',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -151,9 +162,13 @@ class _WebpageSaverScreenState extends State<WebpageSaverScreen> {
                 const SizedBox(width: 12),
                 IconButton.filled(
                   onPressed: _isLoading ? null : _savePage,
-                  icon: _isLoading 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.download),
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.download),
                   tooltip: 'Save for Offline',
                   style: IconButton.styleFrom(backgroundColor: AppTheme.accentBlue),
                 ),
@@ -163,23 +178,86 @@ class _WebpageSaverScreenState extends State<WebpageSaverScreen> {
           const Divider(),
           Expanded(
             child: _savedPages.isEmpty
-                ? const Center(child: Text('No saved pages yet'))
-                : ListView.builder(
-                    itemCount: _savedPages.length,
-                    itemBuilder: (context, index) {
-                      final page = _savedPages[index];
-                      return ListTile(
-                        leading: const CircleAvatar(child: Icon(Icons.public)),
-                        title: Text(page.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(page.url, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () => _openPage(page),
-                      );
-                    },
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.web_asset_off, size: 56, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'No saved pages yet',
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Paste a URL above and tap download',
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  )
+                // RefreshIndicator allows pull-to-refresh to reload from service
+                : RefreshIndicator(
+                    onRefresh: _loadSavedPages,
+                    child: ListView.builder(
+                      // AlwaysScrollableScrollPhysics ensures the list can
+                      // scroll even when there are few items (fixes iOS scroll bug)
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: _savedPages.length,
+                      itemBuilder: (context, index) {
+                        final page = _savedPages[index];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: AppTheme.accentBlue.withOpacity(0.15),
+                            child: const Icon(Icons.public),
+                          ),
+                          title: Text(
+                            page.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                page.url,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              Text(
+                                'Saved ${_formatDate(page.savedAt)}',
+                                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                          isThreeLine: true,
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, size: 20, color: Colors.redAccent),
+                                onPressed: () => _deletePage(page),
+                                tooltip: 'Delete',
+                              ),
+                              const Icon(Icons.arrow_forward_ios, size: 16),
+                            ],
+                          ),
+                          onTap: () => _openPage(page),
+                        );
+                      },
+                    ),
                   ),
           ),
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 }

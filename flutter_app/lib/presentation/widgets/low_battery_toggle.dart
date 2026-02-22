@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:offline_survival_companion/services/power/battery_service.dart';
-import 'package:offline_survival_companion/core/theme/app_theme.dart';
 
 class LowBatteryToggle extends StatefulWidget {
-  const LowBatteryToggle({Key? key}) : super(key: key);
+  const LowBatteryToggle({super.key});
 
   @override
   State<LowBatteryToggle> createState() => _LowBatteryToggleState();
@@ -65,7 +64,7 @@ class _LowBatteryToggleState extends State<LowBatteryToggle> {
         ),
         value: _isLowPowerMode,
         onChanged: _toggleLowPowerMode,
-        activeColor: Colors.orange,
+        activeThumbColor: Colors.orange,
       ),
     );
   }

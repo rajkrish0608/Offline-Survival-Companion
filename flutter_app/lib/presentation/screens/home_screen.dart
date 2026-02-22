@@ -6,11 +6,14 @@ import 'package:offline_survival_companion/presentation/screens/maps_screen.dart
 import 'package:offline_survival_companion/presentation/screens/guide_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/vault_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/webpage_saver_screen.dart';
-import 'package:offline_survival_companion/presentation/screens/saved_qr_codes_screen.dart';
-import 'package:offline_survival_companion/presentation/widgets/low_battery_toggle.dart';
+import 'package:offline_survival_companion/presentation/screens/qr_scanner_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/emergency_contacts_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/settings_screen.dart';
+import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
+import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -67,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class HomeScreenContent extends StatelessWidget {
-  const HomeScreenContent({Key? key}) : super(key: key);
+  const HomeScreenContent({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -116,17 +119,21 @@ class HomeScreenContent extends StatelessWidget {
                 _ActionCard(
                   icon: Icons.light,
                   label: 'Flashlight',
-                  onTap: () {},
+                  onTap: () => context.read<AppBloc>().state is AppReady 
+                    ? context.read<EmergencyService>().toggleFlashlight()
+                    : null,
                 ),
                 _ActionCard(
                   icon: Icons.volume_up,
                   label: 'Alarm',
-                  onTap: () {},
+                  onTap: () => context.read<AlarmService>().toggle(),
                 ),
                 _ActionCard(
                   icon: Icons.contact_emergency,
                   label: 'Contacts',
-                  onTap: () {},
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const EmergencyContactsScreen()),
+                  ),
                 ),
                 _ActionCard(
                   icon: Icons.sync,
@@ -143,10 +150,8 @@ class HomeScreenContent extends StatelessWidget {
                 ),
                 _ActionCard(
                   icon: Icons.qr_code,
-                  label: 'QR Storage',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const SavedQrCodesScreen()),
-                  ),
+                  label: 'QR Scanner',
+                  onTap: () => context.push('/qr-scanner'),
                 ),
               ],
             ),
@@ -188,7 +193,7 @@ class _ActionCard extends StatelessWidget {
 }
 
 class MapsScreenContent extends StatelessWidget {
-  const MapsScreenContent({Key? key}) : super(key: key);
+  const MapsScreenContent({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +214,7 @@ class MapsScreenContent extends StatelessWidget {
 
 
 class GuideScreenContent extends StatelessWidget {
-  const GuideScreenContent({Key? key}) : super(key: key);
+  const GuideScreenContent({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -229,23 +234,12 @@ class GuideScreenContent extends StatelessWidget {
 }
 
 class SettingsScreenContent extends StatelessWidget {
-  const SettingsScreenContent({Key? key}) : super(key: key);
+  const SettingsScreenContent({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Power Management',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          const LowBatteryToggle(),
-          // Add more settings as needed
-        ],
-      ),
+      child: const SettingsScreen(),
     );
   }
 }

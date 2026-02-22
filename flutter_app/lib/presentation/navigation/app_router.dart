@@ -9,18 +9,25 @@ import 'package:offline_survival_companion/presentation/screens/maps_screen.dart
 import 'package:offline_survival_companion/presentation/screens/vault_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/guide_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/settings_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/qr_scanner_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
       final appState = context.read<AppBloc>().state;
+      final location = state.uri.path;
+
+      // Emergency route must always be accessible (safety-critical)
+      if (location == '/emergency') {
+        return null;
+      }
 
       if (appState is AppInitializing) {
         return '/';
       }
 
-      if (appState is AppOnboardingRequired) {
+      if (appState is AppOnboardingRequired && location != '/onboarding') {
         return '/onboarding';
       }
 
@@ -50,6 +57,10 @@ class AppRouter {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/qr-scanner',
+        builder: (context, state) => const QrScannerScreen(),
       ),
     ],
   );

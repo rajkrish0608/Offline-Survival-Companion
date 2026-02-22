@@ -5,7 +5,7 @@ import 'package:offline_survival_companion/presentation/screens/qr_scanner_scree
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 
 class SavedQrCodesScreen extends StatefulWidget {
-  const SavedQrCodesScreen({Key? key}) : super(key: key);
+  const SavedQrCodesScreen({super.key});
 
   @override
   State<SavedQrCodesScreen> createState() => _SavedQrCodesScreenState();

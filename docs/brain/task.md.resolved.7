@@ -1,0 +1,28 @@
+# Market Readiness Fixes
+
+## Fix 2 – Alarm Audio (Real Siren)
+- [x] Add `just_audio` to pubspec.yaml
+- [x] Create alarm_service.dart
+- [x] Wire alarm to emergency screen
+- [x] Add audio background mode to Info.plist
+- [x] Generate/add siren.wav asset (used WAV as fallback for ffmpeg)
+
+## Fix 3 – Webpage Persistence
+- [x] Wire getSavedPages() to SQLite in webpage_service.dart
+- [x] Wire saveWebpage() to INSERT into DB
+- [x] Fix missing sqflite import in webpage_service.dart
+
+## Fix 4 – Emergency Contacts UI
+- [x] Create emergency_contacts_screen.dart
+- [x] Wire from settings_screen.dart
+
+## Fix 5 – Replace print() with Logger
+- [x] Fix biometric_service.dart
+- [x] Fix local_storage_service.dart (WAL + FTS5 warnings)
+
+## Fix 6 – Android Manifest permissions
+- [x] Added CAMERA, FOREGROUND_SERVICE, VIBRATE, READ_CONTACTS permissions to AndroidManifest.xml
+
+## Verification
+- [ ] Hot reload on iOS Simulator
+- [ ] Run full integration test suite

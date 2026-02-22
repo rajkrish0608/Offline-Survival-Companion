@@ -3,7 +3,7 @@ import 'package:offline_survival_companion/services/auth/biometric_service.dart'
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 
 class VaultScreen extends StatefulWidget {
-  const VaultScreen({Key? key}) : super(key: key);
+  const VaultScreen({super.key});
 
   @override
   State<VaultScreen> createState() => _VaultScreenState();

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:offline_survival_companion/core/constants/app_constants.dart';
 import 'package:offline_survival_companion/core/encryption/encryption_service.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
+import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 import 'package:offline_survival_companion/services/sync/sync_engine.dart';
 import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/presentation/navigation/app_router.dart';
@@ -41,11 +41,13 @@ void main() async {
 
   final emergencyService = EmergencyService();
   try {
-    await emergencyService.initialize().timeout(const Duration(seconds: 2));
+    await emergencyService.initialize().timeout(const Duration(seconds: 5));
   } catch (e) {
     debugPrint('Failed to initialize emergency service (or timed out): $e');
   }
 
+  final alarmService = AlarmService();
+  
   final syncEngine = SyncEngine(storageService);
 
   debugPrint('Calling runApp...');
@@ -54,6 +56,7 @@ void main() async {
       storageService: storageService,
       encryptionService: encryptionService,
       emergencyService: emergencyService,
+      alarmService: alarmService,
       syncEngine: syncEngine,
     ),
   );
@@ -63,12 +66,15 @@ class OfflineSurvivalApp extends StatelessWidget {
   final LocalStorageService storageService;
   final EncryptionService encryptionService;
   final EmergencyService emergencyService;
+  final AlarmService alarmService;
   final SyncEngine syncEngine;
 
   const OfflineSurvivalApp({
+    super.key,
     required this.storageService,
     required this.encryptionService,
     required this.emergencyService,
+    required this.alarmService,
     required this.syncEngine,
   });
 
@@ -81,9 +87,13 @@ class OfflineSurvivalApp extends StatelessWidget {
             storageService,
             encryptionService,
             emergencyService,
+            alarmService,
             syncEngine,
           )..add(const AppInitialized()),
         ),
+        // Providing individual services for easy UI access
+        RepositoryProvider.value(value: emergencyService),
+        RepositoryProvider.value(value: alarmService),
       ],
       child: MaterialApp.router(
         title: 'Offline Survival Companion',

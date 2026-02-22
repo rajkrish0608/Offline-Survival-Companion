@@ -1,95 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:offline_survival_companion/core/theme/app_theme.dart';
 import 'package:offline_survival_companion/services/qr/qr_code_service.dart';
 import 'package:uuid/uuid.dart';
 
 class QrScannerScreen extends StatefulWidget {
-  const QrScannerScreen({Key? key}) : super(key: key);
+  const QrScannerScreen({super.key});
 
   @override
   State<QrScannerScreen> createState() => _QrScannerScreenState();
 }
 
 class _QrScannerScreenState extends State<QrScannerScreen> {
-  final QrCodeService _qrService = QrCodeService();
-  final TextEditingController _manualController = TextEditingController();
-  final TextEditingController _labelController = TextEditingController();
-  
-  bool _isScanning = true;
+  final QrCodeService _qrCodeService = QrCodeService();
+  bool _isScanned = false;
+  final MobileScannerController _controller = MobileScannerController();
 
-  void _onDetect(BarcodeCapture capture) {
-    final List<Barcode> barcodes = capture.barcodes;
-    if (barcodes.isNotEmpty) {
-      final code = barcodes.first.rawValue;
-      if (code != null) {
-        // Stop scanning and show save dialog
-        setState(() => _isScanning = false);
-        _showSaveDialog(code);
-      }
-    }
-  }
-
-  void _showSaveDialog(String data) {
-    _manualController.text = data;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Save QR Code'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Data: $data', maxLines: 3, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _labelController,
-              decoration: const InputDecoration(
-                labelText: 'Label (e.g., Home WiFi)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() => _isScanning = true); // Resume scanning
-            },
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (_labelController.text.isEmpty) return;
-              
-              final item = QrCodeItem(
-                id: const Uuid().v4(),
-                data: data,
-                label: _labelController.text,
-                type: _determineType(data),
-                timestamp: DateTime.now(),
-              );
-              
-              await _qrService.saveCode(item);
-              if (mounted) {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Go back to list/home or stay? Let's go back for now
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('QR Code saved successfully!')),
-                );
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _determineType(String data) {
-    if (data.startsWith('WIFI:')) return 'WiFi';
-    if (data.startsWith('http')) return 'URL';
-    if (data.startsWith('MECARD:') || data.startsWith('vCard')) return 'Contact';
-    return 'Text';
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -99,62 +29,123 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         title: const Text('Scan QR Code'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.keyboard),
-            onPressed: () {
-               setState(() => _isScanning = false);
-               _showSaveDialog(''); // Open dialog with empty data for manual entry
-            },
-            tooltip: 'Manual Entry',
+            color: Colors.white,
+            icon: const Icon(Icons.flash_on, color: Colors.yellow),
+            iconSize: 32.0,
+            onPressed: () => _controller.toggleTorch(),
+          ),
+          IconButton(
+            color: Colors.white,
+            icon: const Icon(Icons.flip_camera_android),
+            iconSize: 32.0,
+            onPressed: () => _controller.switchCamera(),
           ),
         ],
       ),
-      body: _isScanning 
-        ? MobileScanner(
-            onDetect: _onDetect,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error, color: Colors.red, size: 48),
-                    const SizedBox(height: 16),
-                    Text('Camera Error: ${error.errorCode}'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() => _isScanning = false);
-                        _showSaveDialog('');
-                      },
-                      child: const Text('Use Manual Entry'),
-                    ),
-                  ],
-                ),
-              );
+      body: Stack(
+        children: [
+          MobileScanner(
+            controller: _controller,
+            onDetect: (capture) {
+              if (_isScanned) return;
+              final List<Barcode> barcodes = capture.barcodes;
+              if (barcodes.isNotEmpty) {
+                final String? rawValue = barcodes.first.rawValue;
+                if (rawValue != null) {
+                  setState(() {
+                    _isScanned = true;
+                  });
+                  _handleQrCode(rawValue);
+                }
+              }
             },
-          )
-        : Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.qr_code_scanner, size: 64, color: Colors.grey),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Camera paused or unavailable.\nUse manual entry to save a code.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Enter Data Manually'),
-                    onPressed: () => _showSaveDialog(''),
-                  ),
-                ],
+          ),
+          Center(
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                border: Border.all(color: AppTheme.accentBlue, width: 4),
+                borderRadius: BorderRadius.circular(24),
               ),
             ),
           ),
+          if (_isScanned)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'Align QR code within the box',
+                style: TextStyle(
+                  color: Colors.white,
+                  backgroundColor: Colors.black45,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  Future<void> _handleQrCode(String data) async {
+    // Determine type (very basic)
+    String type = 'text';
+    if (data.startsWith('http')) {
+      type = 'url';
+    } else if (data.startsWith('WIFI:')) {
+      type = 'wifi';
+    } else if (data.startsWith('BEGIN:VCARD')) {
+      type = 'contact';
+    }
+
+    final newItem = QrCodeItem(
+      id: const Uuid().v4(),
+      data: data,
+      label: 'Scanned at ${DateTime.now().hour}:${DateTime.now().minute}',
+      type: type,
+      timestamp: DateTime.now(),
+    );
+
+    await _qrCodeService.saveCode(newItem);
+
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('QR Code Scanned'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Type: ${type.toUpperCase()}',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(data, maxLines: 5, overflow: TextOverflow.ellipsis),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back to Home
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }

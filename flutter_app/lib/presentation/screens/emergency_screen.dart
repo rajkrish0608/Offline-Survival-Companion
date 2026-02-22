@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 
 class EmergencyScreen extends StatefulWidget {
-  const EmergencyScreen({Key? key}) : super(key: key);
+  const EmergencyScreen({super.key});
 
   @override
   State<EmergencyScreen> createState() => _EmergencyScreenState();
@@ -14,7 +13,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   bool _sosActive = false;
   bool _flashlightActive = false;
   bool _alarmActive = false;
-  int _batteryLevel = 100;
+  final int _batteryLevel = 100;
   String _lastLocation = 'Fetching location...';
   Duration _elapsedTime = Duration.zero;
 

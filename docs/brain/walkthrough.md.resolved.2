@@ -1,0 +1,53 @@
+# Walkthrough: Webpage Saver Bug Fixes + E2E Test
+
+## Bugs Fixed
+
+### 1. Scroll Not Working (iOS)
+**Root cause**: The `ListView.builder` was missing explicit scroll physics, which on iOS can prevent scrolling under certain conditions.
+
+**Fix** in [webpage_saver_screen.dart](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/presentation/screens/webpage_saver_screen.dart):
+```diff
+- ListView.builder(
++ ListView.builder(
++   physics: const AlwaysScrollableScrollPhysics(),
+```
+Also applied `AlwaysScrollableScrollPhysics` to the inner page content `SingleChildScrollView`.
+
+---
+
+### 2. Links Appearing Without Being Downloaded
+**Root cause**: [_loadSavedPages()](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/presentation/screens/webpage_saver_screen.dart#30-39) was hardcoding two mock [SavedWebpage](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/services/webpage/webpage_service.dart#7-22) objects (Ready.gov and Red Cross) into the list on every launch — even if the user had never saved a page.
+
+**Fix** in [webpage_saver_screen.dart](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE SURVIVAL APP/flutter_app/lib/presentation/screens/webpage_saver_screen.dart):
+```diff
+- _savedPages = [SavedWebpage(...), SavedWebpage(...)];  // hardcoded mock data
++ final pages = await _webpageService.getSavedPages();   // actual saved pages only
++ setState(() => _savedPages = pages);
+```
+
+### Additional Improvements
+- **Dispose** added for `TextEditingController` memory cleanup
+- **Delete button** added per saved page entry
+- **Empty state** improved with icon and helpful message
+- **Pull-to-refresh** added via `RefreshIndicator`
+- `keyboardType: TextInputType.url` on TextField for correct mobile keyboard
+
+---
+
+## End-to-End Integration Test
+
+Updated [app_test.dart](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/integration_test/app_test.dart) with a new **Step 6** that verifies the Webpage Saver screen:
+
+| Check | Result |
+|---|---|
+| Navigate to screen via 'Web Saver' quick action | ✅ |
+| App bar shows 'Webpage Saver' | ✅ |
+| Mock data ('Build A Kit / Ready.gov') absent | ✅ |
+| Mock data ('Get Help / Red Cross') absent | ✅ |
+| Empty-state message 'No saved pages yet' shown | ✅ |
+
+### Final Test Run
+```
+00:55 +1: All tests passed!
+```
+All 6 test phases passed successfully on the **iPhone 17 Pro** iOS Simulator.

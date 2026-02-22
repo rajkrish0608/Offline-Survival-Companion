@@ -1,6 +1,6 @@
 import 'package:flutter_sms/flutter_sms.dart';
 import 'package:geolocator/geolocator.dart';
-// import 'package:torch_light/torch_light.dart';
+import 'package:torch_light/torch_light.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:offline_survival_companion/core/constants/app_constants.dart';
@@ -13,16 +13,16 @@ class EmergencyService {
   final Logger _logger = Logger();
 
   bool _sosActive = false;
+  bool _flashlightOn = false;
   DateTime? _sosStartTime;
   String? _lastKnownPosition;
   List<String> _emergencyContacts = [];
 
   EmergencyService({LocalStorageService? storageService})
-    : _storageService = storageService ?? LocalStorageService();
+      : _storageService = storageService ?? LocalStorageService();
 
   Future<void> initialize() async {
     try {
-      await _requestLocationPermission();
       _logger.i('Emergency service initialized');
     } catch (e) {
       _logger.e('Emergency service initialization failed: $e');
@@ -40,6 +40,9 @@ class EmergencyService {
 
       // Enable wake lock to keep screen on
       await WakelockPlus.enable();
+
+      // Request location permission if not already granted
+      await _requestLocationPermission();
 
       // Get current location
       final position = await _getCurrentLocation();
@@ -86,11 +89,17 @@ class EmergencyService {
     }
   }
 
-  /// Enable device flashlight
+  /// Enable device flashlight (real hardware)
   Future<void> enableFlashlight() async {
     try {
-      // await TorchLight.enableTorch();
-      _logger.i('Flashlight enabled (simulated)');
+      final available = await isTorchAvailable();
+      if (!available) {
+        _logger.w('Torch not available on this device');
+        return;
+      }
+      await TorchLight.enableTorch();
+      _flashlightOn = true;
+      _logger.i('Flashlight enabled');
     } catch (e) {
       _logger.e('Failed to enable flashlight: $e');
     }
@@ -99,22 +108,39 @@ class EmergencyService {
   /// Disable device flashlight
   Future<void> disableFlashlight() async {
     try {
-      // await TorchLight.disableTorch();
-      _logger.i('Flashlight disabled (simulated)');
+      if (_flashlightOn) {
+        await TorchLight.disableTorch();
+        _flashlightOn = false;
+        _logger.i('Flashlight disabled');
+      }
     } catch (e) {
       _logger.e('Failed to disable flashlight: $e');
     }
   }
 
-  /// Check if flashlight is available
-  Future<bool> isFlashlightAvailable() async {
+  /// Toggle flashlight on/off
+  Future<bool> toggleFlashlight() async {
+    if (_flashlightOn) {
+      await disableFlashlight();
+    } else {
+      await enableFlashlight();
+    }
+    return _flashlightOn;
+  }
+
+  /// Check if torch is available on this device
+  Future<bool> isTorchAvailable() async {
     try {
-      // return await TorchLight.isTorchAvailable();
-      return false;
+      return await TorchLight.isTorchAvailable();
     } catch (e) {
       return false;
     }
   }
+
+  /// Backward-compat alias
+  Future<bool> isFlashlightAvailable() => isTorchAvailable();
+
+  bool get isFlashlightOn => _flashlightOn;
 
   /// Get current battery level
   Future<int> getBatteryLevel() async {
@@ -155,7 +181,6 @@ class EmergencyService {
       );
     } catch (e) {
       _logger.e('Failed to get current location: $e');
-      // If permission denied or timeout, try last known
       final hasPermission = await Geolocator.checkPermission();
       if (hasPermission == LocationPermission.denied) {
         throw Exception('Location permission not granted');
@@ -215,7 +240,6 @@ class EmergencyService {
       _logger.i('SOS SMS sent: $result');
     } catch (e) {
       _logger.e('Failed to send emergency SMS: $e');
-      // Queue for retry later
     }
   }
 
@@ -228,7 +252,6 @@ class EmergencyService {
           '✓ All clear - $userName has ended emergency mode. Time: ${DateTime.now().toIso8601String()}';
 
       await sendSMS(recipients: _emergencyContacts, message: message);
-
       _logger.i('All-clear SMS sent');
     } catch (e) {
       _logger.e('Failed to send all-clear SMS: $e');
@@ -247,7 +270,6 @@ class EmergencyService {
       'Maps: https://maps.google.com/?q=${position.latitude},${position.longitude}',
     );
     buffer.writeln('Time: ${DateTime.now().toIso8601String()}');
-    buffer.writeln('Battery: ${getBatteryLevel()}%');
 
     if (customMessage.isNotEmpty) {
       buffer.writeln('Message: $customMessage');

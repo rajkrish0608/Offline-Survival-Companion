@@ -1,0 +1,23 @@
+# Walkthrough: Running the Application
+
+I have successfully launched the Offline Survival Companion application.
+
+## Steps Taken
+
+1.  **Environment Check**: Identified available emulators and connected devices.
+2.  **Troubleshooting**: Attempted to launch Pixel 8 and Pixel API 36 emulators, but both failed to start automatically.
+3.  **Dependency Management**: Updated project dependencies using `flutter pub get`.
+4.  **Platform Switch**: Switched the target to macOS desktop to bypass emulator issues.
+5.  **Build and Launch**: Successfully built and ran the application on macOS.
+
+## Verification Results
+
+- **Build Status**: macOS application built successfully.
+- **Initialization**: Sync engine initialized correctly.
+- **Runtime**: Application is interactive and running in debug mode.
+
+> [!NOTE]
+> The application is currently running on your macOS desktop. You should see the app window active on your screen.
+
+## Next Steps
+- If you still need to run it on Android, please manually start your emulator or connect a physical device, and I can run it there for you.

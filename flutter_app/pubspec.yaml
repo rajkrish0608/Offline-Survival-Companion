@@ -51,8 +51,9 @@ dependencies:
   sensors_plus: ^7.0.0
   device_info_plus: ^12.3.0
   battery_plus: ^7.0.0
-  # torch_light: ^0.8.0
+  torch_light: ^1.1.0
   wakelock_plus: ^1.1.0
+  just_audio: ^0.9.40
   
   # File Handling
   image_picker: ^1.0.0
@@ -80,15 +81,20 @@ dev_dependencies:
   build_runner: ^2.4.0
   json_serializable: ^6.7.0
   hive_generator: ^2.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.7
 
 flutter:
   uses-material-design: true
   assets:
     - assets/data/guide_content.json
+    - assets/audio/
+    - assets/audio/siren.wav
+    - assets/maps/
+    - .env
   #   - assets/images/
   #   - assets/icons/
   #   - assets/maps/
-  #   - .env
 
   # fonts:
   #   - family: Inter
@@ -98,3 +104,16 @@ flutter:
   #         weight: 700
   #       - asset: assets/fonts/Inter-SemiBold.ttf
   #         weight: 600
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#1E1E1E"
+  image: "assets/images/splash_screen.png"
+  android_12:
+    image: "assets/images/splash_screen.png"
+    color: "#1E1E1E"

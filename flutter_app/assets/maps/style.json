@@ -1,0 +1,37 @@
+{
+    "version": 8,
+    "name": "Offline Survival Style",
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            "url": "https://demotiles.maplibre.org/tiles/tiles.json"
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "#1a1a1a"
+            }
+        },
+        {
+            "id": "water",
+            "type": "fill",
+            "source": "openmaptiles",
+            "source-layer": "water",
+            "paint": {
+                "fill-color": "#003366"
+            }
+        },
+        {
+            "id": "building",
+            "type": "fill",
+            "source": "openmaptiles",
+            "source-layer": "building",
+            "paint": {
+                "fill-color": "#444444"
+            }
+        }
+    ]
+}

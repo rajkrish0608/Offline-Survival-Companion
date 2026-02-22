@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class GuideScreen extends StatefulWidget {
-  const GuideScreen({Key? key}) : super(key: key);
+  const GuideScreen({super.key});
 
   @override
   State<GuideScreen> createState() => _GuideScreenState();

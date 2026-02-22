@@ -43,6 +43,12 @@ class SyncEngine {
       return;
     }
 
+    // Guard against uninitialized storage
+    if (!_storageService.isInitialized) {
+      _logger.w('Storage not initialized, skipping sync');
+      return;
+    }
+
     // Check connectivity
     if (!await _isConnected()) {
       _logger.w('No connectivity for sync');
@@ -147,8 +153,7 @@ class SyncEngine {
   }
 
   void _onConnectivityChanged(List<ConnectivityResult> result) {
-    final isOnline =
-        result.contains(ConnectivityResult.wifi) ||
+    final isOnline = result.contains(ConnectivityResult.wifi) ||
         result.contains(ConnectivityResult.mobile);
 
     if (isOnline) {

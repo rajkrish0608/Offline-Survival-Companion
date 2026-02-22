@@ -1,0 +1,34 @@
+# Market Readiness Fixes
+
+## Fix 1 – Flashlight (Real Hardware)
+- [ ] Uncomment `torch_light` in pubspec.yaml
+- [ ] Wire TorchLight in emergency_service.dart
+- [ ] Add NSCameraUsageDescription to Info.plist
+
+## Fix 2 – Alarm Audio (Real Siren)
+- [ ] Add `just_audio` to pubspec.yaml
+- [ ] Create alarm_service.dart
+- [ ] Wire alarm to emergency screen
+- [ ] Add audio background mode to Info.plist
+- [ ] Generate/add siren.mp3 asset
+
+## Fix 3 – Webpage Persistence
+- [ ] Wire getSavedPages() to SQLite in webpage_service.dart
+- [ ] Wire saveWebpage() to INSERT into DB
+
+## Fix 4 – Emergency Contacts UI
+- [ ] Create emergency_contacts_screen.dart
+- [ ] Wire from settings_screen.dart
+
+## Fix 5 – Replace print() with Logger
+- [ ] Fix biometric_service.dart
+- [ ] Fix local_storage_service.dart (WAL + FTS5 warnings)
+
+## Fix 6 – iOS Info.plist
+- [ ] NSCameraUsageDescription (torch + QR)
+- [ ] UIBackgroundModes: audio
+- [ ] NSContactsUsageDescription
+
+## Verification
+- [ ] Hot reload on iOS Simulator
+- [ ] Run full integration test suite

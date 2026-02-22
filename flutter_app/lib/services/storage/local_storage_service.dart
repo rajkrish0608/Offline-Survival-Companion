@@ -2,16 +2,19 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:hive/hive.dart';
+import 'package:logger/logger.dart';
 import 'package:offline_survival_companion/core/constants/app_constants.dart';
 import 'dart:io';
 
 class LocalStorageService {
-  late Database _database;
-  late Box<dynamic> _vaultBox;
-  late Box<dynamic> _settingsBox;
-  late Box<dynamic> _cacheBox;
-  late Box<dynamic> _syncBox;
+  Database? _database;
+  Box<dynamic>? _vaultBox;
+  Box<dynamic>? _settingsBox;
+  Box<dynamic>? _cacheBox;
+  Box<dynamic>? _syncBox;
   bool _initialized = false;
+  bool _fts5Available = false;
+  final Logger _logger = Logger();
 
   Future<void> initialize() async {
     try {
@@ -27,11 +30,11 @@ class LocalStorageService {
       );
 
       // Enable WAL mode for concurrent access
-      // Enable WAL mode for concurrent access
+      // Note: SQLite on some platforms returns "not an error" as a success string — that is OK.
       try {
-        await _database.execute('PRAGMA journal_mode=WAL');
+        await _database!.execute('PRAGMA journal_mode=WAL');
       } catch (e) {
-        print('Failed to enable WAL mode: $e');
+        _logger.w('WAL mode not available: $e');
       }
 
       // Initialize Hive boxes
@@ -43,6 +46,12 @@ class LocalStorageService {
       _initialized = true;
     } catch (e) {
       throw Exception('Failed to initialize local storage: $e');
+    }
+  }
+
+  void _ensureDatabaseReady() {
+    if (_database == null) {
+      throw Exception('Database not initialized. Call initialize() first.');
     }
   }
 
@@ -120,16 +129,22 @@ class LocalStorageService {
       )
     ''');
 
-    // Create FTS5 index for search
-    await db.execute('''
-      CREATE VIRTUAL TABLE first_aid_fts USING fts5(
-        title,
-        content,
-        category,
-        content=first_aid_articles,
-        content_rowid=rowid
-      )
-    ''');
+    // Create FTS5 index for search (optional - not available on all platforms)
+    try {
+      await db.execute('''
+        CREATE VIRTUAL TABLE first_aid_fts USING fts5(
+          title,
+          content,
+          category,
+          content=first_aid_articles,
+          content_rowid=rowid
+        )
+      ''');
+      _fts5Available = true;
+    } catch (e) {
+      _logger.w('FTS5 not available, falling back to LIKE-based search');
+      _fts5Available = false;
+    }
 
     // Document Metadata (Vault)
     await db.execute('''
@@ -227,14 +242,19 @@ class LocalStorageService {
   // ==================== User Operations ====================
 
   Future<void> saveUser(Map<String, dynamic> user) async {
-    await _database.insert('users', {
-      ...user,
-      'updated_at': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    _ensureDatabaseReady();
+    await _database!.insert(
+        'users',
+        {
+          ...user,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<Map<String, dynamic>?> getUser(String userId) async {
-    final results = await _database.query(
+    _ensureDatabaseReady();
+    final results = await _database!.query(
       'users',
       where: 'id = ?',
       whereArgs: [userId],
@@ -245,7 +265,8 @@ class LocalStorageService {
   // ==================== Emergency Contacts ====================
 
   Future<void> addEmergencyContact(Map<String, dynamic> contact) async {
-    await _database.insert(
+    _ensureDatabaseReady();
+    await _database!.insert(
       'emergency_contacts',
       contact,
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -253,7 +274,8 @@ class LocalStorageService {
   }
 
   Future<List<Map<String, dynamic>>> getEmergencyContacts(String userId) async {
-    return await _database.query(
+    _ensureDatabaseReady();
+    return await _database!.query(
       'emergency_contacts',
       where: 'user_id = ?',
       whereArgs: [userId],
@@ -262,7 +284,8 @@ class LocalStorageService {
   }
 
   Future<void> deleteEmergencyContact(String contactId) async {
-    await _database.delete(
+    _ensureDatabaseReady();
+    await _database!.delete(
       'emergency_contacts',
       where: 'id = ?',
       whereArgs: [contactId],
@@ -272,7 +295,8 @@ class LocalStorageService {
   // ==================== Offline Packs ====================
 
   Future<void> savePack(Map<String, dynamic> pack) async {
-    await _database.insert(
+    _ensureDatabaseReady();
+    await _database!.insert(
       'offline_packs',
       pack,
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -280,7 +304,8 @@ class LocalStorageService {
   }
 
   Future<List<Map<String, dynamic>>> getDownloadedPacks() async {
-    return await _database.query(
+    _ensureDatabaseReady();
+    return await _database!.query(
       'offline_packs',
       where: 'downloaded = ?',
       whereArgs: [1],
@@ -288,7 +313,8 @@ class LocalStorageService {
   }
 
   Future<void> deletePack(String packId) async {
-    await _database.delete(
+    _ensureDatabaseReady();
+    await _database!.delete(
       'offline_packs',
       where: 'id = ?',
       whereArgs: [packId],
@@ -298,7 +324,8 @@ class LocalStorageService {
   // ==================== First Aid ====================
 
   Future<void> saveFirstAidArticle(Map<String, dynamic> article) async {
-    await _database.insert(
+    _ensureDatabaseReady();
+    await _database!.insert(
       'first_aid_articles',
       article,
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -306,21 +333,33 @@ class LocalStorageService {
   }
 
   Future<List<Map<String, dynamic>>> searchFirstAid(String query) async {
-    return await _database.rawQuery(
-      '''
-      SELECT a.* FROM first_aid_articles a
-      WHERE a.id IN (
-        SELECT rowid FROM first_aid_fts WHERE first_aid_fts MATCH ?
-      )
-    ''',
-      ['$query*'],
-    );
+    _ensureDatabaseReady();
+    if (_fts5Available) {
+      return await _database!.rawQuery(
+        '''
+        SELECT a.* FROM first_aid_articles a
+        WHERE a.id IN (
+          SELECT rowid FROM first_aid_fts WHERE first_aid_fts MATCH ?
+        )
+      ''',
+        ['$query*'],
+      );
+    } else {
+      // Fallback to LIKE-based search when FTS5 is not available
+      final likeQuery = '%$query%';
+      return await _database!.query(
+        'first_aid_articles',
+        where: 'title LIKE ? OR content LIKE ? OR category LIKE ?',
+        whereArgs: [likeQuery, likeQuery, likeQuery],
+      );
+    }
   }
 
   Future<List<Map<String, dynamic>>> getFirstAidByCategory(
     String category,
   ) async {
-    return await _database.query(
+    _ensureDatabaseReady();
+    return await _database!.query(
       'first_aid_articles',
       where: 'category = ?',
       whereArgs: [category],
@@ -330,7 +369,8 @@ class LocalStorageService {
   // ==================== Vault Operations ====================
 
   Future<void> saveVaultDocument(Map<String, dynamic> doc) async {
-    await _database.insert(
+    _ensureDatabaseReady();
+    await _database!.insert(
       'vault_documents',
       doc,
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -338,7 +378,8 @@ class LocalStorageService {
   }
 
   Future<List<Map<String, dynamic>>> getVaultDocuments(String userId) async {
-    return await _database.query(
+    _ensureDatabaseReady();
+    return await _database!.query(
       'vault_documents',
       where: 'user_id = ?',
       whereArgs: [userId],
@@ -347,7 +388,8 @@ class LocalStorageService {
   }
 
   Future<void> deleteVaultDocument(String docId) async {
-    await _database.delete(
+    _ensureDatabaseReady();
+    await _database!.delete(
       'vault_documents',
       where: 'id = ?',
       whereArgs: [docId],
@@ -357,7 +399,8 @@ class LocalStorageService {
   // ==================== QR Codes ====================
 
   Future<void> saveQRCode(Map<String, dynamic> qrCode) async {
-    await _database.insert(
+    _ensureDatabaseReady();
+    await _database!.insert(
       'qr_codes',
       qrCode,
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -365,7 +408,8 @@ class LocalStorageService {
   }
 
   Future<List<Map<String, dynamic>>> getQRCodes(String userId) async {
-    return await _database.query(
+    _ensureDatabaseReady();
+    return await _database!.query(
       'qr_codes',
       where: 'user_id = ?',
       whereArgs: [userId],
@@ -376,14 +420,21 @@ class LocalStorageService {
   // ==================== Hive Operations ====================
 
   Future<void> saveSetting(String key, dynamic value) async {
-    await _settingsBox.put(key, value);
+    if (_settingsBox == null) {
+      throw Exception('Settings storage not initialized');
+    }
+    await _settingsBox!.put(key, value);
   }
 
-  dynamic getSetting(String key) => _settingsBox.get(key);
+  dynamic getSetting(String key) {
+    if (_settingsBox == null) return null;
+    return _settingsBox!.get(key);
+  }
 
   Future<void> removeSettings(List<String> keys) async {
+    if (_settingsBox == null) return;
     for (String key in keys) {
-      await _settingsBox.delete(key);
+      await _settingsBox!.delete(key);
     }
   }
 
@@ -395,7 +446,8 @@ class LocalStorageService {
     String operation,
     String data,
   ) async {
-    await _database.insert('pending_changes', {
+    _ensureDatabaseReady();
+    await _database!.insert('pending_changes', {
       'id': '${tableName}_${recordId}_${DateTime.now().millisecondsSinceEpoch}',
       'table_name': tableName,
       'record_id': recordId,
@@ -407,7 +459,8 @@ class LocalStorageService {
   }
 
   Future<List<Map<String, dynamic>>> getPendingChanges() async {
-    return await _database.query(
+    _ensureDatabaseReady();
+    return await _database!.query(
       'pending_changes',
       where: 'synced = ?',
       whereArgs: [0],
@@ -415,7 +468,8 @@ class LocalStorageService {
   }
 
   Future<void> markChangeAsSynced(String changeId) async {
-    await _database.update(
+    _ensureDatabaseReady();
+    await _database!.update(
       'pending_changes',
       {'synced': 1},
       where: 'id = ?',
@@ -455,13 +509,13 @@ class LocalStorageService {
   // ==================== Cleanup ====================
 
   Future<void> close() async {
-    await _database.close();
-    await _vaultBox.close();
-    await _settingsBox.close();
-    await _cacheBox.close();
-    await _syncBox.close();
+    await _database?.close();
+    await _vaultBox?.close();
+    await _settingsBox?.close();
+    await _cacheBox?.close();
+    await _syncBox?.close();
   }
 
   bool get isInitialized => _initialized;
-  Database get database => _database;
+  Database? get database => _database;
 }

@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:offline_survival_companion/core/encryption/encryption_service.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
+import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 import 'package:offline_survival_companion/services/sync/sync_engine.dart';
 import 'package:logger/logger.dart';
 
@@ -13,6 +14,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final LocalStorageService _storageService;
   final EncryptionService _encryptionService;
   final EmergencyService _emergencyService;
+  final AlarmService _alarmService;
   final SyncEngine _syncEngine;
   final Logger _logger = Logger();
 
@@ -20,6 +22,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._storageService,
     this._encryptionService,
     this._emergencyService,
+    this._alarmService,
     this._syncEngine,
   ) : super(const AppInitializing()) {
     on<AppInitialized>(_onAppInitialized);
@@ -39,8 +42,10 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       // Initialize sync engine
       await _syncEngine.initialize();
 
-      // Check if user is onboarded
-      final isOnboarded = _storageService.getSetting('is_onboarded') ?? false;
+      // Check if user is onboarded (safe even if storage isn't fully initialized)
+      final isOnboarded = _storageService.isInitialized
+          ? (_storageService.getSetting('is_onboarded') ?? false)
+          : false;
 
       if (isOnboarded) {
         emit(const AppReady());
@@ -99,6 +104,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   Future<void> close() async {
     await _syncEngine.dispose();
     await _storageService.close();
+    await _alarmService.dispose();
     await _emergencyService.dispose();
     return super.close();
   }
