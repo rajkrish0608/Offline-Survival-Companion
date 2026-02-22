@@ -262,6 +262,25 @@ class LocalStorageService {
     return results.isNotEmpty ? results.first : null;
   }
 
+  Future<String> getOrCreateDefaultUser() async {
+    _ensureDatabaseReady();
+    final users = await _database!.query('users', limit: 1);
+    
+    if (users.isNotEmpty) {
+      return users.first['id'] as String;
+    }
+
+    final id = 'local_user_${DateTime.now().millisecondsSinceEpoch}';
+    await saveUser({
+      'id': id,
+      'name': 'Local User',
+      'email': 'local@example.com',
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
+    
+    return id;
+  }
+
   // ==================== Emergency Contacts ====================
 
   Future<void> addEmergencyContact(Map<String, dynamic> contact) async {

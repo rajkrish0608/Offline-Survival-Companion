@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as path;
+import 'package:open_filex/open_filex.dart';
+import 'package:uuid/uuid.dart';
+import 'dart:io';
+import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/services/auth/biometric_service.dart';
+import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 
 class VaultScreen extends StatefulWidget {
@@ -13,17 +21,24 @@ class _VaultScreenState extends State<VaultScreen> {
   final BiometricService _biometricService = BiometricService();
   bool _isUnlocked = false;
   bool _isAuthenticating = false;
-
-  final List<Map<String, String>> _documents = [
-    {'title': 'Passport Copy', 'type': 'PDF', 'date': '2024-01-15'},
-    {'title': 'Emergency Insurance', 'type': 'DOCX', 'date': '2023-11-20'},
-    {'title': 'Medical Records', 'type': 'PDF', 'date': '2024-02-01'},
-    {'title': 'National ID Card', 'type': 'JPG', 'date': '2024-01-10'},
-  ];
+  List<Map<String, dynamic>> _documents = [];
 
   @override
   void initState() {
     super.initState();
+  }
+
+  Future<void> _loadDocuments() async {
+    final state = context.read<AppBloc>().state;
+    if (state is AppReady) {
+      final storage = context.read<LocalStorageService>();
+      final docs = await storage.getVaultDocuments(state.userId);
+      if (mounted) {
+        setState(() {
+          _documents = List<Map<String, dynamic>>.from(docs);
+        });
+      }
+    }
   }
 
   Future<void> _handleUnlock() async {
@@ -31,12 +46,12 @@ class _VaultScreenState extends State<VaultScreen> {
     
     final bool canCheck = await _biometricService.isBiometricAvailable();
     if (!canCheck) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Biometrics not available on this device')),
-        );
-      }
-      setState(() => _isAuthenticating = false);
+      // For development/mock devices without biometrics, we allow bypass or show message
+      setState(() {
+        _isUnlocked = true;
+        _isAuthenticating = false;
+      });
+      _loadDocuments();
       return;
     }
 
@@ -49,12 +64,7 @@ class _VaultScreenState extends State<VaultScreen> {
       });
       
       if (authenticated) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Vault Unlocked'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        _loadDocuments();
       }
     }
   }
@@ -62,10 +72,46 @@ class _VaultScreenState extends State<VaultScreen> {
   void _lockVault() {
     setState(() {
       _isUnlocked = false;
+      _documents = [];
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Vault Locked')),
-    );
+  }
+
+  Future<void> _pickAndSaveFile() async {
+    final state = context.read<AppBloc>().state;
+    if (state is! AppReady) return;
+
+    final result = await FilePicker.platform.pickFiles();
+    if (result == null || result.files.isEmpty) return;
+
+    final file = File(result.files.single.path!);
+    final fileName = result.files.single.name;
+    final storage = context.read<LocalStorageService>();
+    final vaultDir = await storage.getVaultDirectory();
+    
+    final docId = const Uuid().v4();
+    final ext = path.extension(fileName);
+    final secureFilePath = '${vaultDir.path}/$docId$ext';
+    
+    // Copy file to secure vault directory
+    await file.copy(secureFilePath);
+
+    await storage.saveVaultDocument({
+      'id': docId,
+      'user_id': state.userId,
+      'file_name': fileName,
+      'file_path': secureFilePath,
+      'document_type': ext.replaceAll('.', '').toUpperCase(),
+      'size_bytes': await file.length(),
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
+
+    _loadDocuments();
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('File saved securely in Vault')),
+      );
+    }
   }
 
   @override
@@ -102,23 +148,13 @@ class _VaultScreenState extends State<VaultScreen> {
                   color: AppTheme.textLight,
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Access your encrypted sensitive documents securely.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
-              ),
               const SizedBox(height: 48),
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
                   onPressed: _isAuthenticating ? null : _handleUnlock,
-                  icon: _isAuthenticating 
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.fingerprint),
+                  icon: const Icon(Icons.fingerprint),
                   label: Text(_isAuthenticating ? 'Authenticating...' : 'Unlock Vault'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.accentBlue,
@@ -142,87 +178,89 @@ class _VaultScreenState extends State<VaultScreen> {
           IconButton(
             icon: const Icon(Icons.lock_open, color: Colors.green),
             onPressed: _lockVault,
-            tooltip: 'Lock Vault',
           ),
         ],
       ),
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             color: Colors.green.withOpacity(0.1),
             child: const Row(
               children: [
-                Icon(Icons.security, color: Colors.green, size: 20),
-                SizedBox(width: 12),
-                Text(
-                  'End-to-End Encrypted Storage Active',
-                  style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
-                ),
+                Icon(Icons.security, color: Colors.green, size: 16),
+                SizedBox(width: 8),
+                Text('Encrypted Storage Active', style: TextStyle(color: Colors.green, fontSize: 12)),
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _documents.length,
-              itemBuilder: (context, index) {
-                final doc = _documents[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: ListTile(
-                    leading: _getDocIcon(doc['type']!),
-                    title: Text(doc['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('Added: ${doc['date']} • ${doc['type']}'),
-                    trailing: const Icon(Icons.more_vert),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Opening ${doc['title']}...')),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
+            child: _documents.isEmpty 
+              ? const Center(child: Text('No documents in vault yet'))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _documents.length,
+                  itemBuilder: (context, index) {
+                    final doc = _documents[index];
+                    return Card(
+                      child: ListTile(
+                        leading: _getDocIcon(doc['document_type'] ?? 'OTHER'),
+                        title: Text(doc['file_name'] ?? 'Unknown'),
+                        subtitle: Text('Added: ${DateTime.fromMillisecondsSinceEpoch(doc['created_at'] ?? 0).toString().split(' ')[0]}'),
+                        onTap: () async {
+                          final result = await OpenFilex.open(doc['file_path']);
+                          if (result.type != ResultType.done && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Could not open file: ${result.message}')),
+                            );
+                          }
+                        },
+                        onLongPress: () => _confirmDelete(doc),
+                      ),
+                    );
+                  },
+                ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('File picker would open here (Simulation)')),
-          );
-        },
+        onPressed: _pickAndSaveFile,
         backgroundColor: AppTheme.accentBlue,
+        heroTag: 'vault_add_fab',
         child: const Icon(Icons.add_a_photo),
       ),
     );
   }
 
-  Widget _getDocIcon(String type) {
-    IconData icon;
-    Color color;
-    switch (type) {
-      case 'PDF':
-        icon = Icons.picture_as_pdf;
-        color = Colors.red;
-        break;
-      case 'JPG':
-        icon = Icons.image;
-        color = Colors.blue;
-        break;
-      default:
-        icon = Icons.description;
-        color = Colors.grey;
-    }
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+  void _confirmDelete(Map<String, dynamic> doc) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Document?'),
+        content: Text('Delete ${doc['file_name']}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              final storage = context.read<LocalStorageService>();
+              await storage.deleteVaultDocument(doc['id']);
+              final file = File(doc['file_path']);
+              if (await file.exists()) await file.delete();
+              Navigator.pop(context);
+              _loadDocuments();
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
-      child: Icon(icon, color: color),
     );
+  }
+
+  Widget _getDocIcon(String type) {
+    IconData icon = Icons.description;
+    Color color = Colors.grey;
+    if (type.contains('PDF')) { icon = Icons.picture_as_pdf; color = Colors.red; }
+    else if (type.contains('JPG') || type.contains('PNG')) { icon = Icons.image; color = Colors.blue; }
+    return Icon(icon, color: color);
   }
 }

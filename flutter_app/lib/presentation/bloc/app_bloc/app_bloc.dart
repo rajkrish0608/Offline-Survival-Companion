@@ -30,6 +30,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<AppPaused>(_onAppPaused);
     on<SyncRequested>(_onSyncRequested);
     on<BatteryLevelChanged>(_onBatteryLevelChanged);
+    on<OnboardingCompleted>(_onOnboardingCompleted);
   }
 
   Future<void> _onAppInitialized(
@@ -42,19 +43,35 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       // Initialize sync engine
       await _syncEngine.initialize();
 
-      // Check if user is onboarded (safe even if storage isn't fully initialized)
+      // Ensure a default user exists
+      final userId = await _storageService.getOrCreateDefaultUser();
+
+      // Check if user is onboarded
       final isOnboarded = _storageService.isInitialized
           ? (_storageService.getSetting('is_onboarded') ?? false)
           : false;
 
       if (isOnboarded) {
-        emit(const AppReady());
+        emit(AppReady(userId: userId));
       } else {
         emit(const AppOnboardingRequired());
       }
     } catch (e) {
       _logger.e('App initialization failed: $e');
       emit(AppError(message: 'Failed to initialize app: $e'));
+    }
+  }
+
+  Future<void> _onOnboardingCompleted(
+    OnboardingCompleted event,
+    Emitter<AppState> emit,
+  ) async {
+    try {
+      await _storageService.saveSetting('is_onboarded', true);
+      final userId = await _storageService.getOrCreateDefaultUser();
+      emit(AppReady(userId: userId));
+    } catch (e) {
+      _logger.e('Onboarding completion failed: $e');
     }
   }
 

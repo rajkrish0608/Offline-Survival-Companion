@@ -33,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/emergency'),
         backgroundColor: Colors.red,
+        heroTag: 'home_sos_fab',
         label: const Text('SOS'),
         icon: const Icon(Icons.emergency),
       ),

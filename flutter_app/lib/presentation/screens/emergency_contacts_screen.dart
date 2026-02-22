@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
+import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:uuid/uuid.dart';
 
 class EmergencyContactsScreen extends StatefulWidget {
@@ -12,21 +14,20 @@ class EmergencyContactsScreen extends StatefulWidget {
 }
 
 class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
-  final LocalStorageService _storage = LocalStorageService();
   List<Map<String, dynamic>> _contacts = [];
   bool _loading = true;
-
-  // Fixed user ID for the single-user offline app
-  static const String _userId = 'local';
 
   @override
   void initState() {
     super.initState();
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
   Future<void> _load() async {
-    final contacts = await _storage.getEmergencyContacts(_userId);
+    final state = context.read<AppBloc>().state;
+    final userId = state is AppReady ? state.userId : 'local';
+    final storage = context.read<LocalStorageService>();
+    final contacts = await storage.getEmergencyContacts(userId);
     if (mounted) {
       setState(() {
         _contacts = contacts;
@@ -35,7 +36,8 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
     }
   }
 
-  Future<void> _showAddDialog({Map<String, dynamic>? existing}) async {
+  Future<void> _showAddDialog(
+      {Map<String, dynamic>? existing, required String currentUserId}) async {
     final nameCtrl =
         TextEditingController(text: existing?['name'] as String? ?? '');
     final phoneCtrl =
@@ -107,7 +109,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
 
                 final contact = {
                   'id': existing?['id'] ?? const Uuid().v4(),
-                  'user_id': _userId,
+                  'user_id': currentUserId,
                   'name': name,
                   'phone': phone,
                   'relationship': relCtrl.text.trim(),
@@ -116,7 +118,13 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                   'created_at': DateTime.now().millisecondsSinceEpoch,
                 };
 
-                await _storage.addEmergencyContact(contact);
+                final storage = context.read<LocalStorageService>();
+                await storage.addEmergencyContact(contact);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Contact saved successfully')),
+                  );
+                }
                 Navigator.pop(ctx);
                 await _load();
               },
@@ -150,13 +158,17 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
       ),
     );
     if (confirmed == true) {
-      await _storage.deleteEmergencyContact(contactId);
+      final storage = context.read<LocalStorageService>();
+      await storage.deleteEmergencyContact(contactId);
       await _load();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppBloc>().state;
+    final userId = state is AppReady ? state.userId : 'local';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Emergency Contacts'),
@@ -274,7 +286,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                           ),
                           trailing: IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20),
-                            onPressed: () => _showAddDialog(existing: c),
+                            onPressed: () => _showAddDialog(existing: c, currentUserId: userId),
                           ),
                         ),
                       ),
@@ -282,8 +294,9 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                   },
                 ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddDialog(),
+        onPressed: () => _showAddDialog(currentUserId: userId),
         backgroundColor: Colors.red,
+        heroTag: 'contacts_add_fab',
         icon: const Icon(Icons.add),
         label: const Text('Add Contact'),
       ),

@@ -63,13 +63,21 @@ class WebpageService {
       final title =
           document.querySelector('title')?.text.trim() ?? 'Untitled Page';
 
-      // Save HTML to local file
+      // Extract plain text and clean it up
+      // We remove script and style tags before extracting text
+      document.querySelectorAll('script, style').forEach((s) => s.remove());
+      final plainText = document.body?.text.trim() ?? '';
+      
+      // Clean up multiple newlines/whitespace
+      final cleanedText = plainText.replaceAll(RegExp(r'\n\s*\n'), '\n\n');
+
+      // Save as .txt for readability
       final directory = await getApplicationDocumentsDirectory();
       final pageId = const Uuid().v4();
-      final filePath = '${directory.path}/offline_pages/$pageId.html';
+      final filePath = '${directory.path}/offline_pages/$pageId.txt';
       final file = File(filePath);
       await file.create(recursive: true);
-      await file.writeAsString(response.body);
+      await file.writeAsString(cleanedText);
 
       final webpage = SavedWebpage(
         id: pageId,

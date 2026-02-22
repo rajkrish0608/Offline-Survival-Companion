@@ -6,6 +6,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:offline_survival_companion/core/constants/app_constants.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:logger/logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class EmergencyService {
   final LocalStorageService _storageService;
@@ -97,11 +98,29 @@ class EmergencyService {
         _logger.w('Torch not available on this device');
         return;
       }
+
+      // Request camera permission as it's often required for torch control
+      final permission = await _requestCameraPermission();
+      if (!permission) {
+        _logger.e('Camera permission denied - cannot enable flashlight');
+        return;
+      }
+
       await TorchLight.enableTorch();
       _flashlightOn = true;
       _logger.i('Flashlight enabled');
     } catch (e) {
       _logger.e('Failed to enable flashlight: $e');
+    }
+  }
+
+  Future<bool> _requestCameraPermission() async {
+    try {
+      final status = await Permission.camera.request();
+      return status.isGranted;
+    } catch (e) {
+      _logger.e('Error requesting camera permission: $e');
+      return false;
     }
   }
 

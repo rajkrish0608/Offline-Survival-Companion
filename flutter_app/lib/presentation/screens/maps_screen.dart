@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
+import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MapsScreen extends StatefulWidget {
   const MapsScreen({super.key});
@@ -14,6 +17,7 @@ class MapsScreen extends StatefulWidget {
 class _MapsScreenState extends State<MapsScreen> {
   MapLibreMapController? _mapController;
   bool _showDownloads = false;
+  bool _locationPermissionGranted = false;
 
   // Mock data for offline packs
   final List<Map<String, dynamic>> _regions = [
@@ -50,7 +54,17 @@ class _MapsScreenState extends State<MapsScreen> {
   @override
   void initState() {
     super.initState();
+    _checkPermissions();
     _checkDownloadedMaps();
+  }
+
+  Future<void> _checkPermissions() async {
+    final status = await Permission.location.request();
+    if (mounted) {
+      setState(() {
+        _locationPermissionGranted = status.isGranted;
+      });
+    }
   }
 
   void _onMapCreated(MapLibreMapController controller) {
@@ -80,7 +94,7 @@ class _MapsScreenState extends State<MapsScreen> {
               zoom: 12.0,
             ),
             styleString: 'assets/maps/style.json',
-            myLocationEnabled: true,
+            myLocationEnabled: _locationPermissionGranted,
             trackCameraPosition: true,
           ),
 
@@ -99,10 +113,11 @@ class _MapsScreenState extends State<MapsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
                     decoration: const InputDecoration(
-                      hintText: 'Search Location...',
+                      hintText: 'Search (e.g. Delhi, London)',
                       prefixIcon: Icon(Icons.search),
                       border: InputBorder.none,
                     ),
+                    onSubmitted: (value) => _searchLocation(value),
                   ),
                 ),
               ),
@@ -158,6 +173,7 @@ class _MapsScreenState extends State<MapsScreen> {
                 );
               },
               backgroundColor: AppTheme.accentBlue,
+              heroTag: 'maps_loc_fab',
               child: const Icon(Icons.my_location),
             )
           : null,
@@ -190,20 +206,56 @@ class _MapsScreenState extends State<MapsScreen> {
     }
   }
 
+  Future<void> _searchLocation(String query) async {
+    if (query.isEmpty) return;
+
+    final q = query.toLowerCase();
+    LatLng? target;
+
+    if (q.contains('delhi')) {
+      target = const LatLng(28.6139, 77.2090);
+    } else if (q.contains('london')) {
+      target = const LatLng(51.5074, -0.1278);
+    } else if (q.contains('new york') || q.contains('nyc')) {
+      target = const LatLng(40.7128, -74.0060);
+    } else if (q.contains('los angeles') || q.contains('la')) {
+      target = const LatLng(34.0522, -118.2437);
+    } else if (q.contains('tokyo')) {
+      target = const LatLng(35.6762, 139.6503);
+    }
+
+    if (target != null) {
+      _mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: target, zoom: 12),
+        ),
+      );
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Offline search: "$query" not found in local index.')),
+        );
+      }
+    }
+  }
+
   Future<void> _checkDownloadedMaps() async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
+    final storage = context.read<LocalStorageService>();
+    final downloadedPacks = await storage.getDownloadedPacks();
+    
+    if (mounted) {
       setState(() {
         for (var region in _regions) {
-          final file = File('${dir.path}/offline_maps/${region['id']}.map');
-          if (file.existsSync()) {
+          final isDownloaded = downloadedPacks.any((p) => p['region_id'] == region['id']);
+          if (isDownloaded) {
             region['status'] = 'downloaded';
             region['progress'] = 1.0;
+          } else {
+            region['status'] = 'not_downloaded';
+            region['progress'] = 0.0;
           }
         }
       });
-    } catch (e) {
-      // Handle potential errors quietly for now
     }
   }
 
@@ -230,6 +282,18 @@ class _MapsScreenState extends State<MapsScreen> {
 
     final file = File('${mapDir.path}/${_regions[index]['id']}.map');
     await file.writeAsString('Dummy map data for ${_regions[index]['name']}');
+
+    // Save to Database
+    final storage = context.read<LocalStorageService>();
+    await storage.savePack({
+      'id': _regions[index]['id'],
+      'region_id': _regions[index]['id'],
+      'name': _regions[index]['name'],
+      'size_mb': int.tryParse(_regions[index]['size'].split(' ')[0]) ?? 0,
+      'downloaded': 1,
+      'downloaded_at': DateTime.now().millisecondsSinceEpoch,
+      'path': file.path,
+    });
 
     if (mounted) {
       setState(() {
@@ -265,6 +329,10 @@ class _MapsScreenState extends State<MapsScreen> {
               if (await file.exists()) {
                 await file.delete();
               }
+
+              // Remove from Database
+              final storage = context.read<LocalStorageService>();
+              await storage.deletePack(_regions[index]['id']);
 
               if (context.mounted) {
                 setState(() {

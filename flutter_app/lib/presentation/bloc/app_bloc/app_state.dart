@@ -16,7 +16,11 @@ class AppOnboardingRequired extends AppState {
 }
 
 class AppReady extends AppState {
-  const AppReady();
+  final String userId;
+  const AppReady({required this.userId});
+
+  @override
+  List<Object?> get props => [userId];
 }
 
 class AppError extends AppState {

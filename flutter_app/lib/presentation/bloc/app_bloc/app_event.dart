@@ -30,3 +30,7 @@ class BatteryLevelChanged extends AppEvent {
   @override
   List<Object?> get props => [level];
 }
+
+class OnboardingCompleted extends AppEvent {
+  const OnboardingCompleted();
+}

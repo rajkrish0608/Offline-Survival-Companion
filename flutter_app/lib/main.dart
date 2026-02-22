@@ -92,6 +92,7 @@ class OfflineSurvivalApp extends StatelessWidget {
           )..add(const AppInitialized()),
         ),
         // Providing individual services for easy UI access
+        RepositoryProvider.value(value: storageService),
         RepositoryProvider.value(value: emergencyService),
         RepositoryProvider.value(value: alarmService),
       ],
