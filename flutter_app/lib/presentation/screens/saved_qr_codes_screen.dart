@@ -144,10 +144,10 @@ class _SavedQrCodesScreenState extends State<SavedQrCodesScreen> {
   }
 
   IconData _getIconForType(String type) {
-    switch (type) {
-      case 'WiFi': return Icons.wifi;
-      case 'URL': return Icons.link;
-      case 'Contact': return Icons.person;
+    switch (type.toLowerCase()) {
+      case 'wifi': return Icons.wifi;
+      case 'url': return Icons.link;
+      case 'contact': return Icons.person;
       default: return Icons.text_fields;
     }
   }

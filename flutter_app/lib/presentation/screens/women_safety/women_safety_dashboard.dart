@@ -143,7 +143,7 @@ class WomenSafetyDashboard extends StatelessWidget {
               style: TextStyle(color: Colors.grey[400], fontSize: 12),
             ),
             value: service.isEnabled,
-            activeColor: AppTheme.accentBlue,
+            activeThumbColor: AppTheme.accentBlue,
             secondary: Icon(
               service.isListening ? Icons.mic : Icons.mic_none,
               color: service.isEnabled ? AppTheme.accentBlue : Colors.grey,
@@ -177,7 +177,7 @@ class WomenSafetyDashboard extends StatelessWidget {
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
             value: service.isSurvivalMode,
-            activeColor: AppTheme.primaryRed,
+            activeThumbColor: AppTheme.primaryRed,
             secondary: Icon(
               Icons.bolt,
               color: service.isSurvivalMode ? AppTheme.primaryRed : Colors.grey,

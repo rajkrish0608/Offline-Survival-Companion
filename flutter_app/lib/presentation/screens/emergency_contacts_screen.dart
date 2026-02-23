@@ -85,7 +85,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                   subtitle: const Text('Gets SMS first in an emergency'),
                   value: isPrimary,
                   onChanged: (v) => setDlg(() => isPrimary = v),
-                  activeColor: AppTheme.accentBlue,
+                  activeThumbColor: AppTheme.accentBlue,
                 ),
               ],
             ),

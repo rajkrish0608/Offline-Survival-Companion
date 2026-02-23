@@ -97,6 +97,8 @@ class _GuideScreenState extends State<GuideScreen> {
         return Icons.medical_services;
       case 'Survival':
         return Icons.landscape;
+      case 'Wild Identification':
+        return Icons.eco;
       default:
         return Icons.article;
     }
@@ -108,6 +110,8 @@ class _GuideScreenState extends State<GuideScreen> {
         return Colors.red;
       case 'Survival':
         return Colors.green;
+      case 'Wild Identification':
+        return Colors.orange;
       default:
         return Colors.blue;
     }

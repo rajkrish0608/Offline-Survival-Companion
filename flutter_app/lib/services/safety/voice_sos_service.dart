@@ -12,7 +12,7 @@ class VoiceSosService extends ChangeNotifier {
 
   bool _isListening = false;
   bool _isEnabled = false;
-  String _triggerPhrase = "help help help";
+  final String _triggerPhrase = "help help help";
   String? _userId;
 
   VoiceSosService(this._emergencyService);
@@ -88,6 +88,7 @@ class VoiceSosService extends ChangeNotifier {
     }
   }
 
+  @override
   void dispose() {
     _isEnabled = false;
     _speech.cancel();

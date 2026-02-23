@@ -102,7 +102,7 @@ class _MapsScreenState extends State<MapsScreen> {
     setState(() { _locationPermissionGranted = status.isGranted; });
   }
 
-  final Set<String> _activeCategories = {};
+  final Set<String> _activeCategories = {'police', 'hospital'};
 
   final List<Map<String, dynamic>> _safePoints = [
     // Patna Points
@@ -117,6 +117,10 @@ class _MapsScreenState extends State<MapsScreen> {
 
   void _onMapCreated(MapLibreMapController controller) {
     _mapController = controller;
+    // Trigger marker rendering now that the controller is ready
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) _updateMarkers();
+    });
   }
 
   void _toggleCategory(String category) {
@@ -238,7 +242,7 @@ class _MapsScreenState extends State<MapsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              value: selectedCategory,
+              initialValue: selectedCategory,
               items: const [
                 DropdownMenuItem(value: 'hazard', child: Text('Hazard/Danger')),
                 DropdownMenuItem(value: 'lighting', child: Text('Poor Lighting')),
@@ -315,7 +319,7 @@ class _MapsScreenState extends State<MapsScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: selectedType,
+              initialValue: selectedType,
               items: const [
                 DropdownMenuItem(value: 'water', child: Text('Water Source')),
                 DropdownMenuItem(value: 'shelter', child: Text('Shelter')),
@@ -405,16 +409,6 @@ class _MapsScreenState extends State<MapsScreen> {
     setState(() {
       _isTopoMode = !_isTopoMode;
     });
-    
-    // In a real offline app, this would switch between local style JSONs
-    // which reference local MBTiles or pre-cached topo raster tiles.
-    if (_isTopoMode) {
-      _mapController?.setSymbolIconAllowOverlap(true);
-      // For demonstration, we could add a raster source for OpenTopoMap
-      // but since we want to be OFFLINE, we'd ideally load a local style.
-      // For now, we'll just toggle the state and update the background color 
-      // or similar to show the UI change, and document the offline path.
-    }
   }
 
   Future<void> _searchLocation(String query) async {
@@ -422,8 +416,9 @@ class _MapsScreenState extends State<MapsScreen> {
     final q = query.toLowerCase();
     LatLng? target;
 
-    if (q.contains('delhi')) target = const LatLng(28.6139, 77.2090);
-    else if (q.contains('london')) target = const LatLng(51.5074, -0.1278);
+    if (q.contains('delhi')) {
+      target = const LatLng(28.6139, 77.2090);
+    } else if (q.contains('london')) target = const LatLng(51.5074, -0.1278);
     else if (q.contains('new york')) target = const LatLng(40.7128, -74.0060);
     else if (q.contains('los angeles')) target = const LatLng(34.0522, -118.2437);
     else if (q.contains('tokyo')) target = const LatLng(35.6762, 139.6503);
@@ -449,6 +444,32 @@ class _MapsScreenState extends State<MapsScreen> {
           myLocationEnabled: _locationPermissionGranted,
           trackCameraPosition: true,
         ),
+        // Topo mode: brown/earth tint overlay to simulate topographic view
+        if (_isTopoMode)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Container(
+                color: const Color(0x33795548), // brown with 20% opacity
+              ),
+            ),
+          ),
+        if (_isTopoMode && !_showDownloads)
+          Positioned(
+            top: 80, left: 0, right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.brown[700],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  '🗻 TOPO MODE',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+            ),
+          ),
         if (!_showDownloads)
           Positioned(
             top: 16, left: 16, right: 16,
@@ -471,13 +492,14 @@ class _MapsScreenState extends State<MapsScreen> {
         if (_showDownloads)
           Positioned.fill(
             child: Container(
-              color: AppTheme.primaryDark,
+              color: Colors.grey[900],
               child: Column(
                 children: [
                    AppBar(
-                    title: const Text('Offline Regions'),
+                    backgroundColor: Colors.grey[850],
+                    title: const Text('Offline Regions', style: TextStyle(color: Colors.white)),
                     leading: IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: const Icon(Icons.close, color: Colors.white),
                       onPressed: () => setState(() => _showDownloads = false),
                     ),
                   ),
@@ -533,63 +555,66 @@ class _MapsScreenState extends State<MapsScreen> {
         // Positioned Location button - moved higher to not conflict with central SOS
         if (!_showDownloads)
           Positioned(
-            bottom: 120, right: 16,
-            child: FloatingActionButton(
-              onPressed: () => _mapController?.animateCamera(CameraUpdate.newCameraPosition(const CameraPosition(target: LatLng(25.5941, 85.1376), zoom: 15))),
-              mini: true,
-              heroTag: 'maps_loc_fab_fix',
-              child: const Icon(Icons.my_location),
-            ),
-          ),
-        // Dedicated Download Trigger Button on Map
-        if (!_showDownloads)
-          Positioned(
-            top: 80, right: 16,
-            child: FloatingActionButton(
-              onPressed: () => setState(() => _showDownloads = true),
-              mini: true,
-              backgroundColor: Colors.white,
-              heroTag: 'maps_download_trigger',
-              child: const Icon(Icons.download_for_offline, color: Colors.blue),
-            ),
-          ),
-        // AR Compass Button
-        if (!_showDownloads)
-          Positioned(
-            bottom: 120, right: 220,
-            child: FloatingActionButton(
-              onPressed: () => context.push('/ar-compass'),
-              mini: true,
-              backgroundColor: AppTheme.accentBlue,
-              heroTag: 'maps_ar_fab',
-              child: const Icon(Icons.view_in_ar, color: Colors.white),
-            ),
-          ),
-        // Topo Toggle Button
-        if (!_showDownloads)
-          Positioned(
-            bottom: 120, right: 170,
-            child: FloatingActionButton(
-              onPressed: _toggleTopoMode,
-              mini: true,
-              backgroundColor: _isTopoMode ? Colors.brown : Colors.blueGrey,
-              heroTag: 'maps_topo_fab',
-              child: Icon(_isTopoMode ? Icons.terrain : Icons.map_outlined),
-            ),
-          ),
-        // Safety Report Button
-        if (!_showDownloads)
-          Positioned(
-            bottom: 120, right: 20,
-            child: FloatingActionButton(
-              onPressed: () => setState(() {
-                _addSafetyPinMode = !_addSafetyPinMode;
-                _addPinMode = false;
-              }),
-              mini: true,
-              backgroundColor: _addSafetyPinMode ? Colors.red : Colors.redAccent,
-              heroTag: 'maps_safety_report_fab',
-              child: Icon(_addSafetyPinMode ? Icons.close : Icons.warning_amber),
+            bottom: 110, right: 16,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  onPressed: () => _mapController?.animateCamera(
+                    CameraUpdate.newCameraPosition(
+                      const CameraPosition(target: LatLng(25.5941, 85.1376), zoom: 15),
+                    ),
+                  ),
+                  mini: true,
+                  heroTag: 'maps_loc_fab_fix',
+                  backgroundColor: Colors.white,
+                  child: const Icon(Icons.my_location, color: Colors.blue),
+                ),
+                const SizedBox(height: 8),
+                FloatingActionButton(
+                  onPressed: () => setState(() => _showDownloads = true),
+                  mini: true,
+                  backgroundColor: Colors.white,
+                  heroTag: 'maps_download_trigger',
+                  child: const Icon(Icons.download_for_offline, color: Colors.blue),
+                ),
+                const SizedBox(height: 8),
+                FloatingActionButton(
+                  onPressed: () => context.push('/ar-compass'),
+                  mini: true,
+                  backgroundColor: AppTheme.accentBlue,
+                  heroTag: 'maps_ar_fab',
+                  child: const Icon(Icons.view_in_ar, color: Colors.white),
+                ),
+                const SizedBox(height: 8),
+                FloatingActionButton(
+                  onPressed: _toggleTopoMode,
+                  mini: true,
+                  backgroundColor: _isTopoMode ? Colors.brown : Colors.blueGrey,
+                  heroTag: 'maps_topo_fab',
+                  child: Icon(_isTopoMode ? Icons.terrain : Icons.map_outlined),
+                ),
+                const SizedBox(height: 8),
+                FloatingActionButton(
+                  onPressed: _toggleTracking,
+                  mini: true,
+                  backgroundColor: _activeRoute != null ? Colors.red : Colors.blue,
+                  heroTag: 'maps_track_fab',
+                  child: Icon(_activeRoute != null ? Icons.stop : Icons.route),
+                ),
+                const SizedBox(height: 8),
+                FloatingActionButton(
+                  onPressed: () => setState(() {
+                    _addSafetyPinMode = !_addSafetyPinMode;
+                    _addPinMode = false;
+                  }),
+                  mini: true,
+                  backgroundColor: _addSafetyPinMode ? Colors.red : Colors.redAccent,
+                  heroTag: 'maps_safety_report_fab',
+                  child: Icon(_addSafetyPinMode ? Icons.close : Icons.warning_amber),
+                ),
+              ],
             ),
           ),
         if (_addPinMode || _addSafetyPinMode)
@@ -609,18 +634,6 @@ class _MapsScreenState extends State<MapsScreen> {
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
-            ),
-          ),
-        // Route Recording FAB
-        if (!_showDownloads)
-          Positioned(
-            bottom: 120, right: 120,
-            child: FloatingActionButton(
-              onPressed: _toggleTracking,
-              mini: true,
-              backgroundColor: _activeRoute != null ? Colors.red : Colors.blue,
-              heroTag: 'maps_track_fab',
-              child: Icon(_activeRoute != null ? Icons.stop : Icons.route),
             ),
           ),
         if (_activeRoute != null)

@@ -1,11 +1,9 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:offline_survival_companion/data/models/poi_model.dart';
 import 'package:provider/provider.dart';
-import 'package:offline_survival_companion/core/theme/app_theme.dart';
 
 class ARCompassScreen extends StatefulWidget {
   const ARCompassScreen({super.key});

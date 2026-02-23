@@ -16,11 +16,14 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
   bool _isRinging = false;
   bool _isCallActive = false;
   int _remainingSeconds = 0;
+  int _callDurationSeconds = 0;
   Timer? _timer;
+  Timer? _callTimer;
 
   @override
   void dispose() {
     _timer?.cancel();
+    _callTimer?.cancel();
     _nameController.dispose();
     super.dispose();
   }
@@ -52,16 +55,30 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
     setState(() {
       _isRinging = false;
       _isCallActive = true;
+      _callDurationSeconds = 0;
+    });
+    _callTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted && _isCallActive) {
+        setState(() => _callDurationSeconds++);
+      }
     });
   }
 
   void _endCall() {
     _timer?.cancel();
+    _callTimer?.cancel();
     setState(() {
       _isRinging = false;
       _isCallActive = false;
       _isCountdownActive = false;
+      _callDurationSeconds = 0;
     });
+  }
+
+  String _formatCallDuration(int totalSeconds) {
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
 
   @override
@@ -235,9 +252,9 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
             style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          const Text(
-            '00:04',
-            style: TextStyle(color: Colors.white70, fontSize: 20),
+          Text(
+            _formatCallDuration(_callDurationSeconds),
+            style: const TextStyle(color: Colors.white70, fontSize: 20),
           ),
           const Spacer(),
           GridView.count(

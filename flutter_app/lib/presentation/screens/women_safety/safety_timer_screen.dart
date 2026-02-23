@@ -117,7 +117,7 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
             title: const Text('Journey Mode', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
             subtitle: const Text('Periodic check-ins throughout your trip. Escalates to SOS if missed twice.', style: TextStyle(color: Colors.grey)),
             value: _isJourneyMode,
-            activeColor: AppTheme.accentBlue,
+            activeThumbColor: AppTheme.accentBlue,
             onChanged: (v) => setState(() => _isJourneyMode = v),
           ),
           const SizedBox(height: 32),

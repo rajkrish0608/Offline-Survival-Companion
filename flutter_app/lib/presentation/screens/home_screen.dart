@@ -6,7 +6,6 @@ import 'package:offline_survival_companion/presentation/screens/maps_screen.dart
 import 'package:offline_survival_companion/presentation/screens/guide_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/vault_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/webpage_saver_screen.dart';
-import 'package:offline_survival_companion/presentation/screens/qr_scanner_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/emergency_contacts_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/settings_screen.dart';
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';

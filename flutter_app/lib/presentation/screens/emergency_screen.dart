@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
+import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
+import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 
 class EmergencyScreen extends StatefulWidget {
   const EmergencyScreen({super.key});
@@ -16,11 +19,24 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   final int _batteryLevel = 100;
   String _lastLocation = 'Fetching location...';
   Duration _elapsedTime = Duration.zero;
+  List<Map<String, dynamic>> _contacts = [];
 
   @override
   void initState() {
     super.initState();
     _simulateSOSActivation();
+    _loadContacts();
+  }
+
+  Future<void> _loadContacts() async {
+    try {
+      final appState = context.read<AppBloc>().state;
+      if (appState is AppReady) {
+        final storage = context.read<LocalStorageService>();
+        final contacts = await storage.getEmergencyContacts(appState.userId);
+        if (mounted) setState(() => _contacts = contacts);
+      }
+    } catch (_) {}
   }
 
   void _simulateSOSActivation() {
@@ -247,26 +263,21 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                                   ?.copyWith(color: AppTheme.textSecondary),
                             ),
                             const SizedBox(height: 12),
-                            _ContactStatusItem(
-                              name: 'Mom',
-                              status: 'SMS Delivered',
-                              icon: Icons.check_circle,
-                              color: AppTheme.successGreen,
-                            ),
-                            const SizedBox(height: 8),
-                            _ContactStatusItem(
-                              name: 'Dad',
-                              status: 'SMS Delivered',
-                              icon: Icons.check_circle,
-                              color: AppTheme.successGreen,
-                            ),
-                            const SizedBox(height: 8),
-                            _ContactStatusItem(
-                              name: 'Emergency',
-                              status: 'SMS Failed (Retry)',
-                              icon: Icons.warning,
-                              color: AppTheme.warningYellow,
-                            ),
+                            if (_contacts.isEmpty)
+                              const Text(
+                                'No emergency contacts set up.\nGo to Settings → Emergency Contacts to add some.',
+                                style: TextStyle(color: Colors.grey, fontSize: 13),
+                              )
+                            else
+                              ..._contacts.map((contact) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _ContactStatusItem(
+                                  name: contact['name'] ?? 'Unknown',
+                                  status: _sosActive ? 'SMS Queued for Delivery' : 'SOS Not Active',
+                                  icon: _sosActive ? Icons.check_circle : Icons.circle_outlined,
+                                  color: _sosActive ? AppTheme.successGreen : Colors.grey,
+                                ),
+                              )),
                           ],
                         ),
                       ),

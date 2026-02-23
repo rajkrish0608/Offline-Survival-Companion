@@ -320,6 +320,7 @@ class EmergencyService extends ChangeNotifier {
   }
 
   /// Clean up resources
+  @override
   Future<void> dispose() async {
     if (_sosActive) {
       await deactivateSOS(userId: 'unknown');
