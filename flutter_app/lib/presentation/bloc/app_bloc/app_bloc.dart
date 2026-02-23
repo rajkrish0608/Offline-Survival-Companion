@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:offline_survival_companion/core/encryption/encryption_service.dart';
@@ -5,6 +6,7 @@ import 'package:offline_survival_companion/services/storage/local_storage_servic
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
 import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 import 'package:offline_survival_companion/services/sync/sync_engine.dart';
+import 'package:offline_survival_companion/services/safety/shake_detector_service.dart';
 import 'package:logger/logger.dart';
 
 part 'app_event.dart';
@@ -16,6 +18,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final EmergencyService _emergencyService;
   final AlarmService _alarmService;
   final SyncEngine _syncEngine;
+  final ShakeDetectorService _shakeDetectorService;
   final Logger _logger = Logger();
 
   AppBloc(
@@ -24,6 +27,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._emergencyService,
     this._alarmService,
     this._syncEngine,
+    this._shakeDetectorService,
   ) : super(const AppInitializing()) {
     on<AppInitialized>(_onAppInitialized);
     on<AppResumed>(_onAppResumed);
@@ -39,9 +43,18 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   ) async {
     try {
       _logger.i('Initializing app...');
+      
+      if (kIsWeb) {
+        _logger.i('Running on Web: Bypassing local database init.');
+        emit(const AppReady(userId: 'guest_web'));
+        return;
+      }
 
       // Initialize sync engine
       await _syncEngine.initialize();
+
+      // Start shake detection
+      _shakeDetectorService.start();
 
       // Ensure a default user exists
       final userId = await _storageService.getOrCreateDefaultUser();
@@ -82,6 +95,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         await _syncEngine.performSync();
       }
 
+      // Restart shake detection if it was stopped
+      if (!_shakeDetectorService.isActive) {
+        _shakeDetectorService.start();
+      }
+
       _logger.i('App resumed');
     } catch (e) {
       _logger.e('Failed to resume app: $e');
@@ -91,6 +109,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   Future<void> _onAppPaused(AppPaused event, Emitter<AppState> emit) async {
     try {
       _logger.i('App paused');
+      // We keep shake detector running in background if possible, 
+      // but on mobile sensors might stop. 
     } catch (e) {
       _logger.e('Failed to pause app: $e');
     }
@@ -119,6 +139,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   @override
   Future<void> close() async {
+    _shakeDetectorService.stop();
     await _syncEngine.dispose();
     await _storageService.close();
     await _alarmService.dispose();

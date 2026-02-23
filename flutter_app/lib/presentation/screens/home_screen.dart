@@ -11,6 +11,7 @@ import 'package:offline_survival_companion/presentation/screens/emergency_contac
 import 'package:offline_survival_companion/presentation/screens/settings_screen.dart';
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
 import 'package:offline_survival_companion/services/audio/alarm_service.dart';
+import 'package:offline_survival_companion/presentation/widgets/safety/silent_sos_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,6 +29,18 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Offline Survival Companion'),
         elevation: 0,
+        actions: [
+          if (_selectedIndex == 1)
+            IconButton(
+              icon: const Icon(Icons.download_for_offline),
+              onPressed: () {
+                // We'll use a GlobalKey or a simpler approach if needed, 
+                // but for now let's just use the router to go to a dedicated downloads page if preferred, 
+                // OR we'll just keep the existing Stack-based approach in MapsScreen if we can trigger it.
+                // Actually, let's keep it simple: Add a small download button directly on the map in MapsScreen.
+              },
+            ),
+        ],
       ),
       body: _buildScreen(_selectedIndex),
       floatingActionButton: FloatingActionButton.extended(
@@ -81,7 +94,6 @@ class HomeScreenContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status Cards
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -102,6 +114,62 @@ class HomeScreenContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            const Center(
+              child: SilentSOSButton(size: 140),
+            ),
+            const SizedBox(height: 24),
+
+            // Women Safety Banner
+            InkWell(
+              onTap: () => context.push('/women-safety'),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.purple[700]!, Colors.purple[400]!],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.purple.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.emergency_share, color: Colors.white, size: 40),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Women Safety & Empowerment',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Fake Call, Safety Timer, and more',
+                            style: TextStyle(color: Colors.white70, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
 
             // Quick Actions
             Text(
@@ -153,6 +221,11 @@ class HomeScreenContent extends StatelessWidget {
                   icon: Icons.qr_code,
                   label: 'QR Scanner',
                   onTap: () => context.push('/qr-scanner'),
+                ),
+                _ActionCard(
+                  icon: Icons.settings_input_antenna,
+                  label: 'Signal Tools',
+                  onTap: () => context.push('/signal-tools'),
                 ),
               ],
             ),

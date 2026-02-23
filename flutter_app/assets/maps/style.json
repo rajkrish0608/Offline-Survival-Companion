@@ -1,10 +1,12 @@
 {
     "version": 8,
-    "name": "Offline Survival Style",
     "sources": {
-        "openmaptiles": {
-            "type": "vector",
-            "url": "https://demotiles.maplibre.org/tiles/tiles.json"
+        "osm": {
+            "type": "raster",
+            "tiles": [
+                "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            ],
+            "tileSize": 256
         }
     },
     "layers": [
@@ -16,22 +18,9 @@
             }
         },
         {
-            "id": "water",
-            "type": "fill",
-            "source": "openmaptiles",
-            "source-layer": "water",
-            "paint": {
-                "fill-color": "#003366"
-            }
-        },
-        {
-            "id": "building",
-            "type": "fill",
-            "source": "openmaptiles",
-            "source-layer": "building",
-            "paint": {
-                "fill-color": "#444444"
-            }
+            "id": "osm",
+            "type": "raster",
+            "source": "osm"
         }
     ]
 }

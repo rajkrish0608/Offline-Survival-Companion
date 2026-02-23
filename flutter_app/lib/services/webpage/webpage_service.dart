@@ -1,11 +1,11 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.js_interop) 'package:offline_survival_companion/services/storage/stubs/io_stub.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:logger/logger.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite/sqflite.dart' if (dart.library.js_interop) 'package:offline_survival_companion/services/storage/stubs/sqflite_stub.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 
 class SavedWebpage {

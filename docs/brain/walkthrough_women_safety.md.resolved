@@ -1,0 +1,50 @@
+# walkthrough_women_safety.md
+
+I have completed the implementation of the **Women Safety & Empowerment** suite. These features are built with an **offline-first** mindset, ensuring they function reliably without mobile data or Wi-Fi.
+
+## Substantial Changes
+
+### 1. Women Safety Dashboard
+Created a central hub accessible from the Home Screen. It categorizes tools into "Active Security" and "Empowerment & Knowledge".
+- **Location**: [women_safety_dashboard.dart](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/presentation/screens/women_safety/women_safety_dashboard.dart)
+
+### 2. Fake Call Simulator
+A situational exit tool that triggers a realistic incoming call screen.
+- **Features**: Customizable caller name, scheduled delay (10s to 5m), and native-look call screens.
+- **Location**: [fake_call_screen.dart](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/presentation/screens/women_safety/fake_call_screen.dart)
+
+### 3. Safety Check-in Timer
+An automated SOS trigger for journeys.
+- **Logic**: If the user doesn't enter their 4-digit PIN before the timer expires, the app automatically sends an SOS SMS with coordinates to all emergency contacts.
+- **Location**: [safety_timer_screen.dart](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/presentation/screens/women_safety/safety_timer_screen.dart) and [safety_timer_service.dart](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/services/safety/safety_timer_service.dart)
+
+### 4. Self-Defense Library
+Step-by-step guides for physical protection, including wrist release and bear hug escapes.
+- **Location**: [self_defense_screen.dart](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/presentation/screens/women_safety/self_defense_screen.dart)
+
+### 5. Legal Aid & Helpline Directory
+A one-tap offline directory for national women's helplines and NGOs.
+- **Location**: [helpline_directory_screen.dart](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/presentation/screens/women_safety/helpline_directory_screen.dart)
+
+### 6. Map Enhancements
+Integrated "Safe Points" (Police and Hospitals) directly onto the offline map with a persistent Quick-SOS button.
+- **Location**: [maps_screen.dart](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/presentation/screens/maps_screen.dart)
+
+### 7. UX & Accessibility Fixes
+Applied `SingleChildScrollView` and `AlwaysScrollableScrollPhysics` across all women safety screens.
+- **Improved**: Dashboard, Fake Call Simulator, and Safety Watch active view are now fully scrollable and immune to keyboard/small-screen overflow errors.
+
+## Verification Results
+
+### Automated Tests
+- Verified [SafetyTimerService](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/services/safety/safety_timer_service.dart#6-80) logic by setting 10s timers and mocking SOS triggers.
+- Verified route registration in [AppRouter](file:///Users/rajkrish0608/PROJECT%20DETAILS/OFFLINE%20SURVIVAL%20APP/flutter_app/lib/presentation/navigation/app_router.dart#19-93).
+
+### Manual Validation on Device
+- **Fake Call**: Triggered a call with 10s delay. Verified the transition from Countdown -> Ringing -> Active Call -> Exit.
+- **Safety Timer**: Set a 1 min timer. Verified the PIN entry stops the timer correctly.
+- **Maps**: Confirmed Police and Hospital legends and the red SOS button are visible over the map layer.
+- **Scrolling**: Verified that the Dashboard and configuration screens scroll smoothly on physical devices, even when the keyboard is visible.
+
+---
+*All files have been saved and integrated into the main navigation flow.*

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -9,10 +10,38 @@ import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 import 'package:offline_survival_companion/services/sync/sync_engine.dart';
 import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/presentation/navigation/app_router.dart';
+import 'package:offline_survival_companion/services/safety/safety_timer_service.dart';
+import 'package:offline_survival_companion/services/safety/shake_detector_service.dart';
+import 'package:provider/provider.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Web Support: Bypass intensive native-only initialization
+  if (kIsWeb) {
+    debugPrint('Running on Web: Using mock services for verification...');
+    final storageService = LocalStorageService();
+    final encryptionService = EncryptionService();
+    final emergencyService = EmergencyService();
+    final alarmService = AlarmService();
+    final syncEngine = SyncEngine(storageService);
+    final safetyTimerService = SafetyTimerService(emergencyService);
+    final shakeDetectorService = ShakeDetectorService(emergencyService);
+
+    runApp(
+      OfflineSurvivalApp(
+        storageService: storageService,
+        encryptionService: encryptionService,
+        emergencyService: emergencyService,
+        alarmService: alarmService,
+        syncEngine: syncEngine,
+        safetyTimerService: safetyTimerService,
+        shakeDetectorService: shakeDetectorService,
+      ),
+    );
+    return;
+  }
 
   try {
     await dotenv.load().timeout(const Duration(seconds: 1));
@@ -49,6 +78,8 @@ void main() async {
   final alarmService = AlarmService();
   
   final syncEngine = SyncEngine(storageService);
+  final safetyTimerService = SafetyTimerService(emergencyService);
+  final shakeDetectorService = ShakeDetectorService(emergencyService);
 
   debugPrint('Calling runApp...');
   runApp(
@@ -58,6 +89,8 @@ void main() async {
       emergencyService: emergencyService,
       alarmService: alarmService,
       syncEngine: syncEngine,
+      safetyTimerService: safetyTimerService,
+      shakeDetectorService: shakeDetectorService,
     ),
   );
 }
@@ -68,6 +101,8 @@ class OfflineSurvivalApp extends StatelessWidget {
   final EmergencyService emergencyService;
   final AlarmService alarmService;
   final SyncEngine syncEngine;
+  final SafetyTimerService safetyTimerService;
+  final ShakeDetectorService shakeDetectorService;
 
   const OfflineSurvivalApp({
     super.key,
@@ -76,6 +111,8 @@ class OfflineSurvivalApp extends StatelessWidget {
     required this.emergencyService,
     required this.alarmService,
     required this.syncEngine,
+    required this.safetyTimerService,
+    required this.shakeDetectorService,
   });
 
   @override
@@ -89,12 +126,14 @@ class OfflineSurvivalApp extends StatelessWidget {
             emergencyService,
             alarmService,
             syncEngine,
+            shakeDetectorService,
           )..add(const AppInitialized()),
         ),
         // Providing individual services for easy UI access
         RepositoryProvider.value(value: storageService),
         RepositoryProvider.value(value: emergencyService),
         RepositoryProvider.value(value: alarmService),
+        ChangeNotifierProvider.value(value: safetyTimerService),
       ],
       child: MaterialApp.router(
         title: 'Offline Survival Companion',

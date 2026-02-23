@@ -22,13 +22,14 @@ class OnboardingScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentBlue.withOpacity(0.1),
-                  shape: BoxShape.circle,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  'assets/images/professional_splash.png',
+                  height: 200,
+                  width: 200,
+                  fit: BoxFit.cover,
                 ),
-                child: Icon(Icons.security, size: 80, color: AppTheme.accentBlue),
               ),
               const SizedBox(height: 48),
               Text(

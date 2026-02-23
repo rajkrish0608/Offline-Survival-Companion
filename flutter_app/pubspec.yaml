@@ -94,6 +94,7 @@ flutter:
     - assets/audio/siren.wav
     - assets/maps/
     - .env
+    - assets/images/professional_splash.png
   #   - assets/images/
   #   - assets/icons/
   #   - assets/maps/

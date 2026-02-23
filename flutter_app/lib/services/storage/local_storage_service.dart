@@ -1,10 +1,11 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sqflite/sqflite.dart' if (dart.library.js_interop) 'package:offline_survival_companion/services/storage/stubs/sqflite_stub.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:offline_survival_companion/core/constants/app_constants.dart';
-import 'dart:io';
+import 'dart:io' if (dart.library.js_interop) 'package:offline_survival_companion/services/storage/stubs/io_stub.dart';
 
 class LocalStorageService {
   Database? _database;
@@ -12,11 +13,17 @@ class LocalStorageService {
   Box<dynamic>? _settingsBox;
   Box<dynamic>? _cacheBox;
   Box<dynamic>? _syncBox;
+  final Map<String, dynamic> _webSettings = {};
   bool _initialized = false;
   bool _fts5Available = false;
   final Logger _logger = Logger();
 
   Future<void> initialize() async {
+    if (kIsWeb) {
+      _logger.i('Running on Web: Bypassing LocalStorage initialization.');
+      _initialized = true;
+      return;
+    }
     try {
       // Initialize SQLite
       final dbPath = await getDatabasesPath();
@@ -24,7 +31,7 @@ class LocalStorageService {
 
       _database = await openDatabase(
         path,
-        version: 1,
+        version: 2,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -203,6 +210,20 @@ class LocalStorageService {
       )
     ''');
 
+    // Custom Map POIs
+    await db.execute('''
+      CREATE TABLE map_pois (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        type TEXT,
+        created_at INTEGER,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    ''');
+
     // Pending Changes (Outbox Pattern)
     await db.execute('''
       CREATE TABLE pending_changes (
@@ -236,12 +257,26 @@ class LocalStorageService {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Handle schema migrations here
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE map_pois (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          latitude REAL NOT NULL,
+          longitude REAL NOT NULL,
+          type TEXT,
+          created_at INTEGER,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      ''');
+    }
   }
 
   // ==================== User Operations ====================
 
   Future<void> saveUser(Map<String, dynamic> user) async {
+    if (kIsWeb) return;
     _ensureDatabaseReady();
     await _database!.insert(
         'users',
@@ -436,9 +471,43 @@ class LocalStorageService {
     );
   }
 
+  // ==================== POI Operations ====================
+
+  Future<void> savePOI(Map<String, dynamic> poi) async {
+    _ensureDatabaseReady();
+    await _database!.insert(
+      'map_pois',
+      poi,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getPOIs(String userId) async {
+    _ensureDatabaseReady();
+    return await _database!.query(
+      'map_pois',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'created_at DESC',
+    );
+  }
+
+  Future<void> deletePOI(String poiId) async {
+    _ensureDatabaseReady();
+    await _database!.delete(
+      'map_pois',
+      where: 'id = ?',
+      whereArgs: [poiId],
+    );
+  }
+
   // ==================== Hive Operations ====================
 
   Future<void> saveSetting(String key, dynamic value) async {
+    if (kIsWeb) {
+      _webSettings[key] = value;
+      return;
+    }
     if (_settingsBox == null) {
       throw Exception('Settings storage not initialized');
     }
@@ -446,6 +515,7 @@ class LocalStorageService {
   }
 
   dynamic getSetting(String key) {
+    if (kIsWeb) return _webSettings[key];
     if (_settingsBox == null) return null;
     return _settingsBox!.get(key);
   }

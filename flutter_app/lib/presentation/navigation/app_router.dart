@@ -10,6 +10,12 @@ import 'package:offline_survival_companion/presentation/screens/vault_screen.dar
 import 'package:offline_survival_companion/presentation/screens/guide_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/settings_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/qr_scanner_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/women_safety/women_safety_dashboard.dart';
+import 'package:offline_survival_companion/presentation/screens/women_safety/fake_call_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/women_safety/safety_timer_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/women_safety/self_defense_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/women_safety/helpline_directory_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/survival/signal_tools_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -61,6 +67,30 @@ class AppRouter {
       GoRoute(
         path: '/qr-scanner',
         builder: (context, state) => const QrScannerScreen(),
+      ),
+      GoRoute(
+        path: '/women-safety',
+        builder: (context, state) => const WomenSafetyDashboard(),
+      ),
+      GoRoute(
+        path: '/fake-call',
+        builder: (context, state) => const FakeCallScreen(),
+      ),
+      GoRoute(
+        path: '/safety-timer',
+        builder: (context, state) => const SafetyTimerScreen(),
+      ),
+      GoRoute(
+        path: '/self-defense',
+        builder: (context, state) => const SelfDefenseScreen(),
+      ),
+      GoRoute(
+        path: '/helpline-directory',
+        builder: (context, state) => const HelplineDirectoryScreen(),
+      ),
+      GoRoute(
+        path: '/signal-tools',
+        builder: (context, state) => const SignalToolsScreen(),
       ),
     ],
   );
