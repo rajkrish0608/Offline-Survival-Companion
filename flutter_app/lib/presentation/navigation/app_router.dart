@@ -16,6 +16,7 @@ import 'package:offline_survival_companion/presentation/screens/women_safety/saf
 import 'package:offline_survival_companion/presentation/screens/women_safety/self_defense_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/women_safety/helpline_directory_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/survival/signal_tools_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/survival/ar_compass_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -91,6 +92,10 @@ class AppRouter {
       GoRoute(
         path: '/signal-tools',
         builder: (context, state) => const SignalToolsScreen(),
+      ),
+      GoRoute(
+        path: '/ar-compass',
+        builder: (context, state) => const ARCompassScreen(),
       ),
     ],
   );

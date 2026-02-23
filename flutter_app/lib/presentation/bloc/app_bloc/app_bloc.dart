@@ -9,6 +9,7 @@ import 'package:offline_survival_companion/services/sync/sync_engine.dart';
 import 'package:offline_survival_companion/services/safety/shake_detector_service.dart';
 import 'package:offline_survival_companion/services/navigation/tracking_service.dart';
 import 'package:offline_survival_companion/services/safety/evidence_service.dart';
+import 'package:offline_survival_companion/services/safety/voice_sos_service.dart';
 import 'package:logger/logger.dart';
 
 part 'app_event.dart';
@@ -23,6 +24,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final ShakeDetectorService _shakeDetectorService;
   final TrackingService _trackingService;
   final EvidenceService _evidenceService;
+  final VoiceSosService _voiceSosService;
   final Logger _logger = Logger();
 
   AppBloc(
@@ -34,6 +36,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._shakeDetectorService,
     this._trackingService,
     this._evidenceService,
+    this._voiceSosService,
   ) : super(const AppInitializing()) {
     on<AppInitialized>(_onAppInitialized);
     on<AppResumed>(_onAppResumed);
@@ -102,9 +105,21 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       }
 
       // Restart shake detection if it was stopped
-      if (!_shakeDetectorService.isActive) {
-        _shakeDetectorService.start();
+      // The userId is not directly available in AppResumed,
+      // so we need to retrieve it from the current state or storage.
+      // Assuming AppReady state holds the userId.
+      String userId = 'guest'; // Default or retrieve from storage if not in state
+      if (state is AppReady) {
+        userId = (state as AppReady).userId;
+      } else {
+        userId = await _storageService.getOrCreateDefaultUser();
       }
+
+      await _shakeDetectorService.initialize();
+      _shakeDetectorService.start(_emergencyService, userId: userId);
+
+      // Initialize Voice SOS
+      await _voiceSosService.initialize(userId: userId);
 
       _logger.i('App resumed');
     } catch (e) {

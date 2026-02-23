@@ -3,6 +3,8 @@ import 'package:offline_survival_companion/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:offline_survival_companion/presentation/screens/women_safety/fake_call_screen.dart';
 import 'package:offline_survival_companion/presentation/widgets/safety/silent_sos_button.dart';
+import 'package:offline_survival_companion/services/safety/voice_sos_service.dart';
+import 'package:provider/provider.dart';
 
 class WomenSafetyDashboard extends StatelessWidget {
   const WomenSafetyDashboard({super.key});
@@ -35,6 +37,8 @@ class WomenSafetyDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _buildSecurityGrid(context),
+            _buildVoiceToggle(context),
+            _buildSurvivalModeToggle(context),
             const SizedBox(height: 32),
             Text(
               'Empowerment & Knowledge',
@@ -111,6 +115,76 @@ class WomenSafetyDashboard extends StatelessWidget {
           onTap: () => context.push('/safety-timer'),
         ),
       ],
+    );
+  }
+
+  Widget _buildVoiceToggle(BuildContext context) {
+    return Consumer<VoiceSosService>(
+      builder: (context, service, child) {
+        return Container(
+          margin: const EdgeInsets.only(top: 16),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceDark,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: service.isEnabled ? AppTheme.accentBlue : Colors.white10,
+            ),
+          ),
+          child: SwitchListTile(
+            title: const Text(
+              'Voice SOS Activation',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              service.isListening 
+                  ? 'Listening for "Help Help Help"...' 
+                  : 'Triggers SOS hands-free via safe word.',
+              style: TextStyle(color: Colors.grey[400], fontSize: 12),
+            ),
+            value: service.isEnabled,
+            activeColor: AppTheme.accentBlue,
+            secondary: Icon(
+              service.isListening ? Icons.mic : Icons.mic_none,
+              color: service.isEnabled ? AppTheme.accentBlue : Colors.grey,
+            ),
+            onChanged: (value) => service.setEnabled(value),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSurvivalModeToggle(BuildContext context) {
+    return Consumer<EmergencyService>(
+      builder: (context, service, child) {
+        return Container(
+          margin: const EdgeInsets.only(top: 12),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceDark,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: service.isSurvivalMode ? AppTheme.primaryRed : Colors.white10,
+            ),
+          ),
+          child: SwitchListTile(
+            title: const Text(
+              'Survival Mode (Battery Saver)',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            subtitle: const Text(
+              'Disables background sync and non-essential tools to extend battery life in emergencies.',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+            value: service.isSurvivalMode,
+            activeColor: AppTheme.primaryRed,
+            secondary: Icon(
+              Icons.bolt,
+              color: service.isSurvivalMode ? AppTheme.primaryRed : Colors.grey,
+            ),
+            onChanged: (value) => service.setSurvivalMode(value),
+          ),
+        );
+      },
     );
   }
 

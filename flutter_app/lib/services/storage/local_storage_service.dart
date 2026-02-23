@@ -31,7 +31,7 @@ class LocalStorageService {
 
       _database = await openDatabase(
         path,
-        version: 3,
+        version: 4,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -249,6 +249,21 @@ class LocalStorageService {
       )
     ''');
 
+    // Crowdsourced Safety Pins
+    await db.execute('''
+      CREATE TABLE safety_pins (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT,
+        is_synced INTEGER DEFAULT 0,
+        created_at INTEGER,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    ''');
+
     // Pending Changes (Outbox Pattern)
     await db.execute('''
       CREATE TABLE pending_changes (
@@ -278,6 +293,12 @@ class LocalStorageService {
     );
     await db.execute(
       'CREATE INDEX idx_pending_changes_synced ON pending_changes(synced)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_safety_pins_user ON safety_pins(user_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_safety_pins_synced ON safety_pins(is_synced)',
     );
   }
 
@@ -318,6 +339,27 @@ class LocalStorageService {
           FOREIGN KEY (route_id) REFERENCES survival_routes(id) ON DELETE CASCADE
         )
       ''');
+    }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE safety_pins (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          latitude REAL NOT NULL,
+          longitude REAL NOT NULL,
+          category TEXT NOT NULL,
+          description TEXT,
+          is_synced INTEGER DEFAULT 0,
+          created_at INTEGER,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX idx_safety_pins_user ON safety_pins(user_id)',
+      );
+      await db.execute(
+        'CREATE INDEX idx_safety_pins_synced ON safety_pins(is_synced)',
+      );
     }
   }
 
@@ -604,6 +646,53 @@ class LocalStorageService {
       'survival_routes',
       where: 'id = ?',
       whereArgs: [routeId],
+    );
+  }
+
+  // ==================== Safety Pin Operations ====================
+
+  Future<void> saveSafetyPin(Map<String, dynamic> pin) async {
+    _ensureDatabaseReady();
+    await _database!.insert(
+      'safety_pins',
+      pin,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getSafetyPins() async {
+    _ensureDatabaseReady();
+    return await _database!.query(
+      'safety_pins',
+      orderBy: 'created_at DESC',
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getUnsyncedSafetyPins() async {
+    _ensureDatabaseReady();
+    return await _database!.query(
+      'safety_pins',
+      where: 'is_synced = ?',
+      whereArgs: [0],
+    );
+  }
+
+  Future<void> markSafetyPinSynced(String pinId) async {
+    _ensureDatabaseReady();
+    await _database!.update(
+      'safety_pins',
+      {'is_synced': 1},
+      where: 'id = ?',
+      whereArgs: [pinId],
+    );
+  }
+
+  Future<void> deleteSafetyPin(String pinId) async {
+    _ensureDatabaseReady();
+    await _database!.delete(
+      'safety_pins',
+      where: 'id = ?',
+      whereArgs: [pinId],
     );
   }
 

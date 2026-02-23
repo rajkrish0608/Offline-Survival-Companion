@@ -75,6 +75,8 @@ dependencies:
   open_filex: ^4.7.0
   record: ^6.2.0
   camera: ^0.11.4
+  speech_to_text: ^7.3.0
+  flutter_compass: ^0.8.1
   
 dev_dependencies:
   flutter_test:

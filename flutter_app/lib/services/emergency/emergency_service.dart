@@ -9,17 +9,20 @@ import 'package:offline_survival_companion/services/storage/local_storage_servic
 import 'package:offline_survival_companion/services/safety/evidence_service.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/foundation.dart';
 
-class EmergencyService {
+class EmergencyService extends ChangeNotifier {
   final EvidenceService? _evidenceService;
   final Battery _battery = Battery();
   final Logger _logger = Logger();
 
   bool _sosActive = false;
   bool _flashlightOn = false;
+  bool _isSurvivalMode = false;
   DateTime? _sosStartTime;
   String? _lastKnownPosition;
   List<String> _emergencyContacts = [];
+  final LocalStorageService _storageService;
 
   EmergencyService({
     LocalStorageService? storageService,
@@ -190,6 +193,14 @@ class EmergencyService {
 
   /// Get SOS status
   bool get isSosActive => _sosActive;
+
+  bool get isSurvivalMode => _isSurvivalMode;
+
+  void setSurvivalMode(bool value) {
+    _isSurvivalMode = value;
+    _logger.w('Survival Mode (Battery Saver) ${value ? 'ENABLED' : 'DISABLED'}');
+    notifyListeners();
+  }
 
   /// Get time elapsed since SOS activation
   Duration? get sosElapsedTime {

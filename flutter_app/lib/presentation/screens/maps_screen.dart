@@ -8,6 +8,8 @@ import 'package:offline_survival_companion/services/storage/local_storage_servic
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/data/models/poi_model.dart';
+import 'package:offline_survival_companion/data/models/safety_pin_model.dart';
+import 'dart:async';
 
 class MapsScreen extends StatefulWidget {
   const MapsScreen({super.key});
@@ -19,7 +21,9 @@ class MapsScreen extends StatefulWidget {
 class _MapsScreenState extends State<MapsScreen> {
   MapLibreMapController? _mapController;
   bool _addPinMode = false;
+  bool _addSafetyPinMode = false;
   List<POI> _userPois = [];
+  List<SafetyPin> _safetyPins = [];
   bool _isTopoMode = false;
   
   TrackingService? _trackingService;
@@ -38,6 +42,7 @@ class _MapsScreenState extends State<MapsScreen> {
     super.initState();
     _requestLocationPermission();
     _loadUserPois();
+    _loadSafetyPins();
   }
 
   @override
@@ -146,16 +151,29 @@ class _MapsScreenState extends State<MapsScreen> {
           circleStrokeColor: '#ffffff',
         ),
       );
-      // Optional: Add symbol/text label
+      );
+    }
+
+    // Safety Pins (Crowdsourced)
+    for (var pin in _safetyPins) {
+      _mapController?.addCircle(
+        CircleOptions(
+          geometry: LatLng(pin.latitude, pin.longitude),
+          circleRadius: 10.0,
+          circleColor: _getSafetyPinColor(pin.category),
+          circleOpacity: 0.9,
+          circleStrokeWidth: 1.5,
+          circleStrokeColor: '#000000',
+        ),
+      );
       _mapController?.addSymbol(
         SymbolOptions(
-          geometry: LatLng(poi.latitude, poi.longitude),
-          textField: poi.title,
-          textOffset: const Offset(0, 2),
+          geometry: LatLng(pin.latitude, pin.longitude),
+          iconImage: _getSafetyPinIcon(pin.category),
+          textField: pin.category.toUpperCase(),
+          textOffset: const Offset(0, 1.5),
           textColor: '#ffffff',
-          textSize: 12.0,
-          textHaloColor: '#000000',
-          textHaloWidth: 1.0,
+          textSize: 10.0,
         ),
       );
     }
@@ -172,9 +190,97 @@ class _MapsScreenState extends State<MapsScreen> {
     }
   }
 
+  String _getSafetyPinColor(String category) {
+    switch (category) {
+      case 'hazard': return '#FF5252'; // Red
+      case 'lighting': return '#FFD700'; // Gold
+      case 'safe-haven': return '#4CAF50'; // Green
+      default: return '#9E9E9E'; // Grey
+    }
+  }
+
+  String _getSafetyPinIcon(String category) {
+    // These should match images pre-registered in the map controller
+    // For now using simple strings.
+    return 'marker-15';
+  }
+
   void _onMapClick(Point<double> point, LatLng latLng) {
     if (_addPinMode) {
       _showAddPoiDialog(latLng);
+    } else if (_addSafetyPinMode) {
+      _showAddSafetyPinDialog(latLng);
+    }
+  }
+
+  Future<void> _showAddSafetyPinDialog(LatLng latLng) async {
+    final descController = TextEditingController();
+    String selectedCategory = 'hazard';
+    
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Report Safety Issue'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              value: selectedCategory,
+              items: const [
+                DropdownMenuItem(value: 'hazard', child: Text('Hazard/Danger')),
+                DropdownMenuItem(value: 'lighting', child: Text('Poor Lighting')),
+                DropdownMenuItem(value: 'safe-haven', child: Text('Safe Haven')),
+              ],
+              onChanged: (v) => selectedCategory = v ?? 'hazard',
+              decoration: const InputDecoration(labelText: 'Category'),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: descController,
+              decoration: const InputDecoration(labelText: 'Description (optional)'),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Report')),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      _saveNewSafetyPin(selectedCategory, descController.text, latLng);
+    }
+  }
+
+  Future<void> _saveNewSafetyPin(String category, String description, LatLng latLng) async {
+    final appState = context.read<AppBloc>().state;
+    if (appState is AppReady) {
+      final pin = SafetyPin(
+        id: const Uuid().v4(),
+        userId: appState.userId,
+        latitude: latLng.latitude,
+        longitude: latLng.longitude,
+        category: category,
+        description: description,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      );
+
+      final storage = context.read<LocalStorageService>();
+      await storage.saveSafetyPin(pin.toJson());
+
+      setState(() {
+        _safetyPins.add(pin);
+        _addSafetyPinMode = false;
+      });
+      _updateMarkers();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Safety Report Submitted (Offline)')),
+        );
+      }
     }
   }
 
@@ -434,6 +540,18 @@ class _MapsScreenState extends State<MapsScreen> {
               child: const Icon(Icons.download_for_offline, color: Colors.blue),
             ),
           ),
+        // AR Compass Button
+        if (!_showDownloads)
+          Positioned(
+            bottom: 120, right: 220,
+            child: FloatingActionButton(
+              onPressed: () => context.push('/ar-compass'),
+              mini: true,
+              backgroundColor: AppTheme.accentBlue,
+              heroTag: 'maps_ar_fab',
+              child: const Icon(Icons.view_in_ar, color: Colors.white),
+            ),
+          ),
         // Topo Toggle Button
         if (!_showDownloads)
           Positioned(
@@ -446,19 +564,23 @@ class _MapsScreenState extends State<MapsScreen> {
               child: Icon(_isTopoMode ? Icons.terrain : Icons.map_outlined),
             ),
           ),
-        // Add POI Button
+          ),
+        // Safety Report Button
         if (!_showDownloads)
           Positioned(
-            bottom: 120, right: 70,
+            bottom: 120, right: 20,
             child: FloatingActionButton(
-              onPressed: () => setState(() => _addPinMode = !_addPinMode),
+              onPressed: () => setState(() {
+                _addSafetyPinMode = !_addSafetyPinMode;
+                _addPinMode = false;
+              }),
               mini: true,
-              backgroundColor: _addPinMode ? Colors.red : Colors.green,
-              heroTag: 'maps_add_poi_fab',
-              child: Icon(_addPinMode ? Icons.close : Icons.add_location_alt),
+              backgroundColor: _addSafetyPinMode ? Colors.red : Colors.redAccent,
+              heroTag: 'maps_safety_report_fab',
+              child: Icon(_addSafetyPinMode ? Icons.close : Icons.warning_amber),
             ),
           ),
-        if (_addPinMode)
+        if (_addPinMode || _addSafetyPinMode)
           Positioned(
             top: 100, left: 0, right: 0,
             child: Center(
@@ -468,9 +590,11 @@ class _MapsScreenState extends State<MapsScreen> {
                   color: Colors.black87,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  'Tap on map to add a survival point',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                child: Text(
+                  _addSafetyPinMode 
+                      ? 'Tap on map to report a safety hazard' 
+                      : 'Tap on map to add a survival point',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
             ),

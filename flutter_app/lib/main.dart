@@ -14,6 +14,7 @@ import 'package:offline_survival_companion/services/safety/safety_timer_service.
 import 'package:offline_survival_companion/services/safety/shake_detector_service.dart';
 import 'package:offline_survival_companion/services/navigation/tracking_service.dart';
 import 'package:offline_survival_companion/services/safety/evidence_service.dart';
+import 'package:offline_survival_companion/services/safety/voice_sos_service.dart';
 import 'package:provider/provider.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 
@@ -35,6 +36,7 @@ void main() async {
     final safetyTimerService = SafetyTimerService(emergencyService);
     final shakeDetectorService = ShakeDetectorService(emergencyService);
     final trackingService = TrackingService(storageService);
+    final voiceSosService = VoiceSosService(emergencyService);
 
     runApp(
       OfflineSurvivalApp(
@@ -47,6 +49,7 @@ void main() async {
         shakeDetectorService: shakeDetectorService,
         trackingService: trackingService,
         evidenceService: evidenceService,
+        voiceSosService: voiceSosService,
       ),
     );
     return;
@@ -95,6 +98,7 @@ void main() async {
   final shakeDetectorService = ShakeDetectorService(emergencyService);
   final trackingService = TrackingService(storageService);
   final evidenceService = EvidenceService(storageService);
+  final voiceSosService = VoiceSosService(emergencyService);
 
   debugPrint('Calling runApp...');
   runApp(
@@ -108,6 +112,7 @@ void main() async {
       shakeDetectorService: shakeDetectorService,
       trackingService: trackingService,
       evidenceService: evidenceService,
+      voiceSosService: voiceSosService,
     ),
   );
 }
@@ -122,6 +127,7 @@ class OfflineSurvivalApp extends StatelessWidget {
   final ShakeDetectorService shakeDetectorService;
   final TrackingService trackingService;
   final EvidenceService evidenceService;
+  final VoiceSosService voiceSosService;
 
   const OfflineSurvivalApp({
     super.key,
@@ -134,6 +140,7 @@ class OfflineSurvivalApp extends StatelessWidget {
     required this.shakeDetectorService,
     required this.trackingService,
     required this.evidenceService,
+    required this.voiceSosService,
   });
 
   @override
@@ -150,6 +157,7 @@ class OfflineSurvivalApp extends StatelessWidget {
             shakeDetectorService,
             trackingService,
             evidenceService,
+            voiceSosService,
           )..add(const AppInitialized()),
         ),
         // Providing individual services for easy UI access
@@ -160,6 +168,7 @@ class OfflineSurvivalApp extends StatelessWidget {
         RepositoryProvider.value(value: shakeDetectorService),
         RepositoryProvider.value(value: trackingService),
         RepositoryProvider.value(value: evidenceService),
+        RepositoryProvider.value(value: voiceSosService),
       ],
       child: MaterialApp.router(
         title: 'Offline Survival Companion',
