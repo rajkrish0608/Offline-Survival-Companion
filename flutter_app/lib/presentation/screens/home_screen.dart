@@ -24,45 +24,96 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Offline Survival Companion'),
-        elevation: 0,
-        actions: [
-          if (_selectedIndex == 1)
-            IconButton(
-              icon: const Icon(Icons.download_for_offline),
-              onPressed: () {
-                // We'll use a GlobalKey or a simpler approach if needed, 
-                // but for now let's just use the router to go to a dedicated downloads page if preferred, 
-                // OR we'll just keep the existing Stack-based approach in MapsScreen if we can trigger it.
-                // Actually, let's keep it simple: Add a small download button directly on the map in MapsScreen.
-              },
+    final alarmService = context.read<AlarmService>();
+    return StatefulBuilder(
+      builder: (context, setStateBanner) {
+        return Stack(
+          children: [
+            Scaffold(
+              appBar: AppBar(
+                title: const Text('Offline Survival Companion'),
+                elevation: 0,
+                actions: [
+                  if (_selectedIndex == 1)
+                    IconButton(
+                      icon: const Icon(Icons.download_for_offline),
+                      onPressed: () {},
+                    ),
+                ],
+              ),
+              body: _buildScreen(_selectedIndex),
+              floatingActionButton: FloatingActionButton.extended(
+                onPressed: () => context.push('/emergency'),
+                backgroundColor: Colors.red,
+                heroTag: 'home_sos_fab',
+                label: const Text('SOS'),
+                icon: const Icon(Icons.emergency),
+              ),
+              floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+              bottomNavigationBar: NavigationBar(
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: (index) {
+                  setState(() => _selectedIndex = index);
+                },
+                destinations: const [
+                  NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
+                  NavigationDestination(icon: Icon(Icons.map), label: 'Maps'),
+                  NavigationDestination(icon: Icon(Icons.lock), label: 'Vault'),
+                  NavigationDestination(icon: Icon(Icons.school), label: 'Guide'),
+                  NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
+                ],
+              ),
             ),
-        ],
-      ),
-      body: _buildScreen(_selectedIndex),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/emergency'),
-        backgroundColor: Colors.red,
-        heroTag: 'home_sos_fab',
-        label: const Text('SOS'),
-        icon: const Icon(Icons.emergency),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() => _selectedIndex = index);
-        },
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.map), label: 'Maps'),
-          NavigationDestination(icon: Icon(Icons.lock), label: 'Vault'),
-          NavigationDestination(icon: Icon(Icons.school), label: 'Guide'),
-          NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
-        ],
-      ),
+            // Persistent STOP ALARM banner — shows on every tab when alarm is ringing
+            if (alarmService.isPlaying)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + kToolbarHeight,
+                left: 0,
+                right: 0,
+                child: Material(
+                  color: Colors.transparent,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await alarmService.stop();
+                      setStateBanner(() {});
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.deepOrange[700],
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.deepOrange.withOpacity(0.5),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.volume_off, color: Colors.white, size: 22),
+                          SizedBox(width: 10),
+                          Text(
+                            '🔇 TAP TO STOP ALARM',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 

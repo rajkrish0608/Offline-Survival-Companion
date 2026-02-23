@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
+import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 
 class EmergencyScreen extends StatefulWidget {
   const EmergencyScreen({super.key});
@@ -26,6 +27,9 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     super.initState();
     _simulateSOSActivation();
     _loadContacts();
+    // Sync alarm state from service
+    final alarm = context.read<AlarmService>();
+    _alarmActive = alarm.isPlaying;
   }
 
   Future<void> _loadContacts() async {
@@ -211,21 +215,25 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                           },
                         ),
                         _EmergencyActionButton(
-                          icon: Icons.volume_up,
-                          label: 'Loud Alarm',
+                          icon: _alarmActive ? Icons.volume_off : Icons.volume_up,
+                          label: _alarmActive ? 'Stop Alarm' : 'Loud Alarm',
                           isActive: _alarmActive,
-                          onTap: () {
+                          onTap: () async {
+                            final alarm = context.read<AlarmService>();
+                            await alarm.toggle();
                             setState(() {
-                              _alarmActive = !_alarmActive;
+                              _alarmActive = alarm.isPlaying;
                             });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  _alarmActive ? 'Loud Alarm ACTIVATED' : 'Alarm Silenced',
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    _alarmActive ? '🔊 Loud Alarm ACTIVATED' : '🔇 Alarm Silenced',
+                                  ),
+                                  backgroundColor: _alarmActive ? Colors.red : Colors.grey[800],
                                 ),
-                                backgroundColor: _alarmActive ? Colors.red : null,
-                              ),
-                            );
+                              );
+                            }
                           },
                         ),
                         _EmergencyActionButton(
