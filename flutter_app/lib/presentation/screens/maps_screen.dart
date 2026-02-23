@@ -9,7 +9,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/data/models/poi_model.dart';
 import 'package:offline_survival_companion/data/models/safety_pin_model.dart';
+import 'package:offline_survival_companion/data/models/route_model.dart';
+import 'package:offline_survival_companion/services/navigation/tracking_service.dart';
 import 'dart:async';
+import 'dart:math';
 
 class MapsScreen extends StatefulWidget {
   const MapsScreen({super.key});
@@ -25,6 +28,8 @@ class _MapsScreenState extends State<MapsScreen> {
   List<POI> _userPois = [];
   List<SafetyPin> _safetyPins = [];
   bool _isTopoMode = false;
+  bool _showDownloads = false;
+  bool _locationPermissionGranted = false;
   
   TrackingService? _trackingService;
   StreamSubscription<SurvivalRoute?>? _trackingSubscription;
@@ -71,7 +76,7 @@ class _MapsScreenState extends State<MapsScreen> {
       setState(() {
         _userPois = poisData.map((p) => POI(
           id: p['id'],
-          user_id: p['user_id'], // Wait, checking POI model...
+          user_id: p['user_id'],
           title: p['title'],
           latitude: p['latitude'],
           longitude: p['longitude'],
@@ -81,6 +86,15 @@ class _MapsScreenState extends State<MapsScreen> {
       });
       _updateMarkers();
     }
+  }
+
+  Future<void> _loadSafetyPins() async {
+    final storage = context.read<LocalStorageService>();
+    final pinsData = await storage.getSafetyPins();
+    setState(() {
+      _safetyPins = pinsData.map((p) => SafetyPin.fromJson(p)).toList();
+    });
+    _updateMarkers();
   }
 
   Future<void> _requestLocationPermission() async {
@@ -150,7 +164,6 @@ class _MapsScreenState extends State<MapsScreen> {
           circleStrokeWidth: 2.0,
           circleStrokeColor: '#ffffff',
         ),
-      );
       );
     }
 
@@ -563,7 +576,6 @@ class _MapsScreenState extends State<MapsScreen> {
               heroTag: 'maps_topo_fab',
               child: Icon(_isTopoMode ? Icons.terrain : Icons.map_outlined),
             ),
-          ),
           ),
         // Safety Report Button
         if (!_showDownloads)

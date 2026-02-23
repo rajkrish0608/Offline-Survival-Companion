@@ -97,7 +97,6 @@ void main() async {
   final safetyTimerService = SafetyTimerService(emergencyService);
   final shakeDetectorService = ShakeDetectorService(emergencyService);
   final trackingService = TrackingService(storageService);
-  final evidenceService = EvidenceService(storageService);
   final voiceSosService = VoiceSosService(emergencyService);
 
   debugPrint('Calling runApp...');
@@ -162,13 +161,13 @@ class OfflineSurvivalApp extends StatelessWidget {
         ),
         // Providing individual services for easy UI access
         RepositoryProvider.value(value: storageService),
-        RepositoryProvider.value(value: emergencyService),
+        ChangeNotifierProvider.value(value: emergencyService),
         RepositoryProvider.value(value: alarmService),
         ChangeNotifierProvider.value(value: safetyTimerService),
         RepositoryProvider.value(value: shakeDetectorService),
         RepositoryProvider.value(value: trackingService),
         RepositoryProvider.value(value: evidenceService),
-        RepositoryProvider.value(value: voiceSosService),
+        ChangeNotifierProvider.value(value: voiceSosService),
       ],
       child: MaterialApp.router(
         title: 'Offline Survival Companion',

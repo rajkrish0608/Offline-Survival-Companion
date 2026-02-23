@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
@@ -72,6 +73,15 @@ class _SilentSOSButtonState extends State<SilentSOSButton> with SingleTickerProv
     }
   }
 
+  void _onTapCancel() {
+    if (_isCountdownActive) return;
+    _controller.stop();
+    setState(() {
+      _isHolding = false;
+      _progress = 0.0;
+    });
+  }
+
   void _startSafetyLock() {
     setState(() {
       _isHolding = false;
@@ -119,7 +129,7 @@ class _SilentSOSButtonState extends State<SilentSOSButton> with SingleTickerProv
         GestureDetector(
           onTapDown: _onTapDown,
           onTapUp: _onTapUp,
-          onTapCancel: () => _onTapUp(TapUpDetails(kind: PointerDeviceKind.touch)),
+          onTapCancel: _onTapCancel,
           child: Stack(
             alignment: Alignment.center,
             children: [

@@ -115,8 +115,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         userId = await _storageService.getOrCreateDefaultUser();
       }
 
-      await _shakeDetectorService.initialize();
-      _shakeDetectorService.start(_emergencyService, userId: userId);
+      _shakeDetectorService.start();
 
       // Initialize Voice SOS
       await _voiceSosService.initialize(userId: userId);

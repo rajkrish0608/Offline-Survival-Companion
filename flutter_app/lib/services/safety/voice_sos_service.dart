@@ -3,7 +3,9 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
 import 'package:logger/logger.dart';
 
-class VoiceSosService {
+import 'package:flutter/foundation.dart';
+
+class VoiceSosService extends ChangeNotifier {
   final EmergencyService _emergencyService;
   final SpeechToText _speech = SpeechToText();
   final Logger _logger = Logger();
@@ -34,6 +36,7 @@ class VoiceSosService {
 
   void setEnabled(bool value) {
     _isEnabled = value;
+    notifyListeners();
     if (_isEnabled) {
       _startListening();
     } else {
@@ -45,6 +48,7 @@ class VoiceSosService {
     if (!_isEnabled || _isListening) return;
 
     _isListening = true;
+    notifyListeners();
     _speech.listen(
       onResult: (result) {
         final words = result.recognizedWords.toLowerCase();

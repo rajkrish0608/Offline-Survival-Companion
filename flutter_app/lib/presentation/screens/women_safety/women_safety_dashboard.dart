@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:offline_survival_companion/presentation/screens/women_safety/fake_call_screen.dart';
 import 'package:offline_survival_companion/presentation/widgets/safety/silent_sos_button.dart';
 import 'package:offline_survival_companion/services/safety/voice_sos_service.dart';
+import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
 import 'package:provider/provider.dart';
 
 class WomenSafetyDashboard extends StatelessWidget {
