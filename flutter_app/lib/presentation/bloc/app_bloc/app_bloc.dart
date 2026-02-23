@@ -7,6 +7,8 @@ import 'package:offline_survival_companion/services/emergency/emergency_service.
 import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 import 'package:offline_survival_companion/services/sync/sync_engine.dart';
 import 'package:offline_survival_companion/services/safety/shake_detector_service.dart';
+import 'package:offline_survival_companion/services/navigation/tracking_service.dart';
+import 'package:offline_survival_companion/services/safety/evidence_service.dart';
 import 'package:logger/logger.dart';
 
 part 'app_event.dart';
@@ -19,6 +21,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final AlarmService _alarmService;
   final SyncEngine _syncEngine;
   final ShakeDetectorService _shakeDetectorService;
+  final TrackingService _trackingService;
+  final EvidenceService _evidenceService;
   final Logger _logger = Logger();
 
   AppBloc(
@@ -28,6 +32,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._alarmService,
     this._syncEngine,
     this._shakeDetectorService,
+    this._trackingService,
+    this._evidenceService,
   ) : super(const AppInitializing()) {
     on<AppInitialized>(_onAppInitialized);
     on<AppResumed>(_onAppResumed);
@@ -139,6 +145,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   @override
   Future<void> close() async {
+    _evidenceService.dispose();
+    _trackingService.dispose();
     _shakeDetectorService.stop();
     await _syncEngine.dispose();
     await _storageService.close();

@@ -12,6 +12,8 @@ import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.d
 import 'package:offline_survival_companion/presentation/navigation/app_router.dart';
 import 'package:offline_survival_companion/services/safety/safety_timer_service.dart';
 import 'package:offline_survival_companion/services/safety/shake_detector_service.dart';
+import 'package:offline_survival_companion/services/navigation/tracking_service.dart';
+import 'package:offline_survival_companion/services/safety/evidence_service.dart';
 import 'package:provider/provider.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 
@@ -23,11 +25,16 @@ void main() async {
     debugPrint('Running on Web: Using mock services for verification...');
     final storageService = LocalStorageService();
     final encryptionService = EncryptionService();
-    final emergencyService = EmergencyService();
+    final evidenceService = EvidenceService(storageService);
+    final emergencyService = EmergencyService(
+      storageService: storageService,
+      evidenceService: evidenceService,
+    );
     final alarmService = AlarmService();
     final syncEngine = SyncEngine(storageService);
     final safetyTimerService = SafetyTimerService(emergencyService);
     final shakeDetectorService = ShakeDetectorService(emergencyService);
+    final trackingService = TrackingService(storageService);
 
     runApp(
       OfflineSurvivalApp(
@@ -38,6 +45,8 @@ void main() async {
         syncEngine: syncEngine,
         safetyTimerService: safetyTimerService,
         shakeDetectorService: shakeDetectorService,
+        trackingService: trackingService,
+        evidenceService: evidenceService,
       ),
     );
     return;
@@ -68,7 +77,11 @@ void main() async {
     debugPrint('Failed to initialize encryption service (or timed out): $e');
   }
 
-  final emergencyService = EmergencyService();
+  final evidenceService = EvidenceService(storageService);
+  final emergencyService = EmergencyService(
+    storageService: storageService,
+    evidenceService: evidenceService,
+  );
   try {
     await emergencyService.initialize().timeout(const Duration(seconds: 5));
   } catch (e) {
@@ -80,6 +93,8 @@ void main() async {
   final syncEngine = SyncEngine(storageService);
   final safetyTimerService = SafetyTimerService(emergencyService);
   final shakeDetectorService = ShakeDetectorService(emergencyService);
+  final trackingService = TrackingService(storageService);
+  final evidenceService = EvidenceService(storageService);
 
   debugPrint('Calling runApp...');
   runApp(
@@ -91,6 +106,8 @@ void main() async {
       syncEngine: syncEngine,
       safetyTimerService: safetyTimerService,
       shakeDetectorService: shakeDetectorService,
+      trackingService: trackingService,
+      evidenceService: evidenceService,
     ),
   );
 }
@@ -103,6 +120,8 @@ class OfflineSurvivalApp extends StatelessWidget {
   final SyncEngine syncEngine;
   final SafetyTimerService safetyTimerService;
   final ShakeDetectorService shakeDetectorService;
+  final TrackingService trackingService;
+  final EvidenceService evidenceService;
 
   const OfflineSurvivalApp({
     super.key,
@@ -113,6 +132,8 @@ class OfflineSurvivalApp extends StatelessWidget {
     required this.syncEngine,
     required this.safetyTimerService,
     required this.shakeDetectorService,
+    required this.trackingService,
+    required this.evidenceService,
   });
 
   @override
@@ -127,6 +148,8 @@ class OfflineSurvivalApp extends StatelessWidget {
             alarmService,
             syncEngine,
             shakeDetectorService,
+            trackingService,
+            evidenceService,
           )..add(const AppInitialized()),
         ),
         // Providing individual services for easy UI access
@@ -134,6 +157,9 @@ class OfflineSurvivalApp extends StatelessWidget {
         RepositoryProvider.value(value: emergencyService),
         RepositoryProvider.value(value: alarmService),
         ChangeNotifierProvider.value(value: safetyTimerService),
+        RepositoryProvider.value(value: shakeDetectorService),
+        RepositoryProvider.value(value: trackingService),
+        RepositoryProvider.value(value: evidenceService),
       ],
       child: MaterialApp.router(
         title: 'Offline Survival Companion',

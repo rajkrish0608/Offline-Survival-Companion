@@ -16,6 +16,7 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
   final TextEditingController _pinController = TextEditingController();
   int _minutes = 20;
   bool _showPinGate = false;
+  bool _isJourneyMode = false;
 
   @override
   void dispose() {
@@ -38,6 +39,7 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
           seconds: _minutes * 60,
           pin: _pinController.text,
           userId: state.userId,
+          isJourneyMode: _isJourneyMode,
         );
     
     _pinController.clear();
@@ -110,7 +112,15 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
               prefixIcon: Icon(Icons.lock),
             ),
           ),
-          const SizedBox(height: 64),
+          const SizedBox(height: 32),
+          SwitchListTile(
+            title: const Text('Journey Mode', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+            subtitle: const Text('Periodic check-ins throughout your trip. Escalates to SOS if missed twice.', style: TextStyle(color: Colors.grey)),
+            value: _isJourneyMode,
+            activeColor: AppTheme.accentBlue,
+            onChanged: (v) => setState(() => _isJourneyMode = v),
+          ),
+          const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
             height: 56,
@@ -156,6 +166,23 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 64, fontWeight: FontWeight.w200),
             ),
             const SizedBox(height: 64),
+            if (service.isJourneyMode)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: SizedBox(
+                  width: 250,
+                  height: 64,
+                  child: ElevatedButton.icon(
+                    onPressed: () => service.acknowledgeCheckIn(),
+                    icon: const Icon(Icons.check_circle),
+                    label: const Text('Acknowledge Check-in', style: TextStyle(fontSize: 18)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: service.missedCheckIns > 0 ? Colors.orange : Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
             if (!_showPinGate)
               SizedBox(
                 width: 200,
@@ -163,7 +190,7 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
                 child: ElevatedButton(
                   onPressed: () => setState(() => _showPinGate = true),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.white10),
-                  child: const Text('I am Safe (Stop)'),
+                  child: Text(service.isJourneyMode ? 'End Journey (PIN)' : 'I am Safe (Stop)'),
                 ),
               )
             else

@@ -28,5 +28,29 @@
         "title": "Water Purification",
         "category": "Survival",
         "content": "1. Boiling: Boil water for at least 1 minute.\n2. Chemical: Use iodine or chlorine tablets.\n3. Filtration: Use a portable water filter or cloth layers for debris."
+    },
+    {
+        "id": "edible_plants",
+        "title": "Identifying Edible Plants",
+        "category": "Wild Identification",
+        "content": "Dandelion: Entire plant is edible. Yellow flowers, jagged leaves. High in Vitamin A and C.\nPine Trees: Young needles steeped in hot water make a Vitamin-rich tea.\nCattails: The inner stalk is edible raw or cooked; looks like a corn dog."
+    },
+    {
+        "id": "poisonous_plants",
+        "title": "Poisonous Plants to Avoid",
+        "category": "Wild Identification",
+        "content": "Poison Ivy: 'Leaves of three, let it be.' Can cause severe rashes.\nDeadly Nightshade (Belladonna): Shiny black berries and bell flowers. Extremely toxic.\nWater Hemlock: Purple-spotted stems and white umbrella flowers. Fatal if ingested."
+    },
+    {
+        "id": "bowline_knot",
+        "title": "The Bowline Knot",
+        "category": "Essential Knots",
+        "content": "Purpose: A secure, fixed loop that won't slip or bind.\n1. Create a small loop (the hole).\n2. Pass the end (rabbit) up through the hole.\n3. Go around the standing line (tree).\n4. Pass back down through the hole and pull tight."
+    },
+    {
+        "id": "clove_hitch",
+        "title": "The Clove Hitch",
+        "category": "Essential Knots",
+        "content": "Purpose: Securing a rope to a post or tree.\n1. Wrap the rope around the post.\n2. Cross the rope over itself and wrap again.\n3. Tuck the end under the second wrap and pull tight."
     }
 ]

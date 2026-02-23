@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_sms/flutter_sms.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:torch_light/torch_light.dart';
@@ -5,11 +6,12 @@ import 'package:battery_plus/battery_plus.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:offline_survival_companion/core/constants/app_constants.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
+import 'package:offline_survival_companion/services/safety/evidence_service.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class EmergencyService {
-  final LocalStorageService _storageService;
+  final EvidenceService? _evidenceService;
   final Battery _battery = Battery();
   final Logger _logger = Logger();
 
@@ -19,8 +21,11 @@ class EmergencyService {
   String? _lastKnownPosition;
   List<String> _emergencyContacts = [];
 
-  EmergencyService({LocalStorageService? storageService})
-      : _storageService = storageService ?? LocalStorageService();
+  EmergencyService({
+    LocalStorageService? storageService,
+    EvidenceService? evidenceService,
+  })  : _storageService = storageService ?? LocalStorageService(),
+        _evidenceService = evidenceService;
 
   Future<void> initialize() async {
     try {
@@ -61,6 +66,11 @@ class EmergencyService {
         customMessage: customMessage,
         userName: await _getUserName(userId),
       );
+
+      // 3. Capture Auto-Evidence
+      if (_evidenceService != null) {
+        unawaited(_evidenceService!.captureEvidence(userId: userId));
+      }
 
       _logger.w('SOS activated by user $userId');
     } catch (e) {

@@ -18,10 +18,13 @@ class MapsScreen extends StatefulWidget {
 
 class _MapsScreenState extends State<MapsScreen> {
   MapLibreMapController? _mapController;
-  bool _locationPermissionGranted = false;
-  bool _showDownloads = false;
   bool _addPinMode = false;
   List<POI> _userPois = [];
+  bool _isTopoMode = false;
+  
+  TrackingService? _trackingService;
+  StreamSubscription<SurvivalRoute?>? _trackingSubscription;
+  SurvivalRoute? _activeRoute;
 
   final List<Map<String, dynamic>> _regions = [
     {'name': 'Delhi NCR', 'size': '45 MB', 'status': 'downloaded', 'progress': 1.0},
@@ -35,6 +38,24 @@ class _MapsScreenState extends State<MapsScreen> {
     super.initState();
     _requestLocationPermission();
     _loadUserPois();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _trackingService ??= context.read<TrackingService>();
+    _trackingSubscription ??= _trackingService?.activeRouteStream.listen((route) {
+      setState(() {
+        _activeRoute = route;
+      });
+      _updateMarkers(); // This will now also call _drawRoute
+    });
+  }
+
+  @override
+  void dispose() {
+    _trackingSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserPois() async {
@@ -138,6 +159,8 @@ class _MapsScreenState extends State<MapsScreen> {
         ),
       );
     }
+
+    _drawRoute();
   }
 
   String _getPoiColor(String type) {
@@ -230,6 +253,48 @@ class _MapsScreenState extends State<MapsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('POI Saved Successfully')));
       }
+    }
+  }
+
+  Future<void> _toggleTracking() async {
+    if (_activeRoute != null) {
+      await _trackingService?.stopTracking();
+    } else {
+      final appState = context.read<AppBloc>().state;
+      if (appState is AppReady) {
+        await _trackingService?.startTracking(userId: appState.userId);
+      }
+    }
+  }
+
+  void _drawRoute() {
+    if (_activeRoute == null || _activeRoute!.points.isEmpty) return;
+
+    final List<LatLng> latLngs = _activeRoute!.points.map((p) => p.toLatLng()).toList();
+    
+    _mapController?.addLine(
+      LineOptions(
+        geometry: latLngs,
+        lineColor: "#FF5252",
+        lineWidth: 4.0,
+        lineOpacity: 0.8,
+      ),
+    );
+  }
+
+  Future<void> _toggleTopoMode() async {
+    setState(() {
+      _isTopoMode = !_isTopoMode;
+    });
+    
+    // In a real offline app, this would switch between local style JSONs
+    // which reference local MBTiles or pre-cached topo raster tiles.
+    if (_isTopoMode) {
+      _mapController?.setSymbolIconAllowOverlap(true);
+      // For demonstration, we could add a raster source for OpenTopoMap
+      // but since we want to be OFFLINE, we'd ideally load a local style.
+      // For now, we'll just toggle the state and update the background color 
+      // or similar to show the UI change, and document the offline path.
     }
   }
 
@@ -369,6 +434,18 @@ class _MapsScreenState extends State<MapsScreen> {
               child: const Icon(Icons.download_for_offline, color: Colors.blue),
             ),
           ),
+        // Topo Toggle Button
+        if (!_showDownloads)
+          Positioned(
+            bottom: 120, right: 170,
+            child: FloatingActionButton(
+              onPressed: _toggleTopoMode,
+              mini: true,
+              backgroundColor: _isTopoMode ? Colors.brown : Colors.blueGrey,
+              heroTag: 'maps_topo_fab',
+              child: Icon(_isTopoMode ? Icons.terrain : Icons.map_outlined),
+            ),
+          ),
         // Add POI Button
         if (!_showDownloads)
           Positioned(
@@ -394,6 +471,35 @@ class _MapsScreenState extends State<MapsScreen> {
                 child: const Text(
                   'Tap on map to add a survival point',
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ),
+        // Route Recording FAB
+        if (!_showDownloads)
+          Positioned(
+            bottom: 120, right: 120,
+            child: FloatingActionButton(
+              onPressed: _toggleTracking,
+              mini: true,
+              backgroundColor: _activeRoute != null ? Colors.red : Colors.blue,
+              heroTag: 'maps_track_fab',
+              child: Icon(_activeRoute != null ? Icons.stop : Icons.route),
+            ),
+          ),
+        if (_activeRoute != null)
+          Positioned(
+            top: 140, left: 0, right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Recording Route: ${_activeRoute!.distanceKm.toStringAsFixed(2)} km',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
             ),

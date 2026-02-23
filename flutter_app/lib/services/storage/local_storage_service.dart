@@ -31,7 +31,7 @@ class LocalStorageService {
 
       _database = await openDatabase(
         path,
-        version: 2,
+        version: 3,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -224,6 +224,31 @@ class LocalStorageService {
       )
     ''');
 
+    // Survival Routes
+    await db.execute('''
+      CREATE TABLE survival_routes (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        name TEXT,
+        start_time INTEGER,
+        end_time INTEGER,
+        distance_km REAL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    ''');
+
+    // Breadcrumb Points
+    await db.execute('''
+      CREATE TABLE breadcrumb_points (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        route_id TEXT NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        timestamp INTEGER,
+        FOREIGN KEY (route_id) REFERENCES survival_routes(id) ON DELETE CASCADE
+      )
+    ''');
+
     // Pending Changes (Outbox Pattern)
     await db.execute('''
       CREATE TABLE pending_changes (
@@ -268,6 +293,29 @@ class LocalStorageService {
           type TEXT,
           created_at INTEGER,
           FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE survival_routes (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT,
+          start_time INTEGER,
+          end_time INTEGER,
+          distance_km REAL,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE breadcrumb_points (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          route_id TEXT NOT NULL,
+          latitude REAL NOT NULL,
+          longitude REAL NOT NULL,
+          timestamp INTEGER,
+          FOREIGN KEY (route_id) REFERENCES survival_routes(id) ON DELETE CASCADE
         )
       ''');
     }
@@ -498,6 +546,64 @@ class LocalStorageService {
       'map_pois',
       where: 'id = ?',
       whereArgs: [poiId],
+    );
+  }
+
+  // ==================== Route Operations ====================
+
+  Future<void> saveRoute(Map<String, dynamic> route) async {
+    _ensureDatabaseReady();
+    await _database!.insert(
+      'survival_routes',
+      route,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> addBreadcrumbPoint(Map<String, dynamic> point) async {
+    _ensureDatabaseReady();
+    await _database!.insert(
+      'breadcrumb_points',
+      point,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getRoutes(String userId) async {
+    _ensureDatabaseReady();
+    return await _database!.query(
+      'survival_routes',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'start_time DESC',
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getRoutePoints(String routeId) async {
+    _ensureDatabaseReady();
+    return await _database!.query(
+      'breadcrumb_points',
+      where: 'route_id = ?',
+      whereArgs: [routeId],
+      orderBy: 'timestamp ASC',
+    );
+  }
+
+  Future<void> updateRoute(String routeId, Map<String, dynamic> data) async {
+    _ensureDatabaseReady();
+    await _database!.update(
+      'survival_routes',
+      data,
+      where: 'id = ?',
+      whereArgs: [routeId],
+    );
+  }
+
+  Future<void> deleteRoute(String routeId) async {
+    _ensureDatabaseReady();
+    await _database!.delete(
+      'survival_routes',
+      where: 'id = ?',
+      whereArgs: [routeId],
     );
   }
 
