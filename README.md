@@ -23,6 +23,25 @@
 
 <br/>
 
+## 🖼️ Visual Interface: Enterprise UX
+
+<div align="center">
+  <table border="0">
+    <tr>
+      <td width="50%" align="center">
+        <img src="assets/readme/survival_mode.png" width="100%" alt="Survival Mode" style="border-radius: 12px;" />
+        <br/><em>Survival Mode (OLED Optimized)</em>
+      </td>
+      <td width="50%" align="center">
+        <img src="flutter_app/assets/images/professional_splash.png" width="100%" alt="Splash Screen" style="border-radius: 12px;" />
+        <br/><em>Core System Boot Sequence</em>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<br/>
+
 <!-- Animated Product Demo GIF Placeholder -->
 <img src="assets/readme/demo_preview.gif" alt="App Demo" width="600" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);" />
 
