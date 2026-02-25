@@ -53,6 +53,17 @@
 		<string>This app needs access to photo library to allow you to save emergency photos and documents to the secure vault.</string>
 		<key>NSFaceIDUsageDescription</key>
 		<string>This app needs Face ID to unlock your secure vault and protect your sensitive documents.</string>
+		<key>NSBluetoothAlwaysUsageDescription</key>
+		<string>This app requires Bluetooth to connect with nearby offline devices for emergency SOS broadcasting.</string>
+		<key>NSBluetoothPeripheralUsageDescription</key>
+		<string>This app requires Bluetooth to connect with nearby offline devices for emergency SOS broadcasting.</string>
+		<key>NSLocalNetworkUsageDescription</key>
+		<string>This app requires local network access to discover nearby devices for offline emergency messaging.</string>
+		<key>NSBonjourServices</key>
+		<array>
+			<string>_mca._tcp</string>
+			<string>_mca._udp</string>
+		</array>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>UIApplicationSupportsIndirectInputEvents</key>

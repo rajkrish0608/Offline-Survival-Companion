@@ -10,6 +10,7 @@ import 'package:offline_survival_companion/services/safety/shake_detector_servic
 import 'package:offline_survival_companion/services/navigation/tracking_service.dart';
 import 'package:offline_survival_companion/services/safety/evidence_service.dart';
 import 'package:offline_survival_companion/services/safety/voice_sos_service.dart';
+import 'package:offline_survival_companion/services/network/peer_mesh_service.dart';
 import 'package:logger/logger.dart';
 
 part 'app_event.dart';
@@ -25,6 +26,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final TrackingService _trackingService;
   final EvidenceService _evidenceService;
   final VoiceSosService _voiceSosService;
+  final PeerMeshService _peerMeshService;
   final Logger _logger = Logger();
 
   AppBloc(
@@ -37,6 +39,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._trackingService,
     this._evidenceService,
     this._voiceSosService,
+    this._peerMeshService,
   ) : super(const AppInitializing()) {
     on<AppInitialized>(_onAppInitialized);
     on<AppResumed>(_onAppResumed);
@@ -175,6 +178,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     _evidenceService.dispose();
     _trackingService.dispose();
     _shakeDetectorService.stop();
+    await _peerMeshService.stopAll();
     await _syncEngine.dispose();
     await _storageService.close();
     await _alarmService.dispose();

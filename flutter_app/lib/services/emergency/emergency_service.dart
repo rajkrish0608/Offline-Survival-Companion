@@ -7,12 +7,14 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:offline_survival_companion/core/constants/app_constants.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:offline_survival_companion/services/safety/evidence_service.dart';
+import 'package:offline_survival_companion/services/network/peer_mesh_service.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/foundation.dart';
 
 class EmergencyService extends ChangeNotifier {
   final EvidenceService? _evidenceService;
+  final PeerMeshService? _peerMeshService;
   final Battery _battery = Battery();
   final Logger _logger = Logger();
 
@@ -27,8 +29,10 @@ class EmergencyService extends ChangeNotifier {
   EmergencyService({
     LocalStorageService? storageService,
     EvidenceService? evidenceService,
+    PeerMeshService? peerMeshService,
   })  : _storageService = storageService ?? LocalStorageService(),
-        _evidenceService = evidenceService;
+        _evidenceService = evidenceService,
+        _peerMeshService = peerMeshService;
 
   Future<void> initialize() async {
     try {
@@ -75,6 +79,19 @@ class EmergencyService extends ChangeNotifier {
         unawaited(_evidenceService!.captureEvidence(userId: userId));
       }
 
+      // 4. Start Offline P2P Broadcast
+      if (_peerMeshService != null) {
+        final sosPayload = {
+          'type': 'sos',
+          'userId': userId,
+          'lat': position.latitude,
+          'lng': position.longitude,
+          'timestamp': DateTime.now().toIso8601String(),
+          'customMessage': customMessage,
+        };
+        unawaited(_peerMeshService!.broadcastSOS(sosPayload));
+      }
+
       _logger.w('SOS activated by user $userId');
     } catch (e) {
       _logger.e('Failed to activate SOS: $e');
@@ -96,6 +113,11 @@ class EmergencyService extends ChangeNotifier {
 
       // Send all-clear SMS
       await _sendAllClearSMS(userId);
+
+      // Stop P2P Broadcast
+      if (_peerMeshService != null) {
+        await _peerMeshService!.stopAll();
+      }
 
       _logger.i('SOS deactivated by user $userId');
     } catch (e) {

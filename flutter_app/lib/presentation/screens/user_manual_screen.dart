@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
-import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_state.dart';
+import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 
 class UserManualScreen extends StatefulWidget {
   const UserManualScreen({super.key});

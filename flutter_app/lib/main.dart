@@ -17,6 +17,7 @@ import 'package:offline_survival_companion/services/safety/evidence_service.dart
 import 'package:offline_survival_companion/services/safety/voice_sos_service.dart';
 import 'package:provider/provider.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
+import 'package:offline_survival_companion/services/network/peer_mesh_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,9 +28,11 @@ void main() async {
     final storageService = LocalStorageService();
     final encryptionService = EncryptionService();
     final evidenceService = EvidenceService(storageService);
+    final peerMeshService = PeerMeshService();
     final emergencyService = EmergencyService(
       storageService: storageService,
       evidenceService: evidenceService,
+      peerMeshService: peerMeshService,
     );
     final alarmService = AlarmService();
     final syncEngine = SyncEngine(storageService);
@@ -50,6 +53,7 @@ void main() async {
         trackingService: trackingService,
         evidenceService: evidenceService,
         voiceSosService: voiceSosService,
+        peerMeshService: peerMeshService,
       ),
     );
     return;
@@ -80,10 +84,12 @@ void main() async {
     debugPrint('Failed to initialize encryption service (or timed out): $e');
   }
 
+  final peerMeshService = PeerMeshService();
   final evidenceService = EvidenceService(storageService);
   final emergencyService = EmergencyService(
     storageService: storageService,
     evidenceService: evidenceService,
+    peerMeshService: peerMeshService,
   );
   try {
     await emergencyService.initialize().timeout(const Duration(seconds: 5));
@@ -99,6 +105,18 @@ void main() async {
   final trackingService = TrackingService(storageService);
   final voiceSosService = VoiceSosService(emergencyService);
 
+  // Start background listening for P2P Mesh SOS signals
+  try {
+    peerMeshService.onSosReceived = (payload) {
+      debugPrint('CRITICAL ALARM: MESH SOS RECEIVED: $payload');
+      // In a real scenario, this would trigger a high-priority local notification
+      // or a specific UI alert using a global key.
+    };
+    await peerMeshService.startDiscovering();
+  } catch (e) {
+    debugPrint('Failed to start mesh discovery: $e');
+  }
+
   debugPrint('Calling runApp...');
   runApp(
     OfflineSurvivalApp(
@@ -112,6 +130,7 @@ void main() async {
       trackingService: trackingService,
       evidenceService: evidenceService,
       voiceSosService: voiceSosService,
+      peerMeshService: peerMeshService,
     ),
   );
 }
@@ -127,6 +146,7 @@ class OfflineSurvivalApp extends StatelessWidget {
   final TrackingService trackingService;
   final EvidenceService evidenceService;
   final VoiceSosService voiceSosService;
+  final PeerMeshService peerMeshService;
 
   const OfflineSurvivalApp({
     super.key,
@@ -140,6 +160,7 @@ class OfflineSurvivalApp extends StatelessWidget {
     required this.trackingService,
     required this.evidenceService,
     required this.voiceSosService,
+    required this.peerMeshService,
   });
 
   @override
@@ -157,9 +178,11 @@ class OfflineSurvivalApp extends StatelessWidget {
             trackingService,
             evidenceService,
             voiceSosService,
+            peerMeshService,
           )..add(const AppInitialized()),
         ),
         // Providing individual services for easy UI access
+        RepositoryProvider.value(value: peerMeshService),
         RepositoryProvider.value(value: storageService),
         ChangeNotifierProvider.value(value: emergencyService),
         RepositoryProvider.value(value: alarmService),

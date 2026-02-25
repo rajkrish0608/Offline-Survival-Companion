@@ -11,6 +11,7 @@ import 'package:offline_survival_companion/presentation/screens/settings_screen.
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
 import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 import 'package:offline_survival_companion/presentation/widgets/safety/silent_sos_button.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -206,6 +207,42 @@ class _HomeScreenContentState extends State<HomeScreenContent> with TickerProvid
                 ),
               ),
             ),
+            // Mesh Network Status Indicator
+            FadeTransition(
+              opacity: _staggeredAnimations[1],
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.blue,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'P2P Mesh Active',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             FadeTransition(
               opacity: _staggeredAnimations[1],
@@ -327,17 +364,17 @@ class _HomeScreenContentState extends State<HomeScreenContent> with TickerProvid
                   _ActionCard(
                     icon: Icons.qr_code,
                     label: 'QR Scanner',
-                    onTap: () => context.push('/qr-scanner'),
+                    onTap: () => Navigator.of(context).pushNamed('/qr-scanner'), // Fallback if no specific route
                   ),
                   _ActionCard(
                     icon: Icons.settings_input_antenna,
                     label: 'Signal Tools',
-                    onTap: () => context.push('/signal-tools'),
+                    onTap: () => Navigator.of(context).pushNamed('/signal-tools'),
                   ),
                   _ActionCard(
                     icon: Icons.help_outline,
                     label: 'User Manual',
-                    onTap: () => context.push('/user-manual'),
+                    onTap: () => Navigator.of(context).pushNamed('/user-manual'),
                   ),
                 ],
               ),
