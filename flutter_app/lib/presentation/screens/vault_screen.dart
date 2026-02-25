@@ -195,18 +195,29 @@ class _VaultScreenState extends State<VaultScreen> {
             ),
           ),
           Expanded(
-            child: _documents.isEmpty 
-              ? const Center(child: Text('No documents in vault yet'))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _documents.length,
-                  itemBuilder: (context, index) {
-                    final doc = _documents[index];
-                    return Card(
-                      child: ListTile(
-                        leading: _getDocIcon(doc['document_type'] ?? 'OTHER'),
-                        title: Text(doc['file_name'] ?? 'Unknown'),
-                        subtitle: Text('Added: ${DateTime.fromMillisecondsSinceEpoch(doc['created_at'] ?? 0).toString().split(' ')[0]}'),
+            child: RefreshIndicator(
+              onRefresh: _loadDocuments,
+              child: _documents.isEmpty 
+                ? ListView(
+                    children: [
+                      SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                      const Center(child: Text('No documents in vault yet')),
+                      const Center(child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text('Pull to refresh', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      )),
+                    ],
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _documents.length,
+                    itemBuilder: (context, index) {
+                      final doc = _documents[index];
+                      return Card(
+                        child: ListTile(
+                          leading: _getDocIcon(doc['document_type'] ?? 'OTHER'),
+                          title: Text(doc['file_name'] ?? 'Unknown'),
+                          subtitle: Text('Added: ${DateTime.fromMillisecondsSinceEpoch(doc['created_at'] ?? 0).toString()}'),
                         onTap: () async {
                           final result = await OpenFilex.open(doc['file_path']);
                           if (result.type != ResultType.done && mounted) {
@@ -220,6 +231,7 @@ class _VaultScreenState extends State<VaultScreen> {
                     );
                   },
                 ),
+            ),
           ),
         ],
       ),
@@ -257,10 +269,20 @@ class _VaultScreenState extends State<VaultScreen> {
   }
 
   Widget _getDocIcon(String type) {
+    final t = type.toUpperCase();
     IconData icon = Icons.description;
     Color color = Colors.grey;
-    if (type.contains('PDF')) { icon = Icons.picture_as_pdf; color = Colors.red; }
-    else if (type.contains('JPG') || type.contains('PNG')) { icon = Icons.image; color = Colors.blue; }
+    
+    if (t.contains('PDF')) { 
+      icon = Icons.picture_as_pdf; color = Colors.red; 
+    } else if (t.contains('JPG') || t.contains('PNG') || t.contains('PHOTO')) { 
+      icon = Icons.image; color = Colors.blue; 
+    } else if (t.contains('VIDEO') || t.contains('MP4')) { 
+      icon = Icons.videocam; color = Colors.orange; 
+    } else if (t.contains('AUDIO') || t.contains('M4A')) { 
+      icon = Icons.audiotrack; color = Colors.green; 
+    }
+    
     return Icon(icon, color: color);
   }
 }

@@ -89,7 +89,6 @@ dev_dependencies:
   json_serializable: ^6.7.0
   hive_generator: ^2.0.0
   flutter_launcher_icons: ^0.14.4
-  flutter_native_splash: ^2.4.7
 
 flutter:
   uses-material-design: true
@@ -100,7 +99,6 @@ flutter:
     - assets/audio/siren.wav
     - assets/maps/
     - .env
-    - assets/images/professional_splash.png
   #   - assets/images/
   #   - assets/icons/
   #   - assets/maps/
@@ -119,10 +117,3 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/images/app_icon.png"
   min_sdk_android: 21
-
-flutter_native_splash:
-  color: "#1E1E1E"
-  image: "assets/images/splash_screen.png"
-  android_12:
-    image: "assets/images/splash_screen.png"
-    color: "#1E1E1E"

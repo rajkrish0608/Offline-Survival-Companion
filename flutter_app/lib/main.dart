@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -105,17 +106,11 @@ void main() async {
   final trackingService = TrackingService(storageService);
   final voiceSosService = VoiceSosService(emergencyService);
 
-  // Start background listening for P2P Mesh SOS signals
-  try {
+    // Start background listening for P2P Mesh SOS signals (Don't await to avoid startup hang)
     peerMeshService.onSosReceived = (payload) {
       debugPrint('CRITICAL ALARM: MESH SOS RECEIVED: $payload');
-      // In a real scenario, this would trigger a high-priority local notification
-      // or a specific UI alert using a global key.
     };
-    await peerMeshService.startDiscovering();
-  } catch (e) {
-    debugPrint('Failed to start mesh discovery: $e');
-  }
+    unawaited(peerMeshService.startDiscovering());
 
   debugPrint('Calling runApp...');
   runApp(

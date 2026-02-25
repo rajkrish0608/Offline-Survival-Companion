@@ -5,6 +5,7 @@ import 'package:offline_survival_companion/core/theme/app_theme.dart';
 import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:offline_survival_companion/services/audio/alarm_service.dart';
+import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
 
 class EmergencyScreen extends StatefulWidget {
   const EmergencyScreen({super.key});
@@ -51,6 +52,11 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
           _sosActive = true;
           _flashlightActive = true;
         });
+
+        // Trigger Real SOS Logic (which starts evidence capture)
+        final appState = context.read<AppBloc>().state;
+        final userId = (appState is AppReady) ? appState.userId : 'local_user';
+        context.read<EmergencyService>().activateSOS(userId: userId);
 
         // Simulate location update
         Future.delayed(const Duration(seconds: 1), () {
@@ -237,11 +243,18 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
                           },
                         ),
                         _EmergencyActionButton(
-                          icon: Icons.local_hospital,
-                          label: 'Hospital',
+                          icon: Icons.stop_circle,
+                          label: 'Stop Recording',
                           isActive: false,
-                          onTap: () {
-                             context.push('/maps');
+                          onTap: () async {
+                             final appState = context.read<AppBloc>().state;
+                             final userId = (appState is AppReady) ? appState.userId : 'local_user';
+                             await context.read<EmergencyService>().deactivateSOS(userId: userId);
+                             if (mounted) {
+                               ScaffoldMessenger.of(context).showSnackBar(
+                                 const SnackBar(content: Text('Silent Evidence Capture Stopped')),
+                               );
+                             }
                           },
                         ),
                         _EmergencyActionButton(

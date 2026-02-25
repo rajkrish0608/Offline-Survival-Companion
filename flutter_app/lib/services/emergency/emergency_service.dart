@@ -114,6 +114,11 @@ class EmergencyService extends ChangeNotifier {
       // Send all-clear SMS
       await _sendAllClearSMS(userId);
 
+      // Stop Evidence Capture
+      if (_evidenceService != null) {
+        await _evidenceService!.stopCapture();
+      }
+
       // Stop P2P Broadcast
       if (_peerMeshService != null) {
         await _peerMeshService!.stopAll();

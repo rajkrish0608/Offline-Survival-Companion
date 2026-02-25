@@ -344,9 +344,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> with TickerProvid
                   _ActionCard(
                     icon: Icons.contact_emergency,
                     label: 'Contacts',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const EmergencyContactsScreen()),
-                    ),
+                    onTap: () => context.push('/emergency-contacts'),
                   ),
                   _ActionCard(
                     icon: Icons.sync,
@@ -357,24 +355,22 @@ class _HomeScreenContentState extends State<HomeScreenContent> with TickerProvid
                   _ActionCard(
                     icon: Icons.save_alt,
                     label: 'Web Saver',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const WebpageSaverScreen()),
-                    ),
+                    onTap: () => context.push('/web-saver'),
                   ),
                   _ActionCard(
                     icon: Icons.qr_code,
                     label: 'QR Scanner',
-                    onTap: () => Navigator.of(context).pushNamed('/qr-scanner'), // Fallback if no specific route
+                    onTap: () => context.push('/qr-scanner'), // Fallback if no specific route
                   ),
                   _ActionCard(
                     icon: Icons.settings_input_antenna,
                     label: 'Signal Tools',
-                    onTap: () => Navigator.of(context).pushNamed('/signal-tools'),
+                    onTap: () => context.push('/signal-tools'),
                   ),
                   _ActionCard(
                     icon: Icons.help_outline,
                     label: 'User Manual',
-                    onTap: () => Navigator.of(context).pushNamed('/user-manual'),
+                    onTap: () => context.push('/user-manual'),
                   ),
                 ],
               ),

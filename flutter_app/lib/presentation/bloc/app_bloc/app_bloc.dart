@@ -63,8 +63,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         return;
       }
 
-      // Initialize sync engine
-      await _syncEngine.initialize();
+      // Initialize sync engine with timeout
+      _logger.i('Initializing SyncEngine...');
+      await _syncEngine.initialize().timeout(const Duration(seconds: 5), onTimeout: () {
+        _logger.w('SyncEngine initialization timed out');
+      });
 
       // Start shake detection
       _shakeDetectorService.start();
@@ -72,16 +75,12 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       // Ensure a default user exists
       final userId = await _storageService.getOrCreateDefaultUser();
 
-      // Check if user is onboarded
-      final isOnboarded = _storageService.isInitialized
-          ? (_storageService.getSetting('is_onboarded') ?? false)
-          : false;
-
-      if (isOnboarded) {
-        emit(AppReady(userId: userId));
-      } else {
-        emit(const AppOnboardingRequired());
-      }
+      // Bypass onboarding check - Go straight to home
+      _logger.i('App ready, emitting AppReady');
+      emit(AppReady(userId: userId));
+      
+      // Mark as onboarded in storage for future consistency
+      await _storageService.saveSetting('is_onboarded', true);
     } catch (e) {
       _logger.e('App initialization failed: $e');
       emit(AppError(message: 'Failed to initialize app: $e'));

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
+import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 
 class SilentSOSButton extends StatefulWidget {
   final double size;
@@ -111,7 +112,11 @@ class _SilentSOSButtonState extends State<SilentSOSButton> with SingleTickerProv
 
   void _triggerSOS() {
     setState(() => _isCountdownActive = false);
-    context.read<EmergencyService>().activateSOS(userId: 'local_user');
+    
+    final appState = context.read<AppBloc>().state;
+    final userId = (appState is AppReady) ? appState.userId : 'local_user';
+    
+    context.read<EmergencyService>().activateSOS(userId: userId);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('SOS Triggered!', style: TextStyle(color: Colors.white)),

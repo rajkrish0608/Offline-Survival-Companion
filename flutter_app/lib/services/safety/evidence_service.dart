@@ -14,12 +14,15 @@ class EvidenceService {
   
   CameraController? _cameraController;
   bool _isCapturing = false;
+  Timer? _audioTimer;
+  bool _stopRequested = false;
 
   EvidenceService(this._storageService);
 
   Future<void> captureEvidence({required String userId}) async {
     if (_isCapturing) return;
     _isCapturing = true;
+    _stopRequested = false;
 
     _logger.i('Starting auto-evidence collection for user: $userId');
 
@@ -31,12 +34,12 @@ class EvidenceService {
       }
 
       // 2. Start Audio Recording (will run for 15s)
-      await _recordAudio(userId);
+      if (!_stopRequested) await _recordAudio(userId);
 
       // 3. Start Video Recording (will run for 15s)
       // We wait a bit to ensure camera is free from photo capture
       await Future.delayed(const Duration(seconds: 2));
-      await _recordVideo(userId);
+      if (!_stopRequested) await _recordVideo(userId);
 
     } catch (e) {
       _logger.e('Failed to capture evidence: $e');
@@ -88,8 +91,9 @@ class EvidenceService {
 
         _logger.i('Audio recording started...');
 
-        // Record for 15 seconds (reduced from 30 to make room for video)
-        Timer(const Duration(seconds: 15), () async {
+        // Record for 15 seconds
+        _audioTimer = Timer(const Duration(seconds: 15), () async {
+          if (_stopRequested) return;
           final audioPath = await _audioRecorder.stop();
           if (audioPath != null) {
             await _saveToVault(userId, File(audioPath), 'audio');
@@ -126,8 +130,11 @@ class EvidenceService {
       await _cameraController!.startVideoRecording();
       _logger.i('Video recording started...');
 
-      // Record for 15 seconds
-      await Future.delayed(const Duration(seconds: 15));
+      // Record for 15 seconds with periodic checks for stop request
+      for (int i = 0; i < 15; i++) {
+        if (_stopRequested) break;
+        await Future.delayed(const Duration(seconds: 1));
+      }
 
       final XFile videoFile = await _cameraController!.stopVideoRecording();
       await _cameraController!.dispose();
@@ -183,6 +190,26 @@ class EvidenceService {
     if (type == 'photo') return '.jpg';
     if (type == 'video') return '.mp4';
     return '.m4a';
+  }
+
+  Future<void> stopCapture() async {
+    _logger.i('Stopping evidence capture...');
+    _stopRequested = true;
+    _audioTimer?.cancel();
+    
+    try {
+      if (await _audioRecorder.isRecording()) {
+        await _audioRecorder.stop();
+      }
+      
+      if (_cameraController != null && _cameraController!.value.isRecordingVideo) {
+        await _cameraController!.stopVideoRecording();
+      }
+    } catch (e) {
+      _logger.e('Error during stopCapture: $e');
+    } finally {
+      _isCapturing = false;
+    }
   }
 
   void dispose() {
