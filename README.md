@@ -118,19 +118,42 @@ graph TD
 
 ---
 
-## ⚡ 4. Capabilities Segmentation
+## 🛠️ 4. Feature Matrix: Comprehensive Capabilities
 
-### 🌐 Online Capabilities (Network Enabled)
-- **Asynchronous Telemetry:** "Outbox Pattern" synchronization of safety metadata.
-- **RESTful API Architecture:** Stateless endpoints for user synchronization and global SOS dispatch.
-- **Crowdsourced Intelligence:** Aggregating global hazard APIs to present real-time threat vectors.
-- **Cloud Notification Relay:** Triggering FCM/APNs for remote device location polling.
+The **Offline Survival Companion** is structured into five core high-resilience modules. Each component is engineered to operate under zero-connectivity constraints.
 
-### 🔋 Offline Capabilities (Zero-Network Autonomy)
-- **Local Spatial Rendering:** Parsing massive `.mbtiles` payloads directly from device storage using MapLibre.
-- **Speech-To-Text (Offline Mode):** Utilizing underlying OS-level DSP dictionaries `ListenMode.deviceDefault` for zero-latency acoustic triggering.
-- **Accelerometer Interrupts:** Background isolate listening for high-G force spikes (Shake SOS) without pinging cognitive cloud services.
-- **Cryptographic Enclaves:** Local generation and storage of PBKDF2 derived keys locking biometric payloads.
+### 🌍 I. Advanced Geospatial Engine
+*   **Offline Vector Mapping (MapLibre GL):** High-performance, GPU-accelerated map rendering utilizing locally stored `.mbtiles` payloads.
+*   **Regional Pack Management:** Granular control over map downloads, allowing users to cache specific survival zones before departure.
+*   **Real-Time Route Tracking:** Deterministic path recording using local GPS telemetry; tracks are persisted to SQLite for retroactive analysis.
+*   **Dynamic Survival POIs:** Automated highlighting of critical infrastructure—Hospitals, Police Stations, and Safe Havens—extracted from vector tile metadata.
+*   **Topology HUD:** Dedicated topographic mode for elevation-conscious navigation in mountainous terrain.
+
+### 🚨 II. Emergency SOS & Triage
+*   **Silent SOS Protocol:** A discreet, non-vibrating trigger system that initiates emergency workflows without alerting nearby threats.
+*   **Multi-Sensor Triggers:**
+    *   **Shake Detection:** Background accelerometer monitoring that triggers distress signals upon high-G force events.
+    *   **Voice Activation:** Local audio DSP engine (Isolate-isolated) that recognizes SOS trigger phrases (e.g., "Help Help Help") even when the app is backgrounded.
+*   **Automated Remote Alerter:** Firing encrypted SMS/Network payloads to pre-configured Emergency Contacts containing sub-meter precision coordinates.
+*   **High-Decibel Panic Siren:** An audio-override system that forces the device to emit a maximum-volume distress frequency to attract physical attention.
+
+### 🛡️ III. Critical Safety & Women's Empowerment
+*   **Safety Timer (The "Dead Man's Switch"):** A countdown protocol requiring periodic user confirmation. Failure to "check-in" auto-triggers a full SOS broadcast.
+*   **Fake Call Simulation:** A high-fidelity UI overlay that replicates a native incoming call (with programmable caller ID) to provide a socially acceptable exit from uncomfortable environments.
+*   **Helpline Directory:** A zero-database-delay directory of local and national emergency services, categorized by urgency.
+*   **Self-Defense Repository:** Illustrated, offline-available guides for tactical situational awareness and physical safety.
+
+### 🔒 IV. Secure Cryptographic Vault
+*   **Government-Grade Encryption:** AES-256 implementation for all local document storage. Keys never leave the device hardware.
+*   **Biometric Authentication Gate:** Multi-factor local auth requiring FaceID, TouchID, or Android Biometric Prompt APIs for entry.
+*   **Offline Document Ingestion:** Scan and store vital travel docs, medical records, or identity proof without cloud upload exposure.
+*   **Auto-Wipe Safety:** Programmable threshold to purge the local vault after multiple failed authentication attempts (User-configurable).
+
+### 🧰 V. Survival Toolkit & 3D HUD
+*   **AR Compass HUD:** A sensor-fusion Augmented Reality overlay. Points of Interest (POIs) and bearings are projected directly onto the camera feed using real-time geographic azimuth calculations.
+*   **Signal Mirrors & Strobe:** Programmable screen/flashlight patterns including standard Morse SOS and high-frequency strobe for signaling rescue aircraft.
+*   **Webpage Archiver:** A lightweight PWA-style scraper that snapshots survival guides or news for offline reading.
+*   **Survival Mode Theme:** A deterministic low-power override. Automatically switches the app to a high-contrast monochrome OLED theme (pure black pixels) and disables all non-critical UI animations to preserve battery life below 20%.
 
 ---
 
