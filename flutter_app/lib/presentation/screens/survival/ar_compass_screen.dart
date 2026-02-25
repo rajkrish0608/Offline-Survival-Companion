@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_compass/flutter_compass.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:offline_survival_companion/data/models/poi_model.dart';
 import 'package:provider/provider.dart';
@@ -16,12 +19,16 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
   CameraController? _cameraController;
   List<POI> _pois = [];
   double? _direction;
+  Position? _currentPosition;
+  StreamSubscription<Position>? _positionStream;
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
     _loadPois();
+    _startPositionUpdates();
+    
     FlutterCompass.events?.listen((event) {
       if (mounted) {
         setState(() {
@@ -56,9 +63,25 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
     }
   }
 
+  void _startPositionUpdates() {
+    _positionStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+      ),
+    ).listen((position) {
+      if (mounted) {
+        setState(() {
+          _currentPosition = position;
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
     _cameraController?.dispose();
+    _positionStream?.cancel();
     super.dispose();
   }
 
@@ -71,18 +94,13 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Camera Preview
           Positioned.fill(
             child: AspectRatio(
               aspectRatio: _cameraController!.value.aspectRatio,
               child: CameraPreview(_cameraController!),
             ),
           ),
-          
-          // AR HUD Overlay
           Positioned.fill(child: _buildHUD()),
-          
-          // Top Controls
           Positioned(
             top: 40, left: 16,
             child: IconButton(
@@ -90,6 +108,17 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
+          if (_currentPosition == null)
+            Positioned(
+              bottom: 20, left: 0, right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                  child: const Text('Acquiring GPS Signal...', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -98,16 +127,11 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
   Widget _buildHUD() {
     return Stack(
       children: [
-        // Compass Strip
         Positioned(
           top: 60, left: 0, right: 0,
           child: _buildCompassStrip(),
         ),
-        
-        // POI Markers
         ..._pois.map((poi) => _buildPOIMarker(poi)),
-        
-        // Center Reticle
         Center(
           child: Container(
             width: 40, height: 40,
@@ -129,14 +153,12 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
 
   Widget _buildCompassStrip() {
     if (_direction == null) return const SizedBox();
-    
     return Container(
       height: 60,
       color: Colors.black26,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Cardinal Directions
           _buildDirectionLabel("N", 0),
           _buildDirectionLabel("NE", 45),
           _buildDirectionLabel("E", 90),
@@ -145,8 +167,6 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
           _buildDirectionLabel("SW", 225),
           _buildDirectionLabel("W", 270),
           _buildDirectionLabel("NW", 315),
-          
-          // Current Heading Indicator
           const Positioned(
             top: 0,
             child: Icon(Icons.arrow_drop_down, color: Colors.red, size: 30),
@@ -160,12 +180,8 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
     double relativeAngle = (angle - (_direction ?? 0)) % 360;
     if (relativeAngle > 180) relativeAngle -= 360;
     if (relativeAngle < -180) relativeAngle += 360;
-    
-    // Only show if within field of view (approx 60 deg)
     if (relativeAngle.abs() > 45) return const SizedBox();
-    
     double xOffset = (relativeAngle / 45) * (MediaQuery.of(context).size.width / 2);
-    
     return Transform.translate(
       offset: Offset(xOffset, 0),
       child: Text(
@@ -176,15 +192,16 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
   }
 
   Widget _buildPOIMarker(POI poi) {
-    // This is a simplified AR marker based on bearing
-    // In a real app, we'd calculate azimuth based on current location
-    // Since we don't have current location here yet, we'll mock it or
-    // just show them at fixed bearings for now to demonstrate the HUD.
+    if (_currentPosition == null || _direction == null) return const SizedBox();
+
+    final bearing = _calculateBearing(
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+      poi.latitude,
+      poi.longitude,
+    );
     
-    // TODO: Calculate real bearing from current location to POI
-    double mockBearing = (poi.latitude * 100) % 360; // Mock bearing
-    
-    double relativeAngle = (mockBearing - (_direction ?? 0)) % 360;
+    double relativeAngle = (bearing - (_direction ?? 0)) % 360;
     if (relativeAngle > 180) relativeAngle -= 360;
     if (relativeAngle < -180) relativeAngle += 360;
     
@@ -193,21 +210,47 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
     double screenWidth = MediaQuery.of(context).size.width;
     double xOffset = (relativeAngle / 30) * (screenWidth / 2);
     
+    final distance = Geolocator.distanceBetween(
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+      poi.latitude,
+      poi.longitude,
+    );
+
     return Center(
       child: Transform.translate(
         offset: Offset(xOffset, 0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(_getIconForType(poi.type), color: Colors.cyanAccent, size: 30),
-            Text(
-              poi.title,
-              style: const TextStyle(color: Colors.white, fontSize: 12, backgroundColor: Colors.black45),
+            Icon(_getIconForType(poi.type), color: Colors.cyanAccent, size: 32),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(4)),
+              child: Column(
+                children: [
+                  Text(poi.title, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                  Text('${(distance / 1000).toStringAsFixed(1)}km', style: const TextStyle(color: Colors.cyanAccent, fontSize: 9)),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  double _calculateBearing(double lat1, double lon1, double lat2, double lon2) {
+    double lat1Rad = lat1 * math.pi / 180;
+    double lat2Rad = lat2 * math.pi / 180;
+    double dLon = (lon2 - lon1) * math.pi / 180;
+
+    double y = math.sin(dLon) * math.cos(lat2Rad);
+    double x = math.cos(lat1Rad) * math.sin(lat2Rad) - 
+               math.sin(lat1Rad) * math.cos(lat2Rad) * math.cos(dLon);
+    
+    double bearing = math.atan2(y, x) * 180 / math.pi;
+    return (bearing + 360) % 360;
   }
 
   IconData _getIconForType(String type) {

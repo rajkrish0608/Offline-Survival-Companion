@@ -34,3 +34,11 @@ class BatteryLevelChanged extends AppEvent {
 class OnboardingCompleted extends AppEvent {
   const OnboardingCompleted();
 }
+
+class SurvivalModeToggled extends AppEvent {
+  final bool isEnabled;
+  const SurvivalModeToggled(this.isEnabled);
+
+  @override
+  List<Object?> get props => [isEnabled];
+}

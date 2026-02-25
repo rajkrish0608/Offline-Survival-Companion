@@ -44,6 +44,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<SyncRequested>(_onSyncRequested);
     on<BatteryLevelChanged>(_onBatteryLevelChanged);
     on<OnboardingCompleted>(_onOnboardingCompleted);
+    on<SurvivalModeToggled>(_onSurvivalModeToggled);
   }
 
   Future<void> _onAppInitialized(
@@ -142,6 +143,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   ) async {
     try {
       await _syncEngine.performSync(isManual: true);
+      await _syncEngine.fetchGlobalSafetyPins();
     } catch (e) {
       _logger.e('Sync failed: $e');
     }
@@ -151,9 +153,20 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     BatteryLevelChanged event,
     Emitter<AppState> emit,
   ) async {
-    final isLowBattery = await _emergencyService.isLowBattery();
-    if (isLowBattery) {
-      _logger.w('Low battery mode activated');
+    if (event.level <= 20) {
+      _logger.w('Low battery level (${event.level}%) detected. Auto-activating Survival Mode.');
+      add(const SurvivalModeToggled(true));
+    }
+  }
+
+  void _onSurvivalModeToggled(
+    SurvivalModeToggled event,
+    Emitter<AppState> emit,
+  ) {
+    if (state is AppReady) {
+      final currentState = state as AppReady;
+      emit(currentState.copyWith(isSurvivalMode: event.isEnabled));
+      _logger.i('Survival Mode ${event.isEnabled ? "Enabled" : "Disabled"}');
     }
   }
 

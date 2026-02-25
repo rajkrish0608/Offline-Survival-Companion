@@ -17,10 +17,18 @@ class AppOnboardingRequired extends AppState {
 
 class AppReady extends AppState {
   final String userId;
-  const AppReady({required this.userId});
+  final bool isSurvivalMode;
+  const AppReady({required this.userId, this.isSurvivalMode = false});
 
   @override
-  List<Object?> get props => [userId];
+  List<Object?> get props => [userId, isSurvivalMode];
+
+  AppReady copyWith({String? userId, bool? isSurvivalMode}) {
+    return AppReady(
+      userId: userId ?? this.userId,
+      isSurvivalMode: isSurvivalMode ?? this.isSurvivalMode,
+    );
+  }
 }
 
 class AppError extends AppState {

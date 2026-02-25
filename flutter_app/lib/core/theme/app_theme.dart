@@ -172,4 +172,45 @@ class AppTheme {
       bodyMedium: TextStyle(fontSize: 14, color: Color(0xFFB0B0B0)),
     ),
   );
+
+  // Survival Theme (Extreme High Contrast, Minimal Color)
+  static final ThemeData survivalTheme = ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: const ColorScheme.dark(
+      primary: Colors.white,
+      secondary: Colors.white,
+      surface: Colors.black,
+      error: Colors.red,
+      onPrimary: Colors.black,
+      onSecondary: Colors.black,
+      onSurface: Colors.white,
+    ),
+    scaffoldBackgroundColor: Colors.black,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.black,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: true,
+    ),
+    cardTheme: CardThemeData(
+      color: Colors.black,
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Colors.white, width: 1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: Colors.black,
+      indicatorColor: Colors.white,
+      labelTextStyle: WidgetStateProperty.all(
+        const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+    ),
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      bodyLarge: TextStyle(color: Colors.white, fontSize: 18),
+      bodyMedium: TextStyle(color: Colors.white70, fontSize: 16),
+    ),
+  );
 }

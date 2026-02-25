@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/services/power/battery_service.dart';
 
 class LowBatteryToggle extends StatefulWidget {
@@ -35,36 +37,36 @@ class _LowBatteryToggleState extends State<LowBatteryToggle> {
   void _toggleLowPowerMode(bool value) {
     setState(() => _isLowPowerMode = value);
     
+    // Dispatch event to Bloc
+    context.read<AppBloc>().add(SurvivalModeToggled(value));
+    
     final message = value 
-        ? 'Low Power Mode Enabled: Animations Disabled' 
-        : 'Low Power Mode Disabled';
+        ? 'Survival Mode Enabled: High Contrast Active' 
+        : 'Survival Mode Disabled';
         
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         duration: const Duration(seconds: 2),
-        backgroundColor: value ? Colors.orange : null,
+        backgroundColor: value ? Colors.black : null,
       ),
     );
-    
-    // In a real app, this would also write to a global SettingsService/Bloc 
-    // to actually disable animations app-wide.
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: _isLowPowerMode ? Colors.orange.withOpacity(0.1) : null,
+      color: _isLowPowerMode ? Colors.yellow.withOpacity(0.1) : null,
       child: SwitchListTile(
-        title: const Text('Low Battery Mode'),
+        title: const Text('Survival Mode'),
         subtitle: Text('Battery Level: $_batteryLevel%'),
         secondary: Icon(
-          _isLowPowerMode ? Icons.battery_alert : Icons.battery_full,
-          color: _isLowPowerMode ? Colors.orange : Colors.green,
+          _isLowPowerMode ? Icons.bolt : Icons.battery_full,
+          color: _isLowPowerMode ? Colors.yellow : Colors.green,
         ),
         value: _isLowPowerMode,
         onChanged: _toggleLowPowerMode,
-        activeThumbColor: Colors.orange,
+        activeThumbColor: Colors.yellow,
       ),
     );
   }

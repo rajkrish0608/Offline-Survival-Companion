@@ -47,35 +47,47 @@ class VoiceSosService extends ChangeNotifier {
   void _startListening() async {
     if (!_isEnabled || _isListening) return;
 
-    _isListening = true;
-    notifyListeners();
-    _speech.listen(
-      onResult: (result) {
-        final words = result.recognizedWords.toLowerCase();
-        _logger.d('Heard: $words');
-        if (words.contains(_triggerPhrase)) {
-          _triggerSOS();
-        }
-      },
-      listenFor: const Duration(seconds: 30),
-      pauseFor: const Duration(seconds: 5),
-      partialResults: true,
-      cancelOnError: false,
-      listenMode: ListenMode.confirmation,
-    );
+    try {
+      _isListening = true;
+      notifyListeners();
+      
+      await _speech.listen(
+        onResult: (result) {
+          final words = result.recognizedWords.toLowerCase();
+          _logger.d('Heard: $words');
+          if (words.contains(_triggerPhrase)) {
+            _triggerSOS();
+          }
+        },
+        listenFor: const Duration(seconds: 30),
+        pauseFor: const Duration(seconds: 5),
+        partialResults: true,
+        cancelOnError: false,
+        listenMode: ListenMode.deviceDefault,
+      );
 
-    // Re-start listening after it stops naturally
-    Timer(const Duration(seconds: 31), () {
-      if (_isEnabled) {
-        _isListening = false;
-        _startListening();
-      }
-    });
+      // Recursive restart after session finishes naturally
+      _speech.statusListener = (status) {
+        if (status == 'done' && _isEnabled) {
+          _isListening = false;
+          _startListening();
+        }
+      };
+    } catch (e) {
+      _logger.e('Error in voice listening: $e');
+      _isListening = false;
+      // Retry after a short delay
+      Future.delayed(const Duration(seconds: 5), () {
+        if (_isEnabled) _startListening();
+      });
+    }
   }
 
   void _stopListening() {
+    _isEnabled = false;
     _isListening = false;
     _speech.stop();
+    notifyListeners();
   }
 
   void _triggerSOS() {

@@ -216,5 +216,40 @@ class SyncEngine {
     _retryTimer?.cancel();
   }
 
+  /// Simulation: Fetch global safety pins from "the crowd"
+  Future<void> fetchGlobalSafetyPins() async {
+    if (!await _isConnected()) return;
+    
+    _logger.i('Fetching crowdsourced safety pins...');
+    await Future.delayed(const Duration(seconds: 1)); // Simulate network latency
+
+    // Mock global data
+    final mockPins = [
+      {
+        'id': 'global-1',
+        'userId': 'system',
+        'latitude': 25.6186,
+        'longitude': 85.1414,
+        'category': 'hazard',
+        'description': 'Road blockage reported by crowd',
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      },
+      {
+        'id': 'global-2',
+        'userId': 'system',
+        'latitude': 25.6000,
+        'longitude': 85.1300,
+        'category': 'lighting',
+        'description': 'Street lights out - reported 2h ago',
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      },
+    ];
+
+    for (var pinJson in mockPins) {
+      await _storageService.saveSafetyPin(pinJson);
+    }
+    _logger.i('Downloaded ${mockPins.length} global safety pins');
+  }
+
   bool get isSyncing => _isSyncing;
 }

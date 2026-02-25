@@ -169,13 +169,22 @@ class OfflineSurvivalApp extends StatelessWidget {
         RepositoryProvider.value(value: evidenceService),
         ChangeNotifierProvider.value(value: voiceSosService),
       ],
-      child: MaterialApp.router(
-        title: 'Offline Survival Companion',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.dark,
-        routerConfig: AppRouter.router,
-        debugShowCheckedModeBanner: false,
+      child: BlocBuilder<AppBloc, AppState>(
+        builder: (context, state) {
+          bool isSurvival = false;
+          if (state is AppReady) {
+            isSurvival = state.isSurvivalMode;
+          }
+
+          return MaterialApp.router(
+            title: 'Offline Survival Companion',
+            theme: isSurvival ? AppTheme.survivalTheme : AppTheme.lightTheme,
+            darkTheme: isSurvival ? AppTheme.survivalTheme : AppTheme.darkTheme,
+            themeMode: isSurvival ? ThemeMode.dark : ThemeMode.dark, // Default to dark, survival is always dark
+            routerConfig: AppRouter.router,
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }

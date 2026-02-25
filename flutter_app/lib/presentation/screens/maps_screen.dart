@@ -173,21 +173,22 @@ class _MapsScreenState extends State<MapsScreen> {
 
     // Safety Pins (Crowdsourced)
     for (var pin in _safetyPins) {
+      final isGlobal = pin.userId == 'system';
       _mapController?.addCircle(
         CircleOptions(
           geometry: LatLng(pin.latitude, pin.longitude),
-          circleRadius: 10.0,
+          circleRadius: isGlobal ? 12.0 : 10.0,
           circleColor: _getSafetyPinColor(pin.category),
           circleOpacity: 0.9,
-          circleStrokeWidth: 1.5,
-          circleStrokeColor: '#000000',
+          circleStrokeWidth: isGlobal ? 3.0 : 1.5,
+          circleStrokeColor: isGlobal ? '#FFFFFF' : '#000000',
         ),
       );
       _mapController?.addSymbol(
         SymbolOptions(
           geometry: LatLng(pin.latitude, pin.longitude),
           iconImage: _getSafetyPinIcon(pin.category),
-          textField: pin.category.toUpperCase(),
+          textField: isGlobal ? 'GLOBAL: ${pin.category.toUpperCase()}' : pin.category.toUpperCase(),
           textOffset: const Offset(0, 1.5),
           textColor: '#ffffff',
           textSize: 10.0,
