@@ -142,7 +142,7 @@ graph TD
 The **Offline Survival Companion** is structured into five core high-resilience modules. Each component is engineered to operate under zero-connectivity constraints.
 
 ### 🌍 I. Advanced Geospatial Engine
-*   **Offline Vector Mapping (MapLibre GL):** High-performance, GPU-accelerated map rendering utilizing locally stored `.mbtiles` payloads.
+*   **Offline Vector Mapping (MapLibre GL):** High-performance, GPU-accelerated map rendering utilizing locally stored `.mbtiles` payloads and professional-grade MapTiler Outdoor topographic tiles.
 *   **Regional Pack Management:** Granular control over map downloads, allowing users to cache specific survival zones before departure.
 *   **Real-Time Route Tracking:** Deterministic path recording using local GPS telemetry; tracks are persisted to SQLite for retroactive analysis.
 *   **Dynamic Survival POIs:** Automated highlighting of critical infrastructure—Hospitals, Police Stations, and Safe Havens—extracted from vector tile metadata.
@@ -155,6 +155,7 @@ The **Offline Survival Companion** is structured into five core high-resilience 
     *   **Voice Activation:** Local audio DSP engine (Isolate-isolated) that recognizes SOS trigger phrases (e.g., "Help Help Help") even when the app is backgrounded.
 *   **Automated Remote Alerter:** Firing encrypted SMS/Network payloads to pre-configured Emergency Contacts containing sub-meter precision coordinates.
 *   **High-Decibel Panic Siren:** An audio-override system that forces the device to emit a maximum-volume distress frequency to attract physical attention.
+*   **Silent Evidence Capture:** Automatically and silently aggregates local evidence during SOS, executing a sequential chain: Stealth Photo capture $\rightarrow$ 15s Audio recording $\rightarrow$ 15s Video capture, all routed directly into the encrypted vault.
 
 ### 🛡️ III. Critical Safety & Women's Empowerment
 *   **Safety Timer (The "Dead Man's Switch"):** A countdown protocol requiring periodic user confirmation. Failure to "check-in" auto-triggers a full SOS broadcast.
@@ -168,9 +169,10 @@ The **Offline Survival Companion** is structured into five core high-resilience 
 *   **Offline Document Ingestion:** Scan and store vital travel docs, medical records, or identity proof without cloud upload exposure.
 *   **Auto-Wipe Safety:** Programmable threshold to purge the local vault after multiple failed authentication attempts (User-configurable).
 
-### 🧰 V. Survival Toolkit & 3D HUD
+### 🧰 V. Survival Toolkit & Intelligence
 *   **AR Compass HUD:** A sensor-fusion Augmented Reality overlay. Points of Interest (POIs) and bearings are projected directly onto the camera feed using real-time geographic azimuth calculations.
 *   **Signal Mirrors & Strobe:** Programmable screen/flashlight patterns including standard Morse SOS and high-frequency strobe for signaling rescue aircraft.
+*   **Comprehensive Offline Manual:** An indexed, real-time searchable JSON-backed knowledge base containing "How to Use" protocols and "Pro Tips" for every critical module.
 *   **Webpage Archiver:** A lightweight PWA-style scraper that snapshots survival guides or news for offline reading.
 *   **Survival Mode Theme:** A deterministic low-power override. Automatically switches the app to a high-contrast monochrome OLED theme (pure black pixels) and disables all non-critical UI animations to preserve battery life below 20%.
 
@@ -180,8 +182,9 @@ The **Offline Survival Companion** is structured into five core high-resilience 
 
 This project treats pixel manipulation as a critical feature, particularly in high-stress UX.
 
-### 2D Micro-Interaction Physics
-We utilize Flutter's implicit animations bound to stiff spring constants ($k$) and critical damping ratios ($\zeta \approx 1$). This means buttons don't "float"—they snap, providing absolute tactile certainty to the user during panic states.
+### 2D Micro-Interaction Physics & Enterprise UI
+We utilize Flutter's implicit animations bound to stiff spring constants ($k$) and critical damping ratios ($\zeta \approx 1$). This means buttons don't "float"—they snap, providing absolute tactile certainty to the user during panic states.  
+Furthermore, the UI features sequential **staggered entry animations** and a cinematic automated splash sequence (using staggered `FadeTransition` and `SlideTransition` nodes) to provide an enterprise-grade polish without sacrificing offline execution speed.
 
 ### 3D Render Pipeline (AR Compass & Maps)
 - **Engine:** MapLibre GL Native.
