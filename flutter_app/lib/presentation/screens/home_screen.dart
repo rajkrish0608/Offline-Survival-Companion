@@ -133,8 +133,45 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class HomeScreenContent extends StatelessWidget {
+class HomeScreenContent extends StatefulWidget {
   const HomeScreenContent({super.key});
+
+  @override
+  State<HomeScreenContent> createState() => _HomeScreenContentState();
+}
+
+class _HomeScreenContentState extends State<HomeScreenContent> with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late List<Animation<double>> _staggeredAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _staggeredAnimations = List.generate(
+      4, // Number of main sections to stagger
+      (index) => CurvedAnimation(
+        parent: _controller,
+        curve: Interval(
+          0.1 * index,
+          0.1 * index + 0.6,
+          curve: Curves.easeOutCubic,
+        ),
+      ),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,140 +181,166 @@ class HomeScreenContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome Back',
-                      style: Theme.of(context).textTheme.headlineSmall,
+            FadeTransition(
+              opacity: _staggeredAnimations[0],
+              child: SlideTransition(
+                position: Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(_staggeredAnimations[0]),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Welcome Back',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'App is fully functional offline',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'App is fully functional offline',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            const Center(
-              child: SilentSOSButton(size: 140),
+            FadeTransition(
+              opacity: _staggeredAnimations[1],
+              child: const Center(
+                child: SilentSOSButton(size: 140),
+              ),
             ),
             const SizedBox(height: 24),
 
             // Women Safety Banner
-            InkWell(
-              onTap: () => context.push('/women-safety'),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.purple[700]!, Colors.purple[400]!],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.purple.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.emergency_share, color: Colors.white, size: 40),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Women Safety & Empowerment',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Fake Call, Safety Timer, and more',
-                            style: TextStyle(color: Colors.white70, fontSize: 13),
-                          ),
-                        ],
+            FadeTransition(
+              opacity: _staggeredAnimations[2],
+              child: SlideTransition(
+                position: Tween<Offset>(begin: const Offset(0.1, 0), end: Offset.zero).animate(_staggeredAnimations[2]),
+                child: InkWell(
+                  onTap: () => context.push('/women-safety'),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.purple[700]!, Colors.purple[400]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
-                  ],
+                    child: Row(
+                      children: [
+                        const Icon(Icons.emergency_share, color: Colors.white, size: 40),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text(
+                                'Women Safety & Empowerment',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Fake Call, Safety Timer, and more',
+                                style: TextStyle(color: Colors.white70, fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 24),
 
             // Quick Actions
-            Text(
-              'Quick Actions',
-              style: Theme.of(context).textTheme.headlineSmall,
+            FadeTransition(
+              opacity: _staggeredAnimations[3],
+              child: Text(
+                'Quick Actions',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
             ),
             const SizedBox(height: 12),
 
-            GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _ActionCard(
-                  icon: Icons.light,
-                  label: 'Flashlight',
-                  onTap: () => context.read<AppBloc>().state is AppReady 
-                    ? context.read<EmergencyService>().toggleFlashlight()
-                    : null,
-                ),
-                _ActionCard(
-                  icon: Icons.volume_up,
-                  label: 'Alarm',
-                  onTap: () => context.read<AlarmService>().toggle(),
-                ),
-                _ActionCard(
-                  icon: Icons.contact_emergency,
-                  label: 'Contacts',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const EmergencyContactsScreen()),
+            FadeTransition(
+              opacity: _staggeredAnimations[3],
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _ActionCard(
+                    icon: Icons.light,
+                    label: 'Flashlight',
+                    onTap: () => context.read<AppBloc>().state is AppReady 
+                      ? context.read<EmergencyService>().toggleFlashlight()
+                      : null,
                   ),
-                ),
-                _ActionCard(
-                  icon: Icons.sync,
-                  label: 'Manual Sync',
-                  onTap: () =>
-                      context.read<AppBloc>().add(const SyncRequested()),
-                ),
-                _ActionCard(
-                  icon: Icons.save_alt,
-                  label: 'Web Saver',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const WebpageSaverScreen()),
+                  _ActionCard(
+                    icon: Icons.volume_up,
+                    label: 'Alarm',
+                    onTap: () => context.read<AlarmService>().toggle(),
                   ),
-                ),
-                _ActionCard(
-                  icon: Icons.qr_code,
-                  label: 'QR Scanner',
-                  onTap: () => context.push('/qr-scanner'),
-                ),
-                _ActionCard(
-                  icon: Icons.settings_input_antenna,
-                  label: 'Signal Tools',
-                  onTap: () => context.push('/signal-tools'),
-                ),
-              ],
+                  _ActionCard(
+                    icon: Icons.contact_emergency,
+                    label: 'Contacts',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const EmergencyContactsScreen()),
+                    ),
+                  ),
+                  _ActionCard(
+                    icon: Icons.sync,
+                    label: 'Manual Sync',
+                    onTap: () =>
+                        context.read<AppBloc>().add(const SyncRequested()),
+                  ),
+                  _ActionCard(
+                    icon: Icons.save_alt,
+                    label: 'Web Saver',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const WebpageSaverScreen()),
+                    ),
+                  ),
+                  _ActionCard(
+                    icon: Icons.qr_code,
+                    label: 'QR Scanner',
+                    onTap: () => context.push('/qr-scanner'),
+                  ),
+                  _ActionCard(
+                    icon: Icons.settings_input_antenna,
+                    label: 'Signal Tools',
+                    onTap: () => context.push('/signal-tools'),
+                  ),
+                  _ActionCard(
+                    icon: Icons.help_outline,
+                    label: 'User Manual',
+                    onTap: () => context.push('/user-manual'),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

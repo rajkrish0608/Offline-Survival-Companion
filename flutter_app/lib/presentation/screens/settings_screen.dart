@@ -124,17 +124,11 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.description),
-                  title: const Text('Survival Guide'),
+                  leading: const Icon(Icons.help_center_outlined, color: Colors.orange),
+                  title: const Text('App User Manual'),
+                  subtitle: const Text('How to use every feature'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                     // Navigate to Guide tab via HomeScreen logic or direct push
-                     // For now, simpler to just show a snackbar or maybe pop to home?
-                     // Ideally, this would switch the tab index.
-                     ScaffoldMessenger.of(context).showSnackBar(
-                       const SnackBar(content: Text('Go to "Guide" tab for manual.')),
-                     );
-                  },
+                  onTap: () => context.push('/user-manual'),
                 ),
               ],
             ),

@@ -1,0 +1,17 @@
+# Sensitive Configuration
+.env
+.env.*
+*.log
+
+# Implementation & Planning
+implementation_plan.md
+requirements.md
+walkthrough.md
+task.md
+
+# Flutter subproject
+flutter_app/.env
+flutter_app/.env.*
+flutter_app/build/
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins-dependencies

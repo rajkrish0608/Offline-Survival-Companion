@@ -1,0 +1,79 @@
+[
+    {
+        "category": "Emergency Protocols",
+        "title": "Silent SOS",
+        "description": "Trigger a distress signal without alerting bystanders.",
+        "how_to_use": "Tap the large red SOS button on the home screen or the 'Emergency' menu. Once activated, the app will discreetly record location and battery levels, and send them to your emergency contacts via SMS and network channels.",
+        "tips": "Use this when you are in a situation where making noise would increase your danger."
+    },
+    {
+        "category": "Emergency Protocols",
+        "title": "Shake SOS",
+        "description": "Hands-free emergency activation.",
+        "how_to_use": "Enable 'Shake for SOS' in Settings. If you shake your phone vigorously, the app will automatically trigger an SOS sequence.",
+        "tips": "Ensure sensitivity is adjusted in settings to prevent false alarms during normal activity."
+    },
+    {
+        "category": "Emergency Protocols",
+        "title": "Voice SOS",
+        "description": "Hands-free voice trigger.",
+        "how_to_use": "Enable 'Voice SOS' in Settings. The app will listen for the trigger phrase 'HELP HELP HELP'. When detected, it will initiate an emergency alert.",
+        "tips": "This feature processes all audio locally on your device for maximum privacy."
+    },
+    {
+        "category": "Emergency Protocols",
+        "title": "Loud Alarm",
+        "description": "High-decibel siren to attract help.",
+        "how_to_use": "Go to 'Emergency' and tap 'Loud Alarm'. It will bypass silent mode to emit a piercing siren.",
+        "tips": "Use this only when you are in an open area and need to be found quickly by rescue teams."
+    },
+    {
+        "category": "Offline Mapping",
+        "title": "Offline Map Downloads",
+        "description": "Navigate without internet or cellular data.",
+        "how_to_use": "Go to the 'Maps' tab. Tap the download icon in the top right. Select your region. The map will be available for full offline use.",
+        "tips": "Download your expected route areas while you still have a strong Wi-Fi connection."
+    },
+    {
+        "category": "Offline Mapping",
+        "title": "Route Tracking",
+        "description": "Record your path to avoid getting lost.",
+        "how_to_use": "On the 'Maps' screen, tap 'Start Tracking'. The app will record your GPS coordinates and display your path in real-time.",
+        "tips": "Saved routes can be exported or revisited later from the 'Settings' menu."
+    },
+    {
+        "category": "Women's Safety",
+        "title": "Fake Call",
+        "description": "Escape uncomfortable situations with a realistic fake call.",
+        "how_to_use": "Go to the 'Women Safety' dashboard and select 'Fake Call'. You can set a timer (e.g., 1 minute) or trigger it immediately.",
+        "tips": "The call screen is designed to mimic your phone's native interface for maximum realism."
+    },
+    {
+        "category": "Women's Safety",
+        "title": "Safety Timer",
+        "description": "Automated SOS if you don't check in.",
+        "how_to_use": "Set a timer before entering a potentially risky area (e.g., walking home at night). If you don't dismiss the timer before it expires, an SOS is automatically sent.",
+        "tips": "Always add notes about your location or destination in the timer setup for your contacts."
+    },
+    {
+        "category": "Security & Vault",
+        "title": "Secure Data Vault",
+        "description": "Military-grade encryption for your documents.",
+        "how_to_use": "Go to the 'Vault' tab. Set up your biometric lock. You can now add images, documents, or medical records. Everything is AES-256 encrypted.",
+        "tips": "Your vault data never leaves your device. If you delete the app, the vault data is permanently lost for security."
+    },
+    {
+        "category": "Survival Toolkit",
+        "title": "AR Compass",
+        "description": "Heads-up display navigation.",
+        "how_to_use": "Open 'Signal Tools' and select 'AR Compass'. Point your camera at the horizon. Distance and bearing to your saved POIs will appear in 3D space.",
+        "tips": "Hold the phone level for the most accurate sensor readings."
+    },
+    {
+        "category": "Survival Toolkit",
+        "title": "Survival Mode",
+        "description": "Drastic battery conservation.",
+        "how_to_use": "Manual toggle in Settings or automatic trigger at 20% battery. The interface will switch to monochrome OLED black to extend runtime.",
+        "tips": "Animations are disabled in this mode to reduce GPU usage and save power."
+    }
+]

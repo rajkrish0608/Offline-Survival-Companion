@@ -1,12 +1,13 @@
 {
     "version": 8,
     "sources": {
-        "osm": {
+        "maptiler": {
             "type": "raster",
             "tiles": [
-                "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                "https://api.maptiler.com/maps/outdoor-v2/256/{z}/{x}/{y}.png?key=mod9TfGWPeFIINuFXNck"
             ],
-            "tileSize": 256
+            "tileSize": 256,
+            "attribution": "\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e"
         }
     },
     "layers": [
@@ -18,9 +19,9 @@
             }
         },
         {
-            "id": "osm",
+            "id": "maptiler",
             "type": "raster",
-            "source": "osm"
+            "source": "maptiler"
         }
     ]
 }

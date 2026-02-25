@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Sensitive Configuration
+.env
+.env.*
+*.log
+
+# Implementation & Planning
+implementation_plan.md
+requirements.md
+walkthrough.md
+task.md

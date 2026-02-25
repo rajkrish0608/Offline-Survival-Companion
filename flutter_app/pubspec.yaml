@@ -94,6 +94,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/guide_content.json
+    - assets/data/user_manual.json
     - assets/audio/
     - assets/audio/siren.wav
     - assets/maps/

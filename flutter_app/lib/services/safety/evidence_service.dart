@@ -30,8 +30,13 @@ class EvidenceService {
         await _saveToVault(userId, File(photoPath), 'photo');
       }
 
-      // 2. Start Audio Recording (will run for 30s)
+      // 2. Start Audio Recording (will run for 15s)
       await _recordAudio(userId);
+
+      // 3. Start Video Recording (will run for 15s)
+      // We wait a bit to ensure camera is free from photo capture
+      await Future.delayed(const Duration(seconds: 2));
+      await _recordVideo(userId);
 
     } catch (e) {
       _logger.e('Failed to capture evidence: $e');
@@ -45,7 +50,9 @@ class EvidenceService {
       final cameras = await availableCameras();
       if (cameras.isEmpty) return null;
 
-      // Use front camera if available
+      // Use back camera for better quality photos generally, 
+      // but front might be better for 'witness' capture.
+      // Front is safer for silent 'selfie' evidence.
       final camera = cameras.firstWhere(
         (c) => c.lensDirection == CameraLensDirection.front,
         orElse: () => cameras.first,
@@ -81,8 +88,8 @@ class EvidenceService {
 
         _logger.i('Audio recording started...');
 
-        // Record for 30 seconds
-        Timer(const Duration(seconds: 30), () async {
+        // Record for 15 seconds (reduced from 30 to make room for video)
+        Timer(const Duration(seconds: 15), () async {
           final audioPath = await _audioRecorder.stop();
           if (audioPath != null) {
             await _saveToVault(userId, File(audioPath), 'audio');
@@ -95,8 +102,56 @@ class EvidenceService {
     }
   }
 
+  Future<void> _recordVideo(String userId) async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) return;
+
+      final camera = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+
+      _cameraController = CameraController(
+        camera,
+        ResolutionPreset.low, // Low res to keep file size offline-friendly
+        enableAudio: true,
+      );
+
+      await _cameraController!.initialize();
+      
+      final directory = await getTemporaryDirectory();
+      final path = '${directory.path}/sos_video_${const Uuid().v4()}.mp4';
+
+      await _cameraController!.startVideoRecording();
+      _logger.i('Video recording started...');
+
+      // Record for 15 seconds
+      await Future.delayed(const Duration(seconds: 15));
+
+      final XFile videoFile = await _cameraController!.stopVideoRecording();
+      await _cameraController!.dispose();
+      _cameraController = null;
+
+      await _saveToVault(userId, File(videoFile.path), 'video');
+      _logger.i('Video evidence saved to vault.');
+
+    } catch (e) {
+      _logger.e('Video recording failed: $e');
+      if (_cameraController != null) {
+        await _cameraController!.dispose();
+        _cameraController = null;
+      }
+    }
+  }
+
   Future<void> _saveToVault(String userId, File file, String type) async {
     try {
+      if (!await file.exists()) {
+        _logger.e('File does not exist: ${file.path}');
+        return;
+      }
+
       final vaultDir = await _storageService.getVaultDirectory();
       final fileName = 'evidence_${type}_${DateTime.now().millisecondsSinceEpoch}${_getFileExtension(type)}';
       final newPath = '${vaultDir.path}/$fileName';
@@ -113,7 +168,7 @@ class EvidenceService {
         'category': 'evidence',
         'document_type': type,
         'size_bytes': await File(newPath).length(),
-        'is_encrypted': 1, // Logic for actual encryption happens in VaultScreen/EncryptionService
+        'is_encrypted': 1,
         'created_at': DateTime.now().millisecondsSinceEpoch,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       });
@@ -125,7 +180,9 @@ class EvidenceService {
   }
 
   String _getFileExtension(String type) {
-    return type == 'photo' ? '.jpg' : '.m4a';
+    if (type == 'photo') return '.jpg';
+    if (type == 'video') return '.mp4';
+    return '.m4a';
   }
 
   void dispose() {

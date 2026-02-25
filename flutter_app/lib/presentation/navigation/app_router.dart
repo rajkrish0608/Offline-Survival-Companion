@@ -17,10 +17,12 @@ import 'package:offline_survival_companion/presentation/screens/women_safety/sel
 import 'package:offline_survival_companion/presentation/screens/women_safety/helpline_directory_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/survival/signal_tools_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/survival/ar_compass_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/user_manual_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/splash_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/',
+    initialLocation: '/splash',
     redirect: (context, state) {
       final appState = context.read<AppBloc>().state;
       final location = state.uri.path;
@@ -45,6 +47,7 @@ class AppRouter {
       return null;
     },
     routes: [
+      GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: '/onboarding',
@@ -96,6 +99,10 @@ class AppRouter {
       GoRoute(
         path: '/ar-compass',
         builder: (context, state) => const ARCompassScreen(),
+      ),
+      GoRoute(
+        path: '/user-manual',
+        builder: (context, state) => const UserManualScreen(),
       ),
     ],
   );
