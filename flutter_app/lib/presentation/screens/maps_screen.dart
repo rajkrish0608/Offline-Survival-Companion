@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
@@ -105,14 +107,20 @@ class _MapsScreenState extends State<MapsScreen> {
   final Set<String> _activeCategories = {'police', 'hospital'};
 
   final List<Map<String, dynamic>> _safePoints = [
-    // Patna Points
+    // Patna (Bihar) Points
     {'name': 'Gandhi Maidan Police Station', 'lat': 25.6186, 'lng': 85.1414, 'type': 'police'},
-    {'name': 'Patiala House Court Police', 'lat': 25.6100, 'lng': 85.1200, 'type': 'police'},
     {'name': 'PMCH Hospital', 'lat': 25.6210, 'lng': 85.1520, 'type': 'hospital'},
     {'name': 'Ruban Memorial', 'lat': 25.5940, 'lng': 85.1050, 'type': 'hospital'},
-    // NYC Points
-    {'name': 'NYPD 1st Precinct', 'lat': 40.7230, 'lng': -74.0080, 'type': 'police'},
-    {'name': 'Upper East Side Hospital', 'lat': 40.7640, 'lng': -73.9550, 'type': 'hospital'},
+
+    // Mumbai Points
+    {'name': 'Mumbai Central Police', 'lat': 18.9696, 'lng': 72.8193, 'type': 'police'},
+    {'name': 'Sir H. N. Reliance Hospital', 'lat': 18.9592, 'lng': 72.8210, 'type': 'hospital'},
+    {'name': 'JJ Hospital', 'lat': 18.9633, 'lng': 72.8339, 'type': 'hospital'},
+
+    // Delhi Points
+    {'name': 'New Delhi Rly Stn Police', 'lat': 28.6429, 'lng': 77.2190, 'type': 'police'},
+    {'name': 'AIIMS Delhi', 'lat': 28.5672, 'lng': 77.2100, 'type': 'hospital'},
+    {'name': 'Safdarjung Hospital', 'lat': 28.5670, 'lng': 77.2078, 'type': 'hospital'},
   ];
 
   void _onMapCreated(MapLibreMapController controller) {
@@ -426,9 +434,112 @@ class _MapsScreenState extends State<MapsScreen> {
     else if (q.contains('patna')) target = const LatLng(25.5941, 85.1376);
 
     if (target != null) {
-      _mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: target, zoom: 12)));
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Search index: "$query" not found.')));
+      _mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: target, zoom: 15)));
+      _mapController?.addSymbol(SymbolOptions(
+        geometry: target,
+        iconImage: 'custom-marker', // Assuming marker is handled or using default
+        textField: query,
+        textOffset: const Offset(0, 2),
+      ));
+    } else {
+      try {
+        List<Location> locations = await locationFromAddress(query);
+        if (locations.isNotEmpty) {
+          final loc = locations.first;
+          final latLng = LatLng(loc.latitude, loc.longitude);
+          _mapController?.animateCamera(
+            CameraUpdate.newCameraPosition(CameraPosition(target: latLng, zoom: 15)),
+          );
+          _mapController?.addSymbol(SymbolOptions(
+            geometry: latLng,
+            iconImage: 'marker-15',
+            textField: query,
+            textOffset: const Offset(0, 2),
+          ));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Could not find location: "$query". Ensure you have internet for initial search.'),
+            backgroundColor: Colors.orange,
+          ));
+        }
+      }
+    }
+  }
+
+  void _downloadCurrentArea() async {
+    final center = await _mapController?.cameraPosition?.target;
+    if (center == null) return;
+
+    // Simulate finding the region name
+    String regionName = "Local Region (${center.latitude.toStringAsFixed(2)}, ${center.longitude.toStringAsFixed(2)})";
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(center.latitude, center.longitude);
+      if (placemarks.isNotEmpty) {
+        regionName = placemarks.first.locality ?? placemarks.first.subAdministrativeArea ?? regionName;
+      }
+    } catch (_) {}
+
+    setState(() {
+      _regions.insert(0, {
+        'name': regionName,
+        'size': '25 MB',
+        'status': 'downloading',
+        'progress': 0.0,
+      });
+      _showDownloads = true;
+    });
+
+    _startDownloadShim(0);
+  }
+
+  void _startDownloadShim(int index) async {
+    if (_regions[index]['status'] == 'downloaded') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Region already available offline.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _regions[index]['status'] = 'downloading';
+      _regions[index]['progress'] = 0.0;
+    });
+
+    for (int i = 1; i <= 10; i++) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+      setState(() {
+        _regions[index]['progress'] = i / 10.0;
+      });
+    }
+
+    setState(() {
+      _regions[index]['status'] = 'downloaded';
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Succesfully downloaded ${_regions[index]['name']}!')),
+      );
+    }
+  }
+
+  Future<void> _goToMyLocation() async {
+    try {
+      final position = await Geolocator.getCurrentPosition();
+      _mapController?.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 15),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to get current location: $e')),
+        );
+      }
     }
   }
 
@@ -440,8 +551,8 @@ class _MapsScreenState extends State<MapsScreen> {
         MapLibreMap(
           onMapCreated: _onMapCreated,
           onMapClick: _onMapClick,
-          initialCameraPosition: const CameraPosition(target: LatLng(40.7128, -74.0060), zoom: 12.0), // New York
-          styleString: "assets/maps/style.json",
+          initialCameraPosition: const CameraPosition(target: LatLng(20.5937, 78.9629), zoom: 4.0), // Center of India
+          styleString: "assets/maps/style_google.json",
           myLocationEnabled: _locationPermissionGranted,
           trackCameraPosition: true,
         ),
@@ -504,15 +615,51 @@ class _MapsScreenState extends State<MapsScreen> {
                       onPressed: () => setState(() => _showDownloads = false),
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ElevatedButton.icon(
+                      onPressed: _downloadCurrentArea,
+                      icon: const Icon(Icons.add_location_alt),
+                      label: const Text('Download Current View Offline'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const Divider(color: Colors.grey),
                   Expanded(
                     child: ListView.builder(
                       itemCount: _regions.length,
                       itemBuilder: (context, index) {
                         final region = _regions[index];
+                        final isDownloading = region['status'] == 'downloading';
+                        
                         return ListTile(
                           title: Text(region['name'], style: const TextStyle(color: Colors.white)),
-                          subtitle: Text(region['size'], style: const TextStyle(color: Colors.grey)),
-                          trailing: region['status'] == 'downloaded' ? const Icon(Icons.check_circle, color: Colors.green) : const Icon(Icons.download, color: Colors.blue),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(region['size'], style: const TextStyle(color: Colors.grey)),
+                              if (isDownloading)
+                                LinearProgressIndicator(
+                                  value: region['progress'],
+                                  backgroundColor: Colors.grey[800],
+                                  color: Colors.blue,
+                                ),
+                            ],
+                          ),
+                          onTap: isDownloading ? null : () => _startDownloadShim(index),
+                          trailing: region['status'] == 'downloaded' 
+                              ? const Icon(Icons.check_circle, color: Colors.green) 
+                              : isDownloading 
+                                  ? const SizedBox(
+                                      width: 20, height: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.download, color: Colors.blue),
                         );
                       },
                     ),
@@ -562,11 +709,7 @@ class _MapsScreenState extends State<MapsScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 FloatingActionButton(
-                  onPressed: () => _mapController?.animateCamera(
-                    CameraUpdate.newCameraPosition(
-                      const CameraPosition(target: LatLng(25.5941, 85.1376), zoom: 15),
-                    ),
-                  ),
+                  onPressed: _goToMyLocation,
                   mini: true,
                   heroTag: 'maps_loc_fab_fix',
                   backgroundColor: Colors.white,

@@ -106,11 +106,10 @@ void main() async {
   final trackingService = TrackingService(storageService);
   final voiceSosService = VoiceSosService(emergencyService);
 
-    // Start background listening for P2P Mesh SOS signals (Don't await to avoid startup hang)
+    // Start background listening for P2P Mesh SOS signals (Requires permissions, so start it later in UI)
     peerMeshService.onSosReceived = (payload) {
       debugPrint('CRITICAL ALARM: MESH SOS RECEIVED: $payload');
     };
-    unawaited(peerMeshService.startDiscovering());
 
   debugPrint('Calling runApp...');
   runApp(

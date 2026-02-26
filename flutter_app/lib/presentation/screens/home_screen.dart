@@ -11,7 +11,9 @@ import 'package:offline_survival_companion/presentation/screens/settings_screen.
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
 import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 import 'package:offline_survival_companion/presentation/widgets/safety/silent_sos_button.dart';
+import 'package:offline_survival_companion/services/network/peer_mesh_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,6 +24,39 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startPassiveMeshListening();
+  }
+
+  Future<void> _startPassiveMeshListening() async {
+    // We try to start discovery silently. It requires permissions,
+    // so we must explicitly check and safely request them before starting
+    // to prevent Android 14 Foreground Service SecurityExceptions.
+    try {
+      if (mounted) {
+        // Must explicitly check permissions before starting FGS to prevent Android 14 crash
+        final locStatus = await Permission.location.status;
+        final blStatus = await Permission.bluetooth.status;
+        final blConnectStatus = await Permission.bluetoothConnect.status;
+        final blScanStatus = await Permission.bluetoothScan.status;
+
+        // Check if all necessary permissions are granted
+        if (locStatus.isGranted && 
+            (blStatus.isGranted || blConnectStatus.isGranted || blScanStatus.isGranted)) {
+          final peerMeshService = context.read<PeerMeshService>();
+          await peerMeshService.startDiscovering();
+          debugPrint('Passive mesh listening started successfully.');
+        } else {
+          debugPrint('Passive mesh listening skipped: permissions not yet granted.');
+        }
+      }
+    } catch (e) {
+      debugPrint('Could not start passive mesh listening: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
