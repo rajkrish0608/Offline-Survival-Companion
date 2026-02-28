@@ -7,10 +7,52 @@ import 'package:offline_survival_companion/presentation/widgets/low_battery_togg
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
-  Future<void> _clearAllData(BuildContext context) async {
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  // Secret admin access: tap version 7 times
+  int _versionTapCount = 0;
+  static const int _requiredTaps = 7;
+  DateTime? _lastTapTime;
+
+  void _onVersionTap() {
+    final now = DateTime.now();
+
+    // Reset if more than 2 seconds passed between taps
+    if (_lastTapTime != null &&
+        now.difference(_lastTapTime!).inSeconds > 2) {
+      _versionTapCount = 0;
+    }
+    _lastTapTime = now;
+    _versionTapCount++;
+
+    final remaining = _requiredTaps - _versionTapCount;
+
+    if (_versionTapCount >= _requiredTaps) {
+      // Unlock — navigate to admin
+      _versionTapCount = 0;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      Navigator.of(context).pushNamed('/admin');
+    } else if (remaining <= 3) {
+      // Show countdown hint only in the last 3 taps
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              '$remaining more tap${remaining == 1 ? '' : 's'} to unlock developer options'),
+          duration: const Duration(milliseconds: 800),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _clearAllData() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -34,23 +76,23 @@ class SettingsScreen extends StatelessWidget {
 
     if (confirmed == true) {
       try {
-        // Clear SharedPreferences (QR codes, settings)
         final prefs = await SharedPreferences.getInstance();
         await prefs.clear();
 
-        // Clear Documents Directory (Webpages, Vault files)
         final dir = await getApplicationDocumentsDirectory();
         if (await dir.exists()) {
           dir.deleteSync(recursive: true);
         }
 
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('All data cleared. Please restart the app.')),
+            const SnackBar(
+                content:
+                    Text('All data cleared. Please restart the app.')),
           );
         }
       } catch (e) {
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error clearing data: $e')),
           );
@@ -84,18 +126,22 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 24),
           _buildSectionHeader('Power Management'),
           const LowBatteryToggle(),
-          
+
           const SizedBox(height: 24),
           _buildSectionHeader('Data & Privacy'),
           Card(
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.sync, color: AppTheme.accentBlue),
+                  leading:
+                      const Icon(Icons.sync, color: AppTheme.accentBlue),
                   title: const Text('Sync Now'),
-                  subtitle: const Text('Check for map & guide updates'),
+                  subtitle:
+                      const Text('Check for map & guide updates'),
                   onTap: () {
-                    context.read<AppBloc>().add(const SyncRequested());
+                    context
+                        .read<AppBloc>()
+                        .add(const SyncRequested());
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Sync started...')),
                     );
@@ -103,10 +149,12 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.delete_forever, color: Colors.red),
+                  leading: const Icon(Icons.delete_forever,
+                      color: Colors.red),
                   title: const Text('Clear All Data'),
-                  subtitle: const Text('Delete saved pages, codes & settings'),
-                  onTap: () => _clearAllData(context),
+                  subtitle: const Text(
+                      'Delete saved pages, codes & settings'),
+                  onTap: _clearAllData,
                 ),
               ],
             ),
@@ -117,23 +165,27 @@ class SettingsScreen extends StatelessWidget {
           Card(
             child: Column(
               children: [
+                // 🔒 Secret admin trigger — tap version 7 times rapidly
                 ListTile(
                   leading: const Icon(Icons.info_outline),
                   title: const Text('Version'),
                   trailing: const Text('1.0.0 (Beta)'),
+                  onTap: _onVersionTap,
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.help_center_outlined, color: Colors.orange),
+                  leading: const Icon(Icons.help_center_outlined,
+                      color: Colors.orange),
                   title: const Text('App User Manual'),
                   subtitle: const Text('How to use every feature'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => Navigator.of(context).pushNamed('/user-manual'),
+                  onTap: () =>
+                      Navigator.of(context).pushNamed('/user-manual'),
                 ),
               ],
             ),
           ),
-          
+
           const SizedBox(height: 48),
           const Center(
             child: Text(
