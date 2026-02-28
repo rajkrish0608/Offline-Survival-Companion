@@ -46,16 +46,16 @@ app.use(cors({
 // Rate limiting — general API
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests from this IP',
+    max: 300,
+    message: { error: 'Too many requests from this IP' },
 });
 app.use('/api/', limiter);
 
 // Stricter rate limit for admin routes
 const adminLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 30,
-    message: 'Too many admin requests from this IP',
+    max: 200,
+    message: { error: 'Too many admin requests from this IP' },
 });
 app.use('/api/admin/', adminLimiter);
 
