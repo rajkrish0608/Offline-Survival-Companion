@@ -11,6 +11,7 @@ import 'package:offline_survival_companion/services/navigation/tracking_service.
 import 'package:offline_survival_companion/services/safety/evidence_service.dart';
 import 'package:offline_survival_companion/services/safety/voice_sos_service.dart';
 import 'package:offline_survival_companion/services/network/peer_mesh_service.dart';
+import 'package:offline_survival_companion/services/auth/auth_service.dart';
 import 'package:logger/logger.dart';
 
 part 'app_event.dart';
@@ -27,6 +28,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final EvidenceService _evidenceService;
   final VoiceSosService _voiceSosService;
   final PeerMeshService _peerMeshService;
+  final AuthService _authService;
   final Logger _logger = Logger();
 
   AppBloc(
@@ -40,6 +42,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     this._evidenceService,
     this._voiceSosService,
     this._peerMeshService,
+    this._authService,
   ) : super(const AppInitializing()) {
     on<AppInitialized>(_onAppInitialized);
     on<AppResumed>(_onAppResumed);
@@ -48,6 +51,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<BatteryLevelChanged>(_onBatteryLevelChanged);
     on<OnboardingCompleted>(_onOnboardingCompleted);
     on<SurvivalModeToggled>(_onSurvivalModeToggled);
+    on<AppLoggedIn>(_onAppLoggedIn);
+    on<AppLoggedOut>(_onAppLoggedOut);
   }
 
   Future<void> _onAppInitialized(
@@ -72,12 +77,15 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       // Start shake detection
       _shakeDetectorService.start();
 
-      // Ensure a default user exists
-      final userId = await _storageService.getOrCreateDefaultUser();
-
-      // Bypass onboarding check - Go straight to home
-      _logger.i('App ready, emitting AppReady');
-      emit(AppReady(userId: userId));
+      // Check if user is authenticated instead of creating a default user
+      if (_authService.isAuthenticated && _authService.currentUser != null) {
+        final userId = _authService.currentUser!['id'] as String;
+        _logger.i('App ready, user authenticated. Emitting AppReady');
+        emit(AppReady(userId: userId));
+      } else {
+        _logger.i('No user session found. Emitting AppUnauthenticated');
+        emit(const AppUnauthenticated());
+      }
       
       // Mark as onboarded in storage for future consistency
       await _storageService.saveSetting('is_onboarded', true);
@@ -93,8 +101,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   ) async {
     try {
       await _storageService.saveSetting('is_onboarded', true);
-      final userId = await _storageService.getOrCreateDefaultUser();
-      emit(AppReady(userId: userId));
+      if (_authService.isAuthenticated && _authService.currentUser != null) {
+        emit(AppReady(userId: _authService.currentUser!['id'] as String));
+      } else {
+        emit(const AppUnauthenticated());
+      }
     } catch (e) {
       _logger.e('Onboarding completion failed: $e');
     }
@@ -114,8 +125,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       String userId = 'guest'; // Default or retrieve from storage if not in state
       if (state is AppReady) {
         userId = (state as AppReady).userId;
-      } else {
-        userId = await _storageService.getOrCreateDefaultUser();
+      } else if (_authService.isAuthenticated && _authService.currentUser != null) {
+        userId = _authService.currentUser!['id'] as String;
       }
 
       _shakeDetectorService.start();
@@ -170,6 +181,26 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       emit(currentState.copyWith(isSurvivalMode: event.isEnabled));
       _logger.i('Survival Mode ${event.isEnabled ? "Enabled" : "Disabled"}');
     }
+  }
+
+  Future<void> _onAppLoggedIn(
+    AppLoggedIn event,
+    Emitter<AppState> emit,
+  ) async {
+    _logger.i('AppLoggedIn event received for user: ${event.userId}');
+    _shakeDetectorService.start();
+    await _voiceSosService.initialize(userId: event.userId);
+    emit(AppReady(userId: event.userId));
+  }
+
+  Future<void> _onAppLoggedOut(
+    AppLoggedOut event,
+    Emitter<AppState> emit,
+  ) async {
+    _logger.i('AppLoggedOut event received');
+    _shakeDetectorService.stop();
+    await _authService.logout();
+    emit(const AppUnauthenticated());
   }
 
   @override

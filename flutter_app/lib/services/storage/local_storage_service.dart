@@ -31,7 +31,7 @@ class LocalStorageService {
 
       _database = await openDatabase(
         path,
-        version: 5,
+        version: 6,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -70,6 +70,7 @@ class LocalStorageService {
         email TEXT UNIQUE,
         name TEXT,
         phone TEXT,
+        password_hash TEXT,
         created_at INTEGER,
         updated_at INTEGER
       )
@@ -417,6 +418,9 @@ class LocalStorageService {
       await db.execute(
           'CREATE INDEX IF NOT EXISTS idx_activity_logs_feature ON activity_logs(feature)');
     }
+    if (oldVersion < 6) {
+      await db.execute('ALTER TABLE users ADD COLUMN password_hash TEXT');
+    }
   }
 
   // ==================== User Operations ====================
@@ -439,6 +443,16 @@ class LocalStorageService {
       'users',
       where: 'id = ?',
       whereArgs: [userId],
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  Future<Map<String, dynamic>?> getUserByEmail(String email) async {
+    _ensureDatabaseReady();
+    final results = await _database!.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
     );
     return results.isNotEmpty ? results.first : null;
   }
