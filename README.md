@@ -10,304 +10,310 @@
 
 **The Ultimate Autonomous Utility for Disconnected Environments**
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/rajkrish0608/Offline-Survival-Companion/build.yml?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/rajkrish0608/Offline-Survival-Companion/actions)
-[![Version](https://img.shields.io/badge/version-v2.0.0--RC1-blue?style=for-the-badge&logo=semver)](https://github.com/rajkrish0608/Offline-Survival-Companion/releases)
+[![Version](https://img.shields.io/badge/version-v1.0.0--Beta-blue?style=for-the-badge&logo=semver)](https://github.com/rajkrish0608/Offline-Survival-Companion/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
-
-<br/>
-
-<!-- Placeholder for Spline 3D Embed Preview -->
-> 🌌 **[Interactive 3D Topographical Demo](https://spline.design/)** — *Spline/WebGL integration rendering real-time elevation node mapping.*
-
-<br/>
-
-## 🖼️ Visual Interface: Enterprise UX
-
-<div align="center">
-  <table border="0">
-    <tr>
-      <td width="50%" align="center">
-        <img src="assets/readme/survival_mode.png" width="100%" alt="Survival Mode" style="border-radius: 12px;" />
-        <br/><em>Survival Mode (OLED Optimized)</em>
-      </td>
-      <td width="50%" align="center">
-        <img src="flutter_app/assets/images/professional_splash.png" width="100%" alt="Splash Screen" style="border-radius: 12px;" />
-        <br/><em>Core System Boot Sequence</em>
-      </td>
-    </tr>
-  </table>
-</div>
-
-<br/>
-
-<!-- Animated Product Demo GIF Placeholder -->
-<img src="assets/readme/demo_preview.gif" alt="App Demo" width="600" style="border-radius: 12px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);" />
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech)
+[![Backblaze B2](https://img.shields.io/badge/Backblaze_B2-E05C2C?style=for-the-badge&logo=backblaze&logoColor=white)](https://backblaze.com)
 
 </div>
 
 ---
 
-## 🚀 1. Executive-Level Project Overview
+## 🚀 1. Project Overview
 
-**Problem Statement:**  
-Modern mobile utilities are structurally dependent on active TCP/IP connections. In high-risk scenarios (natural disasters, remote expeditions, cellular infrastructure collapse), these applications become obsolete hardware bricks exactly when they are needed most. 
+**Problem Statement:**
+Modern mobile utilities are structurally dependent on active internet connections. In high-risk scenarios — natural disasters, remote expeditions, cellular infrastructure collapse — these apps become useless exactly when they're needed most.
 
-**Solution Architecture:**  
-The **Offline Survival Companion** reverses this paradigm. Built on an aggressive, deterministic "Offline-First" architecture, it pushes massive computation payloads—including spatial rendering, cryptographic hashing, and speech recognition—directly to the edge device. 
+**Solution:**
+**Offline Survival Companion** is an aggressive **offline-first** Android app. It pushes computation entirely to the edge — including spatial rendering, cryptographic hashing, and sensor fusion — with optional cloud sync when connectivity is restored.
 
-**Target Audience:**  
-- **Disaster Response Protocols:** First responders operating in compromised physical environments.
-- **Enterprise Wilderness Exploration:** Teams requiring sub-meter AR topological navigation without Assisted-GPS.
-- **High-Risk Demographics:** Users requiring instantaneous, zero-latency panic hardware integrations.
-
-**Engineering Philosophy:**  
-*Resilience through autonomy.* We believe a life-saving tool must rely on physics (hardware sensors) rather than infrastructure (cell towers). 
+**Built for:**
+- 🚑 First responders in compromised environments
+- 🏔️ Wilderness/expedition teams without network access
+- 🛡️ High-risk individuals needing instant panic-hardware integration
 
 ---
 
-## 🏛️ 2. System Architecture (Technical)
-
-Our system is structured utilizing strict **Clean Architecture** patterns, ensuring immutability across safety protocols and preventing UI blocking operations from stalling background sensor telemetry.
-
-### Mermaid Architecture Diagram
+## 🏛️ 2. System Architecture
 
 ```mermaid
 graph TD
-    subgraph Edge_Device [Flutter Mobile Client]
-        UI[Presentation Layer<br>Impeller / Skia Engine]
-        BLoC[State Management<br>RxDart / Streams]
-        Domain[Domain Entities<br>Pure Dart]
-        Data[Repository Implementation]
-        
-        UI <-->|State/Events| BLoC
-        BLoC <-->|Data Contracts| Domain
-        Domain <-->|Interfaces| Data
+    subgraph Edge_Device [Flutter Mobile App - Offline First]
+        UI[Presentation Layer]
+        BLoC[State Management - flutter_bloc]
+        Services[Services - GPS, Sensor, Camera, Audio]
+        SQLite[(SQLite - sqflite)]
+        Hive[(Hive - Encrypted Vault)]
     end
 
-    subgraph Native_Sensors [Hardware Abstraction]
-        Acc[Accelerometer]
-        Mag[Magnetometer]
-        Audio[Mic / DSP]
-        GPS[GPS Chipset]
-    end
-
-    subgraph Local_Datastores
-        SQLite[(SQLite<br>GeoData)]
-        Hive[(Hive NoSQL<br>AES-256 Vault)]
-    end
-
-    subgraph Cloud_Infrastructure [Optional Resilience]
+    subgraph Cloud_Optional [Optional Cloud Sync]
         API[Node.js + Express API]
-        PostGIS[(PostGIS Cluster)]
+        PG[(PostgreSQL - Neon.tech)]
+        B2[(Backblaze B2 - Vault Storage)]
     end
 
-    Data <--> Native_Sensors
-    Data <--> Local_Datastores
-    Data -.->|Optimistic Sync| API
-    API <--> PostGIS
+    UI <-->|Events/States| BLoC
+    BLoC <--> Services
+    Services --> SQLite
+    Services --> Hive
+    Services -.->|Optimistic Sync| API
+    API <--> PG
+    API <--> B2
 ```
 
-### Request Lifecycle & Data Flow
-1. **Event Capture:** A 60Hz loop polls native sensors (e.g., Magnetometer for AR Compass).
-2. **State Mutation:** The data is pushed through an Isolate (background thread) to prevent main-thread jank, piped into the BLoC.
-3. **Optimistic Persistence:** If the event is a "Safety Pin" drop, it is serialized directly to SQLite via `sqflite` with a `sync_status: PENDING`.
-4. **Outbox Synchronization (Eventual Consistency):** A connectivity listener detects network restoration. The outbox flushes to the Node.js API using an exponential backoff circuit breaker.
-
-### Scalability & Fault Tolerance
-- **UI Thread Preservation:** Heavy cryptographic tasks (AES-256) are executed in separated Dart Isolates.
-- **Degraded Modes:** The app gracefully degrades. If GPS lock is lost, the Map engine falls back to the last known coordinate cached in Hive. If battery drops below 20%, it triggers a deterministic state machine overhaul (Survival Mode), killing complex widget trees for raw black/white text.
+### Data Flow
+1. **Sensor Capture:** 60Hz loop polls native sensors (magnetometer, GPS, accelerometer)
+2. **State Mutation:** Data is processed in Dart Isolates (background threads) → pushed to BLoC
+3. **Optimistic Persistence:** Events (safety pins, routes, SOS) are saved locally with `sync_status: PENDING`
+4. **Outbox Sync:** On connectivity restore, a `SyncEngine` flushes pending changes to the backend via exponential-backoff retry
 
 ---
 
 ## ⚙️ 3. Technology Stack
 
-| Category | Technology | Rationale |
+| Category | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Frontend Platform** | Flutter 3.x (Dart) | Predictable compilation to C++ ARM binaries; Impeller engine for 120fps capability. |
-| **State Management** | `flutter_bloc` | Enterprise standard for enforced unidirectional data flow and highly testable state transitions. |
-| **Relational Database** | SQLite (`sqflite`) | ACID-compliant on-device storage for dense geospatial coordinate routing. |
-| **NoSQL / Secure Store** | Hive | High-performance key-value store; natively supports AES-256 encryption chunking. |
-| **Backend API** | Node.js / Express | Non-blocking event loop ideal for capturing massive concurrent bursts of SOS telemetry. |
-| **Cloud Database** | PostgreSQL + PostGIS | Enterprise-grade spatial query support for calculating crowd-sourced safety polygon overlapping. |
-| **Hardware Abstraction**| `camera`, `speech_to_text` | Direct C++ method channels to iOS/Android underlying APIs bypassing UI thread limitations. |
-| **Security** | AES-256-CBC | Hardware-backed keystore/Secure Enclave utilization for symmetric key generation. |
-| **Animation / 3D** | MapLibre GL / Canvas API | OpenGL/WebGL bindings for massive vector coordinate interpolations at 60Hz. |
+| **Mobile** | Flutter 3.x (Dart) | Cross-platform, compiled to native ARM |
+| **State** | `flutter_bloc` | Unidirectional data flow, testable states |
+| **Local DB** | SQLite (`sqflite`) | Routes, POIs, contacts, SOS archives |
+| **Secure Store** | Hive | AES-256 encrypted vault documents |
+| **Backend** | Node.js + Express | REST API, vault sync, authentication |
+| **Cloud DB** | PostgreSQL (Neon.tech) | User accounts, vault metadata |
+| **File Storage** | Backblaze B2 | Encrypted vault files (photos, audio, video) |
+| **Auth** | JWT + bcrypt | Stateless auth with secure sessions |
+| **Maps** | MapLibre GL | GPU-accelerated offline vector maps |
+| **Sensors** | `camera`, `geolocator`, `flutter_compass` | Hardware abstraction |
+| **Security** | AES-256, biometric auth | Device-native secure enclave |
 
 ---
 
-## 🛠️ 4. Feature Matrix: Comprehensive Capabilities
+## 🛠️ 4. Features
 
-The **Offline Survival Companion** is structured into five core high-resilience modules. Each component is engineered to operate under zero-connectivity constraints.
+### 🌍 Geospatial Engine
+- **Offline Vector Maps** (MapLibre GL) with topographic tile support
+- **Real-Time GPS Route Tracking** — routes persisted to local SQLite
+- **Breadcrumb Trail** with timestamp and coordinate logging
+- **Dynamic POIs** — hospitals, police stations, safe havens
+- **Safety Pin Drops** — geo-tagged hazard markers
 
-### 🌍 I. Advanced Geospatial Engine
-*   **Offline Vector Mapping (MapLibre GL):** High-performance, GPU-accelerated map rendering utilizing locally stored `.mbtiles` payloads and professional-grade MapTiler Outdoor topographic tiles.
-*   **Regional Pack Management:** Granular control over map downloads, allowing users to cache specific survival zones before departure.
-*   **Real-Time Route Tracking:** Deterministic path recording using local GPS telemetry; tracks are persisted to SQLite for retroactive analysis.
-*   **Dynamic Survival POIs:** Automated highlighting of critical infrastructure—Hospitals, Police Stations, and Safe Havens—extracted from vector tile metadata.
-*   **Topology HUD:** Dedicated topographic mode for elevation-conscious navigation in mountainous terrain.
+### 🚨 Emergency SOS
+- **Silent SOS** — discreet trigger without visual alert
+- **Shake-to-SOS** — accelerometer-based background detection
+- **Voice Trigger** — local speech recognition ("Help Help Help")
+- **Auto SMS** — sends encrypted location to emergency contacts
+- **Panic Siren** — max-volume audio distress signal
+- **Evidence Chain** — auto photo → 15s audio → 15s video capture routed to encrypted vault
 
-### 🚨 II. Emergency SOS & Triage
-*   **Silent SOS Protocol:** A discreet, non-vibrating trigger system that initiates emergency workflows without alerting nearby threats.
-*   **Multi-Sensor Triggers:**
-    *   **Shake Detection:** Background accelerometer monitoring that triggers distress signals upon high-G force events.
-    *   **Voice Activation:** Local audio DSP engine (Isolate-isolated) that recognizes SOS trigger phrases (e.g., "Help Help Help") even when the app is backgrounded.
-*   **Automated Remote Alerter:** Firing encrypted SMS/Network payloads to pre-configured Emergency Contacts containing sub-meter precision coordinates.
-*   **High-Decibel Panic Siren:** An audio-override system that forces the device to emit a maximum-volume distress frequency to attract physical attention.
-*   **Silent Evidence Capture:** Automatically and silently aggregates local evidence during SOS, executing a sequential chain: Stealth Photo capture $\rightarrow$ 15s Audio recording $\rightarrow$ 15s Video capture, all routed directly into the encrypted vault.
+### 🛡️ Women's Safety Module
+- **Safety Timer** ("Dead Man's Switch") — auto-SOS if check-in missed
+- **Fake Call Simulator** — high-fidelity incoming call UI overlay
+- **Helpline Directory** — offline emergency numbers by category
+- **Self-Defense Guides** — illustrated offline reference
 
-### 🛡️ III. Critical Safety & Women's Empowerment
-*   **Safety Timer (The "Dead Man's Switch"):** A countdown protocol requiring periodic user confirmation. Failure to "check-in" auto-triggers a full SOS broadcast.
-*   **Fake Call Simulation:** A high-fidelity UI overlay that replicates a native incoming call (with programmable caller ID) to provide a socially acceptable exit from uncomfortable environments.
-*   **Helpline Directory:** A zero-database-delay directory of local and national emergency services, categorized by urgency.
-*   **Self-Defense Repository:** Illustrated, offline-available guides for tactical situational awareness and physical safety.
+### 🔒 Encrypted Vault
+- **AES-256 Encryption** — keys never leave the device
+- **Biometric Auth Gate** — FaceID / TouchID / Fingerprint
+- **Document Scanner** — store identity docs, medical records offline
+- **Cloud Backup** — encrypted upload to Backblaze B2 via backend
+- **Auto-Wipe** — configurable purge after failed auth attempts
 
-### 🔒 IV. Secure Cryptographic Vault
-*   **Government-Grade Encryption:** AES-256 implementation for all local document storage. Keys never leave the device hardware.
-*   **Biometric Authentication Gate:** Multi-factor local auth requiring FaceID, TouchID, or Android Biometric Prompt APIs for entry.
-*   **Offline Document Ingestion:** Scan and store vital travel docs, medical records, or identity proof without cloud upload exposure.
-*   **Auto-Wipe Safety:** Programmable threshold to purge the local vault after multiple failed authentication attempts (User-configurable).
-
-### 🧰 V. Survival Toolkit & Intelligence
-*   **AR Compass HUD:** A sensor-fusion Augmented Reality overlay. Points of Interest (POIs) and bearings are projected directly onto the camera feed using real-time geographic azimuth calculations.
-*   **Signal Mirrors & Strobe:** Programmable screen/flashlight patterns including standard Morse SOS and high-frequency strobe for signaling rescue aircraft.
-*   **Comprehensive Offline Manual:** An indexed, real-time searchable JSON-backed knowledge base containing "How to Use" protocols and "Pro Tips" for every critical module.
-*   **Webpage Archiver:** A lightweight PWA-style scraper that snapshots survival guides or news for offline reading.
-*   **Survival Mode Theme:** A deterministic low-power override. Automatically switches the app to a high-contrast monochrome OLED theme (pure black pixels) and disables all non-critical UI animations to preserve battery life below 20%.
+### 🧰 Survival Toolkit
+- **AR Compass HUD** — sensor-fusion overlay on camera feed with POI bearings
+- **Signal Tools** — Morse SOS strobe, flashlight control, mirror signaling
+- **Offline Manual** — searchable JSON knowledge base for all features
+- **Webpage Archiver** — snapshot survival guides for offline reading
+- **Survival Mode** — OLED black theme + battery saver triggers below 20%
 
 ---
 
-## 🎥 5. 3D & Animation Architecture
+## 📦 5. Local Development Setup
 
-This project treats pixel manipulation as a critical feature, particularly in high-stress UX.
+### Prerequisites
+- Flutter SDK 3.x (`flutter --version`)
+- Node.js 18+ (`node --version`)
+- Android Studio + ADB
+- A connected Android device or emulator
 
-### 2D Micro-Interaction Physics & Enterprise UI
-We utilize Flutter's implicit animations bound to stiff spring constants ($k$) and critical damping ratios ($\zeta \approx 1$). This means buttons don't "float"—they snap, providing absolute tactile certainty to the user during panic states.  
-Furthermore, the UI features sequential **staggered entry animations** and a cinematic automated splash sequence (using staggered `FadeTransition` and `SlideTransition` nodes) to provide an enterprise-grade polish without sacrificing offline execution speed.
-
-### 3D Render Pipeline (AR Compass & Maps)
-- **Engine:** MapLibre GL Native.
-- **Frame Lifecycle:** At 60 frames per second, the magnetometer stream updates an `Angle` state. Native C++ bindings calculate the rotation matrix and project the viewport 3D camera vector over the static 2D vector tiles.
-- **GPU Acceleration & Memory:** We employ severe Level of Detail (LOD) culling. Vector tile layers not in the immediate frustum are aggressively garbage collected to keep VRAM usage strictly under 150MB.
-- **Canvas AR HUD:** The Camera stream is drawn as the lowest layer on the Z-axis. Flutter's custom `CustomPainter` API natively plots geometry (Canvas draw calls) calculating relative bearing offsets in screen-space coordinates.
-
----
-
-## 📦 6. Getting Started & Installation
-
-### Local Development Setup
-
-1. **Clone Repository & Define Environment**
+### 1. Clone & Setup Flutter App
 ```bash
 git clone https://github.com/rajkrish0608/Offline-Survival-Companion.git
 cd Offline-Survival-Companion/flutter_app
-```
 
-2. **Initialize Secure Environment Constraints (`.env`)**
-```properties
-MAP_TILE_API_KEY=sk_test_51... # (If fetching initial tiles)
-SYNC_SERVER_URL=https://api.survival-edge.io/v1
-AES_SALT_ROUNDS=12
-DEBUG_FORCE_SURVIVAL_MODE=false
-```
-
-3. **Build Dependency Graph**
-```bash
 flutter clean && flutter pub get
 ```
 
-4. **Launch Development Isolate**
-```bash
-flutter run --flavor development --dart-define=ENVIRONMENT=DEV
+### 2. Configure Flutter Environment
+Create `flutter_app/.env`:
+```env
+API_BASE_URL=http://10.0.2.2:3000/api   # Use your machine IP for physical device
 ```
 
-### Production Build Pipeline
-For enterprise deployment, binaries must be Ahead-of-Time (AOT) compiled and obfuscated to prevent reverse-engineering of cryptographic structures.
-
+### 3. Run on Device
 ```bash
-# Android - R8 Shrinking + Obfuscation
-flutter build appbundle --release --obfuscate --split-debug-info=./build/app/outputs/symbols
+# List connected devices
+flutter devices
 
-# iOS - LLVM Optimization
-flutter build ipa --release --obfuscate --split-debug-info=./build/ios/symbols
+# Run on connected Android device
+flutter run -d <device-id>
+```
+
+### 4. Setup Backend
+```bash
+cd backend
+npm install
+```
+
+Create `backend/.env`:
+```env
+NODE_ENV=development
+PORT=3000
+
+# PostgreSQL (get from neon.tech)
+DATABASE_URL=postgresql://user:pass@host/dbname?sslmode=require
+
+# Auth
+JWT_SECRET=your-64-char-random-secret
+
+# CORS
+ALLOWED_ORIGINS=http://localhost:3000
+
+# Backblaze B2 (vault file storage)
+B2_ENDPOINT=https://s3.us-west-004.backblazeb2.com
+B2_REGION=us-west-004
+B2_KEY_ID=your-b2-key-id
+B2_APP_KEY=your-b2-app-key
+B2_BUCKET=survival-vault
+VAULT_MAX_FILE_SIZE_MB=500
+
+LOG_LEVEL=debug
+```
+
+Start the backend:
+```bash
+node src/index.js
+```
+
+---
+
+## 🚀 6. Production Deployment
+
+### Backend → Render.com
+1. Go to [render.com](https://render.com) → **New Web Service**
+2. Connect your GitHub repo
+3. Settings:
+   - **Root Directory**: `backend`
+   - **Build Command**: `npm install`
+   - **Start Command**: `node src/index.js`
+4. Add all environment variables from `.env` (with production values)
+5. Deploy ✅
+
+### Database → Neon.tech (Free)
+- Sign up at [neon.tech](https://neon.tech)
+- Copy the PostgreSQL connection string → set as `DATABASE_URL`
+- Migrations run automatically on first backend start
+
+### Vault Storage → Backblaze B2 (Free 10 GB)
+- Create a **private** bucket named `survival-vault`
+- Generate an App Key with Read/Write permissions
+- Add credentials to backend environment variables
+
+### Flutter – Build Release APK
+```bash
+cd flutter_app
+
+# Update API_BASE_URL to your Render URL first
+flutter build apk --split-per-abi --release
+
+# Best APK for modern phones:
+# build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
 ```
 
 ---
 
 ## 📡 7. API Reference
 
-While predominantly offline, the synchronization layer exposes a resilient REST structure.
+Base URL: `https://your-backend.onrender.com/api`
 
-### Add Crowdsourced Safety Pin
-Synchronizes a locally stored geofence marker with the global database.
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/auth/register` | None | Create account |
+| `POST` | `/auth/login` | None | Get JWT token |
+| `POST` | `/auth/logout` | JWT | Invalidate session |
+| `GET` | `/vault/files` | JWT | List vault files |
+| `POST` | `/vault/upload-url` | JWT | Get B2 upload URL |
+| `DELETE` | `/vault/files/:id` | JWT | Delete vault file |
+| `POST` | `/sync/push` | JWT | Push pending changes |
+| `GET` | `/sync/pull` | JWT | Pull server updates |
 
-**Endpoint:** `POST /api/v1/sync/safety-pins`
-**Auth:** Bearer JWT
-
-```json
-// Request Payload (Application/JSON)
-{
-  "device_id": "uuid-v4",
-  "payload": [
-    {
-      "local_id": "evt_908312",
-      "lat": 34.0522,
-      "lng": -118.2437,
-      "urgency_index": 0.85,
-      "timestamp_utc": "2026-02-25T11:45:00Z"
-    }
-  ],
-  "checksum": "sha256-hash-of-payload"
-}
-```
-
-```json
-// Response (202 Accepted - Queue Processed)
-{
-  "status": "success",
-  "synced_count": 1,
-  "server_timestamp": "2026-02-25T11:45:02Z"
-}
+### Health Check
+```bash
+curl https://your-backend.onrender.com/health
+# {"status":"ok","timestamp":"2026-02-28T..."}
 ```
 
 ---
 
-## 📁 8. Architectural Folder Structure
+## 📁 8. Project Structure
 
-```text
-lib/
-├── core/                   # Highly abstract, un-opinionated utilities.
-│   ├── encryption/         # PBKDF2 / AES-256 engines.
-│   └── theme/              # Deterministic visual state machines (Survival Theme).
-├── data/                   # Boundary layer (DTOs and HTTP clients).
-│   ├── models/             # Immutable data classes with JSON serialization.
-│   └── repositories/       # Concrete implementation of abstract domains.
-├── presentation/           # Ephemeral UI states. No I/O allowed here.
-│   ├── bloc/               # State reducers handling all UI -> Data interaction.
-│   ├── screens/            # Macro route targets.
-│   └── widgets/            # Reusable, atomic render elements.
-└── services/               # Hardware interaction singletons.
-    ├── audio/              # OpenAL / AudioTrack DSP wrappers.
-    ├── navigation/         # AR projection and GPS polling routines.
-    └── safety/             # Background Isolates for accelerometer/mic listening.
+```
+Offline-Survival-Companion/
+├── flutter_app/
+│   └── lib/
+│       ├── core/                   # App constants, theme, encryption engine
+│       ├── presentation/
+│       │   ├── bloc/               # AppBloc — central state machine
+│       │   ├── screens/            # All screens (home, emergency, vault, maps…)
+│       │   └── widgets/            # Reusable UI components
+│       └── services/
+│           ├── auth/               # JWT session management
+│           ├── emergency/          # SOS, flashlight, survival mode
+│           ├── navigation/         # GPS tracking, route engine
+│           ├── safety/             # Evidence capture, voice SOS
+│           ├── storage/            # SQLite local storage
+│           ├── sync/               # SyncEngine — outbox pattern
+│           └── vault/              # Encrypted document vault
+└── backend/
+    └── src/
+        ├── routes/                 # auth, vault, sync, user, content
+        ├── middleware/             # JWT auth, error handler
+        ├── services/               # Backblaze B2 storage service
+        ├── migrations/             # PostgreSQL schema setup
+        └── index.js                # Express app entry point
 ```
 
 ---
 
-## 🚀 9. Roadmap & Enterprise Scalability Vision
+## 🗺️ 9. Roadmap
 
-- **Q3 2026: Bluetooth Low Energy (BLE) Mesh Networks:** Implementing peer-to-peer data synchronization utilizing WiFi Direct / BLE to propagate hazard data locally through device hopping (Zero-infrastructure wide-area networks).
-- **Q4 2026: Satellite Payload Integration:** Native C bindings for flagship IoT Satellite APIs (e.g., essentially bypassing terrestrial networks for 50-byte SOS bursts).
-- **Q1 2027: Edge-Quantized Local LLMs:** Processing complex natural language distress commands locally via TFLite/CoreML, removing reliance on rudimentary regex-based dictionary triggers.
+| Timeline | Feature |
+|---|---|
+| Q3 2026 | BLE Mesh Network — P2P SOS relay without infrastructure |
+| Q4 2026 | Satellite Integration — sub-50-byte SOS over IoT satellites |
+| Q1 2027 | On-Device LLM — TFLite natural language distress commands |
+| Q2 2027 | iOS release — full App Store distribution |
 
 ---
 
-## 🛡️ 10. Contribution Guidelines
-We strictly enforce **Conventional Commits** and require 90%+ unit test coverage for any modifications to the `core/encryption` or `services/safety` directories. Refer to `CONTRIBUTING.md` for our branch strategy and CI/CD validation hooks.
+## 🔐 10. Security
 
-## 📄 11. License
-Distributed under the MIT License. See `LICENSE` for the full legal text.
+- All vault files encrypted with **AES-256** before storage — keys never leave the device
+- Backend uses **JWT** with `httpOnly` session handling
+- Backblaze B2 bucket is **private** — files only accessible via time-limited signed URLs (1 hour)
+- All API routes protected — no unauthenticated data access
+- `DATABASE_URL` uses `sslmode=require` — transit encrypted
+- Passwords hashed with **bcrypt** (never stored in plaintext)
+
+---
+
+## 🛡️ 11. Contributing
+
+We enforce **Conventional Commits** and require 90%+ unit test coverage for changes to `core/encryption` or `services/safety`. See `CONTRIBUTING.md` for branch strategy and CI/CD hooks.
+
+## 📄 12. License
+
+Distributed under the MIT License. See `LICENSE` for full text.
 
 <br/>
 
