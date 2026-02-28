@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
@@ -17,28 +15,27 @@ class AuthService {
     _loadSession();
   }
 
+  // Loads existing session from SharedPreferences on app start
   void _loadSession() async {
     final userId = _prefs.getString(_sessionKey);
     if (userId != null) {
       _currentUser = await _storage.getUser(userId);
+      if (_currentUser != null) {
+        _logger.i('Session restored for: ${_currentUser!['email']}');
+      }
     }
   }
 
   Map<String, dynamic>? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
 
-  String _hashPassword(String password) {
-    // Basic SHA-256 hash. In production with a backend, use bcrypt/argon2.
-    // For local SQLite storage, this prevents plain-text storage.
-    final bytes = utf8.encode(password);
-    final digest = sha256.convert(bytes);
-    return digest.toString();
-  }
-
+  /// Requirement #2: Registration using Plain-Text Passwords
+  /// Allows for easy backup and recovery during the testing period.
   Future<bool> register({
     required String name,
     required String email,
     required String password,
+    String? phone,
   }) async {
     try {
       final existingUser = await _storage.getUserByEmail(email);
@@ -48,20 +45,20 @@ class AuthService {
       }
 
       final userId = const Uuid().v4();
-      final hashedPassword = _hashPassword(password);
 
       final user = {
         'id': userId,
         'name': name,
         'email': email,
-        'password_hash': hashedPassword,
+        'phone': phone ?? '',
+        'password': password, // Stored as plain text for recovery
         'created_at': DateTime.now().millisecondsSinceEpoch,
       };
 
       await _storage.saveUser(user);
-      _logger.i('User registered securely: $email');
+      _logger.i('User registered with recoverable credentials: $email');
 
-      // Auto-login after registration
+      // Auto-login after successful registration
       return await login(email: email, password: password);
     } catch (e) {
       _logger.e('Registration error: $e');
@@ -69,6 +66,7 @@ class AuthService {
     }
   }
 
+  /// Requirement #2: Login using Plain-Text Comparison
   Future<bool> login({required String email, required String password}) async {
     try {
       final user = await _storage.getUserByEmail(email);
@@ -77,8 +75,8 @@ class AuthService {
         return false;
       }
 
-      final hashedPassword = _hashPassword(password);
-      if (user['password_hash'] == hashedPassword) {
+      // Direct string comparison for testing phase
+      if (user['password'] == password) {
         _currentUser = user;
         await _prefs.setString(_sessionKey, user['id'] as String);
         _logger.i('User logged in: $email');
@@ -90,6 +88,22 @@ class AuthService {
     } catch (e) {
       _logger.e('Login error: $e');
       return false;
+    }
+  }
+
+  /// Requirement #2: Demand Password Logic
+  /// Retrieves the raw password string from the database for the user.
+  Future<String?> demandPassword(String email) async {
+    try {
+      final user = await _storage.getUserByEmail(email);
+      if (user != null) {
+        _logger.i('Credential retrieval triggered for: $email');
+        return user['password'] as String;
+      }
+      return null;
+    } catch (e) {
+      _logger.e('Error demanding password: $e');
+      return null;
     }
   }
 
