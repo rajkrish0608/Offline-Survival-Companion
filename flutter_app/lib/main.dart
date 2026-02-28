@@ -46,7 +46,7 @@ void main() async {
     final voiceSosService = VoiceSosService(emergencyService);
 
     final prefs = await SharedPreferences.getInstance();
-    final authService = AuthService(storageService, prefs);
+    final authService = AuthService(prefs);
     final syncService = SyncService(storageService);
 
     runApp(
@@ -121,7 +121,7 @@ void main() async {
     };
 
   final prefs = await SharedPreferences.getInstance();
-  final authService = AuthService(storageService, prefs);
+  final authService = AuthService(prefs);
   final syncService = SyncService(storageService);
 
   debugPrint('Calling runApp...');

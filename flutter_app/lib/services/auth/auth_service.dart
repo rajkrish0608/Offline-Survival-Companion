@@ -1,36 +1,36 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
-import 'package:uuid/uuid.dart';
+import 'package:offline_survival_companion/core/constants/app_constants.dart';
 
 class AuthService {
-  final LocalStorageService _storage;
   final SharedPreferences _prefs;
   final Logger _logger = Logger();
 
-  static const String _sessionKey = 'current_user_id';
-  Map<String, dynamic>? _currentUser;
+  static const String _tokenKey = 'auth_token';
+  static const String _userKey = 'current_user';
 
-  AuthService(this._storage, this._prefs) {
+  Map<String, dynamic>? _currentUser;
+  String? _token;
+
+  AuthService(this._prefs) {
     _loadSession();
   }
 
-  // Loads existing session from SharedPreferences on app start
-  void _loadSession() async {
-    final userId = _prefs.getString(_sessionKey);
-    if (userId != null) {
-      _currentUser = await _storage.getUser(userId);
-      if (_currentUser != null) {
-        _logger.i('Session restored for: ${_currentUser!['email']}');
-      }
+  void _loadSession() {
+    final userJson = _prefs.getString(_userKey);
+    _token = _prefs.getString(_tokenKey);
+    if (userJson != null && _token != null) {
+      _currentUser = jsonDecode(userJson);
+      _logger.i('Session restored for: ${_currentUser!['email']}');
     }
   }
 
   Map<String, dynamic>? get currentUser => _currentUser;
-  bool get isAuthenticated => _currentUser != null;
+  String? get token => _token;
+  bool get isAuthenticated => _currentUser != null && _token != null;
 
-  /// Requirement #2: Registration using Plain-Text Passwords
-  /// Allows for easy backup and recovery during the testing period.
   Future<bool> register({
     required String name,
     required String email,
@@ -38,51 +38,55 @@ class AuthService {
     String? phone,
   }) async {
     try {
-      final existingUser = await _storage.getUserByEmail(email);
-      if (existingUser != null) {
-        _logger.w('Registration failed: Email already exists');
+      final response = await http.post(
+        Uri.parse('${AppConstants.apiBaseUrl}/auth/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': name,
+          'email': email,
+          'password': password,
+          'phone': phone ?? '',
+        }),
+      ).timeout(AppConstants.apiTimeout);
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        _token = data['token'];
+        _currentUser = data['user'];
+        await _prefs.setString(_tokenKey, _token!);
+        await _prefs.setString(_userKey, jsonEncode(_currentUser));
+        _logger.i('User registered: $email');
+        return true;
+      } else {
+        _logger.w('Registration failed: ${data['message']}');
         return false;
       }
-
-      final userId = Uuid().v4();
-
-      final user = {
-        'id': userId,
-        'name': name,
-        'email': email,
-        'phone': phone ?? '',
-        'password': password, // Stored as plain text for recovery
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      };
-
-      await _storage.saveUser(user);
-      _logger.i('User registered with recoverable credentials: $email');
-
-      // Auto-login after successful registration
-      return await login(email: email, password: password);
     } catch (e) {
       _logger.e('Registration error: $e');
       return false;
     }
   }
 
-  /// Requirement #2: Login using Plain-Text Comparison
   Future<bool> login({required String email, required String password}) async {
     try {
-      final user = await _storage.getUserByEmail(email);
-      if (user == null) {
-        _logger.w('Login failed: User not found');
-        return false;
-      }
+      final response = await http.post(
+        Uri.parse('${AppConstants.apiBaseUrl}/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      ).timeout(AppConstants.apiTimeout);
 
-      // Direct string comparison for testing phase
-      if (user['password'] == password) {
-        _currentUser = user;
-        await _prefs.setString(_sessionKey, user['id'] as String);
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        _token = data['token'];
+        _currentUser = data['user'];
+        await _prefs.setString(_tokenKey, _token!);
+        await _prefs.setString(_userKey, jsonEncode(_currentUser));
         _logger.i('User logged in: $email');
         return true;
       } else {
-        _logger.w('Login failed: Incorrect password');
+        _logger.w('Login failed: ${data['message']}');
         return false;
       }
     } catch (e) {
@@ -91,25 +95,24 @@ class AuthService {
     }
   }
 
-  /// Requirement #2: Demand Password Logic
-  /// Retrieves the raw password string from the database for the user.
-  Future<String?> demandPassword(String email) async {
-    try {
-      final user = await _storage.getUserByEmail(email);
-      if (user != null) {
-        _logger.i('Credential retrieval triggered for: $email');
-        return user['password'] as String;
-      }
-      return null;
-    } catch (e) {
-      _logger.e('Error demanding password: $e');
-      return null;
-    }
-  }
-
   Future<void> logout() async {
+    try {
+      if (_token != null) {
+        await http.post(
+          Uri.parse('${AppConstants.apiBaseUrl}/auth/logout'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $_token',
+          },
+        ).timeout(const Duration(seconds: 5));
+      }
+    } catch (_) {
+      // Ignore logout API errors — clear local session regardless
+    }
     _currentUser = null;
-    await _prefs.remove(_sessionKey);
+    _token = null;
+    await _prefs.remove(_tokenKey);
+    await _prefs.remove(_userKey);
     _logger.i('User logged out');
   }
 }
