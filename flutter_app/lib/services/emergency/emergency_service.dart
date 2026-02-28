@@ -11,6 +11,7 @@ import 'package:offline_survival_companion/services/network/peer_mesh_service.da
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 
 class EmergencyService extends ChangeNotifier {
   final EvidenceService? _evidenceService;
@@ -67,11 +68,33 @@ class EmergencyService extends ChangeNotifier {
       // Activate flashlight
       await enableFlashlight();
 
-      // Send SMS to all emergency contacts
-      await _sendEmergencySMS(
+      // Build the personalized SOS message
+      final userName = await _getUserName(userId);
+      final sosMessage = _buildSOSMessage(
         position: position,
         customMessage: customMessage,
-        userName: await _getUserName(userId),
+        userName: userName,
+      );
+
+      // Send SMS
+      await _sendEmergencySMSDirect(
+        message: sosMessage,
+      );
+
+      // Archive exact message (immutable legal record)
+      await _storageService.archiveSosMessage(
+        id: const Uuid().v4(),
+        userId: userId,
+        fullMessage: sosMessage,
+        lat: position.latitude,
+        lng: position.longitude,
+      );
+
+      // Log SOS activity for analytics
+      await _storageService.logActivity(
+        id: const Uuid().v4(),
+        userId: userId,
+        feature: 'SOS',
       );
 
       // 3. Capture Auto-Evidence
@@ -282,33 +305,22 @@ class EmergencyService extends ChangeNotifier {
     }
   }
 
-  Future<void> _sendEmergencySMS({
-    required Position position,
-    required String customMessage,
-    required String userName,
-  }) async {
+  Future<void> _sendEmergencySMSDirect({required String message}) async {
     if (_emergencyContacts.isEmpty) {
       _logger.w('No emergency contacts available for SMS');
       return;
     }
-
     try {
-      final message = _buildSOSMessage(
-        position: position,
-        customMessage: customMessage,
-        userName: userName,
-      );
-
       final String result = await sendSMS(
         recipients: _emergencyContacts,
         message: message,
       );
-
       _logger.i('SOS SMS sent: $result');
     } catch (e) {
       _logger.e('Failed to send emergency SMS: $e');
     }
   }
+
 
   Future<void> _sendAllClearSMS(String userId) async {
     if (_emergencyContacts.isEmpty) return;
@@ -331,8 +343,9 @@ class EmergencyService extends ChangeNotifier {
     required String userName,
   }) {
     final buffer = StringBuffer();
-    buffer.writeln('🆘 EMERGENCY — $userName activated SOS');
-    buffer.writeln('Location: ${position.latitude}, ${position.longitude}');
+    buffer.writeln('[EMERGENCY] $userName has triggered an SOS.');
+    buffer.writeln(
+        'Location: ${position.latitude}, ${position.longitude}');
     buffer.writeln(
       'Maps: https://maps.google.com/?q=${position.latitude},${position.longitude}',
     );
@@ -352,5 +365,6 @@ class EmergencyService extends ChangeNotifier {
     if (_sosActive) {
       await deactivateSOS(userId: 'unknown');
     }
+    super.dispose();
   }
 }

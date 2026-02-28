@@ -80,7 +80,10 @@ dependencies:
   flutter_compass: ^0.8.1
   flutter_nearby_connections: ^1.1.2
   flutter_native_splash: ^2.4.7
-  
+  archive: ^4.0.4
+  share_plus: ^11.0.0
+  provider: ^6.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

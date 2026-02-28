@@ -20,6 +20,7 @@ import 'package:offline_survival_companion/presentation/screens/emergency_contac
 import 'package:offline_survival_companion/presentation/screens/webpage_saver_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/user_manual_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/splash_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/admin/admin_dashboard_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -109,6 +110,10 @@ class AppRouter {
       GoRoute(
         path: '/user-manual',
         builder: (context, state) => const UserManualScreen(),
+      ),
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) => const AdminDashboardScreen(),
       ),
     ],
   );

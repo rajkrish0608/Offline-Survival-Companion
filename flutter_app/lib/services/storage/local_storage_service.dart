@@ -31,7 +31,7 @@ class LocalStorageService {
 
       _database = await openDatabase(
         path,
-        version: 4,
+        version: 5,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -277,6 +277,30 @@ class LocalStorageService {
       )
     ''');
 
+    // SOS Archives (immutable legal record)
+    await db.execute('''
+      CREATE TABLE sos_archives (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        full_message TEXT NOT NULL,
+        lat REAL,
+        lng REAL,
+        timestamp INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    ''');
+
+    // Activity Logs (for feature analytics)
+    await db.execute('''
+      CREATE TABLE activity_logs (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        feature TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    ''');
+
     // Create indexes
     await db.execute(
       'CREATE INDEX idx_emergency_contacts_user ON emergency_contacts(user_id)',
@@ -299,6 +323,12 @@ class LocalStorageService {
     );
     await db.execute(
       'CREATE INDEX idx_safety_pins_synced ON safety_pins(is_synced)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_sos_archives_user ON sos_archives(user_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_activity_logs_feature ON activity_logs(feature)',
     );
   }
 
@@ -360,6 +390,32 @@ class LocalStorageService {
       await db.execute(
         'CREATE INDEX idx_safety_pins_synced ON safety_pins(is_synced)',
       );
+    }
+    if (oldVersion < 5) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS sos_archives (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          full_message TEXT NOT NULL,
+          lat REAL,
+          lng REAL,
+          timestamp INTEGER NOT NULL,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS activity_logs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          feature TEXT NOT NULL,
+          created_at INTEGER NOT NULL,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+      ''');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_sos_archives_user ON sos_archives(user_id)');
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_activity_logs_feature ON activity_logs(feature)');
     }
   }
 
@@ -788,6 +844,143 @@ class LocalStorageService {
       await cacheDir.create(recursive: true);
     }
     return cacheDir;
+  }
+
+  // ==================== SOS Archives ====================
+
+  Future<void> archiveSosMessage({
+    required String id,
+    required String userId,
+    required String fullMessage,
+    required double lat,
+    required double lng,
+  }) async {
+    if (kIsWeb) return;
+    _ensureDatabaseReady();
+    await _database!.insert(
+      'sos_archives',
+      {
+        'id': id,
+        'user_id': userId,
+        'full_message': fullMessage,
+        'lat': lat,
+        'lng': lng,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getSosArchives(String userId) async {
+    _ensureDatabaseReady();
+    return await _database!.query(
+      'sos_archives',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'timestamp DESC',
+    );
+  }
+
+  // ==================== Activity Logs ====================
+
+  Future<void> logActivity({
+    required String id,
+    required String userId,
+    required String feature,
+  }) async {
+    if (kIsWeb) return;
+    _ensureDatabaseReady();
+    await _database!.insert('activity_logs', {
+      'id': id,
+      'user_id': userId,
+      'feature': feature,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  // ==================== Admin Analytics ====================
+
+  /// Returns aggregated KPIs only — no individual tracking data.
+  Future<Map<String, dynamic>> getAdminAnalytics() async {
+    _ensureDatabaseReady();
+    final since24h =
+        DateTime.now().subtract(const Duration(hours: 24)).millisecondsSinceEpoch;
+
+    // KPI 1: Total SOS events in last 24 hours
+    final sosResult = await _database!.rawQuery(
+      'SELECT COUNT(*) as count FROM sos_archives WHERE timestamp >= ?',
+      [since24h],
+    );
+    final totalSosToday = (sosResult.first['count'] as int?) ?? 0;
+
+    // KPI 2: Most used feature (returns feature id with highest count)
+    final featureResult = await _database!.rawQuery(
+      '''
+      SELECT feature, COUNT(*) as cnt
+      FROM activity_logs
+      GROUP BY feature
+      ORDER BY cnt DESC
+      LIMIT 1
+      ''',
+    );
+    final topFeature = featureResult.isNotEmpty
+        ? (featureResult.first['feature'] as String? ?? '—')
+        : '—';
+
+    // KPI 3: Average survival mode session duration (ms)
+    final survivalResult = await _database!.rawQuery(
+      '''
+      SELECT AVG(end_time - start_time) as avg_duration
+      FROM survival_routes
+      WHERE end_time IS NOT NULL AND end_time > start_time
+      ''',
+    );
+    final avgDuration = survivalResult.isNotEmpty
+        ? survivalResult.first['avg_duration']
+        : null;
+
+    // KPI 4: Unique active devices in last 24 hours
+    final devicesResult = await _database!.rawQuery(
+      '''
+      SELECT COUNT(DISTINCT user_id) as count
+      FROM activity_logs
+      WHERE created_at >= ?
+      ''',
+      [since24h],
+    );
+    final activeDevices = (devicesResult.first['count'] as int?) ?? 0;
+
+    return {
+      'total_sos_today': totalSosToday,
+      'top_feature': topFeature,
+      'avg_survival_duration_ms': avgDuration,
+      'active_devices': activeDevices,
+    };
+  }
+
+  // ==================== Admin Vault Review ====================
+
+  /// Returns all vault documents joined with user name — for admin use only.
+  Future<List<Map<String, dynamic>>> getVaultDocumentsAdmin() async {
+    _ensureDatabaseReady();
+    return await _database!.rawQuery(
+      '''
+      SELECT v.*, u.name as owner_username
+      FROM vault_documents v
+      LEFT JOIN users u ON v.user_id = u.id
+      ORDER BY v.created_at DESC
+      ''',
+    );
+  }
+
+  /// Returns all users (id, name, email only — no sensitive data).
+  Future<List<Map<String, dynamic>>> getUsersAll() async {
+    _ensureDatabaseReady();
+    return await _database!.query(
+      'users',
+      columns: ['id', 'name', 'email'],
+      orderBy: 'name ASC',
+    );
   }
 
   // ==================== Cleanup ====================
