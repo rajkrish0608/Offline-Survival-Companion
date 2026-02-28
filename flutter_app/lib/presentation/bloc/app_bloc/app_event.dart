@@ -19,6 +19,18 @@ class AppPaused extends AppEvent {
   const AppPaused();
 }
 
+class AppLoggedIn extends AppEvent {
+  final String userId;
+  const AppLoggedIn(this.userId);
+
+  @override
+  List<Object?> get props => [userId];
+}
+
+class AppLoggedOut extends AppEvent {
+  const AppLoggedOut();
+}
+
 class SyncRequested extends AppEvent {
   const SyncRequested();
 }

@@ -9,8 +9,11 @@ import 'package:offline_survival_companion/services/storage/local_storage_servic
 import 'package:offline_survival_companion/services/emergency/emergency_service.dart';
 import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 import 'package:offline_survival_companion/services/sync/sync_engine.dart';
+import 'package:offline_survival_companion/services/sync/sync_service.dart';
+import 'package:offline_survival_companion/services/auth/auth_service.dart';
 import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/presentation/navigation/app_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:offline_survival_companion/services/safety/safety_timer_service.dart';
 import 'package:offline_survival_companion/services/safety/shake_detector_service.dart';
 import 'package:offline_survival_companion/services/navigation/tracking_service.dart';
@@ -42,6 +45,10 @@ void main() async {
     final trackingService = TrackingService(storageService);
     final voiceSosService = VoiceSosService(emergencyService);
 
+    final prefs = await SharedPreferences.getInstance();
+    final authService = AuthService(storageService, prefs);
+    final syncService = SyncService(storageService);
+
     runApp(
       OfflineSurvivalApp(
         storageService: storageService,
@@ -55,6 +62,8 @@ void main() async {
         evidenceService: evidenceService,
         voiceSosService: voiceSosService,
         peerMeshService: peerMeshService,
+        authService: authService,
+        syncService: syncService,
       ),
     );
     return;
@@ -111,6 +120,10 @@ void main() async {
       debugPrint('CRITICAL ALARM: MESH SOS RECEIVED: $payload');
     };
 
+  final prefs = await SharedPreferences.getInstance();
+  final authService = AuthService(storageService, prefs);
+  final syncService = SyncService(storageService);
+
   debugPrint('Calling runApp...');
   runApp(
     OfflineSurvivalApp(
@@ -125,6 +138,8 @@ void main() async {
       evidenceService: evidenceService,
       voiceSosService: voiceSosService,
       peerMeshService: peerMeshService,
+      authService: authService,
+      syncService: syncService,
     ),
   );
 }
@@ -141,6 +156,8 @@ class OfflineSurvivalApp extends StatelessWidget {
   final EvidenceService evidenceService;
   final VoiceSosService voiceSosService;
   final PeerMeshService peerMeshService;
+  final AuthService authService;
+  final SyncService syncService;
 
   const OfflineSurvivalApp({
     super.key,
@@ -155,6 +172,8 @@ class OfflineSurvivalApp extends StatelessWidget {
     required this.evidenceService,
     required this.voiceSosService,
     required this.peerMeshService,
+    required this.authService,
+    required this.syncService,
   });
 
   @override
@@ -173,6 +192,7 @@ class OfflineSurvivalApp extends StatelessWidget {
             evidenceService,
             voiceSosService,
             peerMeshService,
+            authService,
           )..add(const AppInitialized()),
         ),
         // Providing individual services for easy UI access
@@ -185,6 +205,8 @@ class OfflineSurvivalApp extends StatelessWidget {
         RepositoryProvider.value(value: trackingService),
         RepositoryProvider.value(value: evidenceService),
         ChangeNotifierProvider.value(value: voiceSosService),
+        RepositoryProvider.value(value: authService),
+        RepositoryProvider.value(value: syncService),
       ],
       child: BlocBuilder<AppBloc, AppState>(
         builder: (context, state) {

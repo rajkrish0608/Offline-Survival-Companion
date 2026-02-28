@@ -21,6 +21,8 @@ import 'package:offline_survival_companion/presentation/screens/webpage_saver_sc
 import 'package:offline_survival_companion/presentation/screens/user_manual_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/splash_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/admin/admin_dashboard_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/auth/login_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/auth/register_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -38,9 +40,17 @@ class AppRouter {
         return (location == '/splash') ? null : '/splash';
       }
 
-      // If we are on splash but app is ready, move to home
-      if (location == '/splash') {
-        if (appState is AppReady) return '/';
+      if (appState is AppUnauthenticated) {
+        if (location != '/login' && location != '/register') {
+          return '/login';
+        }
+        return null; // allow access to login/register
+      }
+
+      if (appState is AppReady) {
+        if (location == '/login' || location == '/register' || location == '/splash') {
+          return '/';
+        }
       }
 
       if (appState is AppError) {
@@ -51,6 +61,8 @@ class AppRouter {
     },
     routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
       GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: '/emergency',

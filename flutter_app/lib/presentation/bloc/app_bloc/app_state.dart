@@ -11,6 +11,10 @@ class AppInitializing extends AppState {
   const AppInitializing();
 }
 
+class AppUnauthenticated extends AppState {
+  const AppUnauthenticated();
+}
+
 class AppOnboardingRequired extends AppState {
   const AppOnboardingRequired();
 }
