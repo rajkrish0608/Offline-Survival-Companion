@@ -31,7 +31,6 @@ const generateToken = (userId, email) => {
 
 // Register
 router.post('/register', async (req, res) => {
-    // Validate request
     const { error, value } = registerSchema.validate(req.body);
     if (error) {
         return res.status(400).json({
@@ -44,7 +43,10 @@ router.post('/register', async (req, res) => {
 
     try {
         // Check if user already exists
-        const existingUser = await dbGet('SELECT id FROM users WHERE email = ?', [email]);
+        const existingUser = await dbGet(
+            'SELECT id FROM users WHERE email = $1',
+            [email]
+        );
         if (existingUser) {
             throw new AppError('User already exists', 409, 'Conflict');
         }
@@ -56,11 +58,10 @@ router.post('/register', async (req, res) => {
         const userId = `user_${Date.now()}`;
         await dbRun(
             `INSERT INTO users (id, email, name, phone, password_hash, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
             [userId, email, name, phone, hashedPassword, Date.now(), Date.now()]
         );
 
-        // Generate token
         const token = generateToken(userId, email);
 
         res.status(201).json({
@@ -76,17 +77,12 @@ router.post('/register', async (req, res) => {
                 message: err.message,
             });
         }
-
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: err.message,
-        });
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
 // Login
 router.post('/login', async (req, res) => {
-    // Validate request
     const { error, value } = loginSchema.validate(req.body);
     if (error) {
         return res.status(400).json({
@@ -98,19 +94,16 @@ router.post('/login', async (req, res) => {
     const { email, password } = value;
 
     try {
-        // Get user
-        const user = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
+        const user = await dbGet('SELECT * FROM users WHERE email = $1', [email]);
         if (!user) {
             throw new AppError('Invalid credentials', 401, 'Unauthorized');
         }
 
-        // Verify password
         const passwordMatch = await bcrypt.compare(password, user.password_hash);
         if (!passwordMatch) {
             throw new AppError('Invalid credentials', 401, 'Unauthorized');
         }
 
-        // Generate token
         const token = generateToken(user.id, user.email);
 
         res.json({
@@ -131,11 +124,7 @@ router.post('/login', async (req, res) => {
                 message: err.message,
             });
         }
-
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: err.message,
-        });
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
@@ -156,15 +145,9 @@ router.post('/refresh', async (req, res) => {
 
         const newToken = generateToken(decoded.userId, decoded.email);
 
-        res.json({
-            message: 'Token refreshed',
-            token: newToken,
-        });
+        res.json({ message: 'Token refreshed', token: newToken });
     } catch (err) {
-        res.status(401).json({
-            error: 'Unauthorized',
-            message: 'Failed to refresh token',
-        });
+        res.status(401).json({ error: 'Unauthorized', message: 'Failed to refresh token' });
     }
 });
 

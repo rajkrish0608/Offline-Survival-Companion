@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard — Offline Survival</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #070b14;
+            --surface: rgba(255, 255, 255, 0.04);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #00e5ff;
+            --accent2: #7c3aed;
+            --red: #ef4444;
+            --green: #22c55e;
+            --yellow: #f59e0b;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --card-bg: rgba(15, 23, 42, 0.85);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 20% 10%, rgba(0, 229, 255, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(124, 58, 237, 0.06) 0%, transparent 60%);
+        }
+
+        /* ── Login gate ── */
+        #login-gate {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 80px rgba(0, 229, 255, 0.08);
+            text-align: center;
+        }
+
+        .login-shield {
+            width: 80px;
+            height: 80px;
+            background: rgba(0, 229, 255, 0.1);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .login-shield svg {
+            width: 44px;
+            height: 44px;
+            stroke: var(--accent);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 50px rgba(0, 229, 255, 0.7);
+            }
+        }
+
+        .login-card h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+
+        .login-card p {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 32px;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: monospace;
+            letter-spacing: 2px;
+            outline: none;
+            transition: border 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .login-card input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15);
+        }
+
+        .login-card input.error {
+            border-color: var(--red);
+        }
+
+        #login-error {
+            color: var(--red);
+            font-size: 12px;
+            min-height: 18px;
+            margin-bottom: 8px;
+        }
+
+        /* ── Shared button ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 22px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.4);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-full {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* ── App shell (hidden until logged in) ── */
+        #app {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 32px;
+            background: rgba(7, 11, 20, 0.9);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo svg {
+            width: 28px;
+            height: 28px;
+            stroke: var(--accent);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .logo span {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .api-badge {
+            background: rgba(0, 229, 255, 0.08);
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            color: var(--accent);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        nav {
+            display: flex;
+            gap: 4px;
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--muted);
+            background: transparent;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            background: rgba(0, 229, 255, 0.08);
+            border: 1px solid rgba(0, 229, 255, 0.2);
+        }
+
+        main {
+            flex: 1;
+            padding: 32px;
+            max-width: 1280px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* ── KPI cards ── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .kpi-value.accent {
+            color: var(--accent);
+        }
+
+        .kpi-value.red {
+            color: var(--red);
+        }
+
+        .kpi-value.green {
+            color: var(--green);
+        }
+
+        .kpi-value.yellow {
+            color: var(--yellow);
+        }
+
+        /* ── Section headers ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .section-header p {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        /* ── Search bar ── */
+        .search-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .search-wrap {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-wrap svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            stroke: var(--muted);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .search-wrap input {
+            width: 100%;
+            padding: 12px 14px 12px 42px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .search-wrap input:focus {
+            border-color: var(--accent);
+        }
+
+        .search-wrap input::placeholder {
+            color: var(--muted);
+        }
+
+        /* ── Table ── */
+        .table-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 14px 20px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-blue {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--accent);
+        }
+
+        .badge-purple {
+            background: rgba(124, 58, 237, 0.15);
+            color: #a78bfa;
+        }
+
+        .badge-red {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+        }
+
+        .badge-green {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--green);
+        }
+
+        /* ── File drawer ── */
+        #file-drawer {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: none;
+            align-items: flex-start;
+            justify-content: flex-end;
+        }
+
+        #file-drawer.open {
+            display: flex;
+        }
+
+        .drawer-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .drawer-panel {
+            position: relative;
+            z-index: 1;
+            width: min(520px, 96vw);
+            height: 100vh;
+            background: #0d1526;
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            animation: slide-in 0.3s ease;
+            overflow: hidden;
+        }
+
+        @keyframes slide-in {
+            from {
+                transform: translateX(100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .drawer-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .drawer-header-text {
+            flex: 1;
+        }
+
+        .drawer-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .drawer-header p {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 24px;
+        }
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .file-name {
+            font-size: 13px;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        .file-meta {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        /* ── Empty / loading ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 16px;
+            stroke: var(--muted);
+            fill: none;
+            stroke-width: 1;
+            opacity: 0.5;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 40px auto;
+            display: block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Toast ── */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 999;
+            background: #1e293b;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            max-width: 300px;
+        }
+
+        #toast.show {
+            opacity: 1;
+        }
+
+        #toast.success {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        #toast.error {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        /* ── Storage bar ── */
+        .storage-bar-wrap {
+            margin-bottom: 8px;
+        }
+
+        .storage-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: var(--muted);
+        }
+
+        .storage-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .storage-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: var(--accent);
+            transition: width 1s ease;
+        }
+
+        @media (max-width: 640px) {
+            header {
+                padding: 12px 16px;
+            }
+
+            nav {
+                padding: 12px 16px;
+                overflow-x: auto;
+            }
+
+            main {
+                padding: 16px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════════════ LOGIN GATE ═══════════════════════════════════ -->
+    <div id="login-gate">
+        <div class="login-card">
+            <div class="login-shield">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+            </div>
+            <h1>ADMIN ACCESS</h1>
+            <p>Enter your Admin API Key to continue.<br />All access is logged and audited.</p>
+            <input id="api-key-input" type="password" placeholder="••••••••••••••••••••" autocomplete="off" />
+            <div id="login-error"></div>
+            <button class="btn btn-primary btn-full" onclick="doLogin()">
+                <svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+                Enter Dashboard
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ APP SHELL ═══════════════════════════════════ -->
+    <div id="app">
+        <header>
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>OFFLINE SURVIVAL — ADMIN</span>
+            </div>
+            <div class="header-right">
+                <span class="api-badge">● SECURE</span>
+                <button class="btn btn-ghost" onclick="doLogout()">Logout</button>
+            </div>
+        </header>
+
+        <nav>
+            <button class="tab active" onclick="showSection('overview', this)">📊 Overview</button>
+            <button class="tab" onclick="showSection('users', this)">👥 Users</button>
+            <button class="tab" onclick="showSection('storage', this)">🗄️ Storage</button>
+        </nav>
+
+        <main>
+            <!-- ══ OVERVIEW ══ -->
+            <div id="section-overview" class="section active">
+                <div class="section-header">
+                    <div>
+                        <h2>Platform Overview</h2>
+                        <p>Live data from the backend — refreshed on load</p>
+                    </div>
+                    <button class="btn btn-ghost" onclick="loadOverview()">↻ Refresh</button>
+                </div>
+                <div id="kpi-grid" class="kpi-grid">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+
+            <!-- ══ USERS ══ -->
+            <div id="section-users" class="section">
+                <div class="section-header">
+                    <div>
+                        <h2>Registered Users</h2>
+                        <p>Click a row to view vault files</p>
+                    </div>
+                    <button class="btn btn-ghost" onclick="loadUsers()">↻ Refresh</button>
+                </div>
+                <div class="search-row">
+                    <div class="search-wrap">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.35-4.35" />
+                        </svg>
+                        <input id="user-search" type="text" placeholder="Search by name or email…"
+                            oninput="filterUsers()" />
+                    </div>
+                </div>
+                <div id="users-table-wrap" class="table-wrap">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+
+            <!-- ══ STORAGE ══ -->
+            <div id="section-storage" class="section">
+                <div class="section-header">
+                    <div>
+                        <h2>Storage Summary</h2>
+                        <p>Platform-wide vault storage by category</p>
+                    </div>
+                    <button class="btn btn-ghost" onclick="loadStorage()">↻ Refresh</button>
+                </div>
+                <div id="storage-content">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ═══════════════════════════════════ FILE DRAWER ═══════════════════════════════════ -->
+    <div id="file-drawer">
+        <div class="drawer-backdrop" onclick="closeDrawer()"></div>
+        <div class="drawer-panel">
+            <div class="drawer-header">
+                <div class="drawer-header-text">
+                    <h3 id="drawer-name">User Name</h3>
+                    <p id="drawer-email">user@email.com</p>
+                </div>
+                <button class="btn btn-ghost" onclick="closeDrawer()">✕</button>
+            </div>
+            <div class="drawer-body" id="drawer-body">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        // ── State ──────────────────────────────────────────────────────────────────
+        let API_KEY = '';
+        let API_BASE = window.location.origin + '/api/admin';
+        let allUsers = [];
+
+        // ── Auth ───────────────────────────────────────────────────────────────────
+        async function doLogin() {
+            const input = document.getElementById('api-key-input');
+            const key = input.value.trim();
+            if (!key) return;
+
+            // Test the key by hitting /api/admin/users
+            try {
+                const r = await fetch(`${API_BASE}/users`, { headers: { 'x-admin-api-key': key } });
+                if (r.status === 403) {
+                    document.getElementById('login-error').textContent = 'Invalid API key. Access denied.';
+                    input.classList.add('error');
+                    return;
+                }
+                API_KEY = key;
+                sessionStorage.setItem('admin_key', key);
+                document.getElementById('login-gate').style.display = 'none';
+                document.getElementById('app').style.display = 'flex';
+                loadOverview();
+            } catch (e) {
+                document.getElementById('login-error').textContent = 'Cannot reach server. Check your connection.';
+            }
+            input.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); }, { once: true });
+        }
+
+        document.getElementById('api-key-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') doLogin();
+            document.getElementById('login-error').textContent = '';
+            e.target.classList.remove('error');
+        });
+
+        // Auto-restore key from session
+        const savedKey = sessionStorage.getItem('admin_key');
+        if (savedKey) {
+            API_KEY = savedKey;
+            document.getElementById('login-gate').style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+            loadOverview();
+        }
+
+        function doLogout() {
+            sessionStorage.removeItem('admin_key');
+            API_KEY = '';
+            document.getElementById('login-gate').style.display = 'flex';
+            document.getElementById('app').style.display = 'none';
+        }
+
+        // ── API helper ─────────────────────────────────────────────────────────────
+        async function api(path, opts = {}) {
+            const r = await fetch(API_BASE + path, {
+                ...opts,
+                headers: { 'x-admin-api-key': API_KEY, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+            });
+            if (!r.ok) throw new Error((await r.json()).message || r.statusText);
+            return r.json();
+        }
+
+        // ── Tabs ───────────────────────────────────────────────────────────────────
+        function showSection(id, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('section-' + id).classList.add('active');
+            btn.classList.add('active');
+            if (id === 'users') loadUsers();
+            if (id === 'storage') loadStorage();
+        }
+
+        // ── Overview ───────────────────────────────────────────────────────────────
+        async function loadOverview() {
+            const grid = document.getElementById('kpi-grid');
+            grid.innerHTML = '<div class="loading-spinner"></div>';
+            try {
+                const [usersData, storageData] = await Promise.all([
+                    api('/users'),
+                    api('/vault/storage-summary'),
+                ]);
+                const u = usersData;
+                const s = storageData.totals;
+                grid.innerHTML = `
+        ${kpi('Total Users', u.totalUsers, 'accent')}
+        ${kpi('Total Files', s.totalFiles, 'green')}
+        ${kpi('Storage Used', fmtBytes(s.totalBytes), 'yellow')}
+        ${kpi('Active Uploaders', s.activeUsers, 'accent')}
+      `;
+            } catch (e) { grid.innerHTML = errMsg(e); }
+        }
+
+        function kpi(label, value, cls = '') {
+            return `<div class="kpi-card"><div class="kpi-label">${label}</div><div class="kpi-value ${cls}">${value}</div></div>`;
+        }
+
+        // ── Users ──────────────────────────────────────────────────────────────────
+        async function loadUsers() {
+            const wrap = document.getElementById('users-table-wrap');
+            wrap.innerHTML = '<div class="loading-spinner"></div>';
+            try {
+                const data = await api('/users');
+                allUsers = data.users;
+                renderUsers(allUsers);
+            } catch (e) { wrap.innerHTML = errMsg(e); }
+        }
+
+        function filterUsers() {
+            const q = document.getElementById('user-search').value.toLowerCase();
+            const filtered = allUsers.filter(u =>
+                (u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)
+            );
+            renderUsers(filtered);
+        }
+
+        function renderUsers(users) {
+            const wrap = document.getElementById('users-table-wrap');
+            if (!users.length) { wrap.innerHTML = empty('No users found'); return; }
+            wrap.innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Email</th><th>Phone</th>
+          <th>Files</th><th>Storage</th><th>Since</th><th></th>
+        </tr></thead>
+        <tbody>
+          ${users.map(u => `
+            <tr style="cursor:pointer" onclick="openDrawer('${u.id}','${escHtml(u.name || '')}','${escHtml(u.email || '')}')">
+              <td><strong>${escHtml(u.name || '—')}</strong></td>
+              <td style="color:var(--muted)">${escHtml(u.email || '—')}</td>
+              <td style="color:var(--muted)">${escHtml(u.phone || '—')}</td>
+              <td><span class="badge badge-blue">${u.file_count}</span></td>
+              <td>${fmtBytes(u.total_bytes)}</td>
+              <td style="color:var(--muted)">${fmtDate(u.created_at)}</td>
+              <td><button class="btn btn-ghost" style="padding:6px 14px;font-size:12px" onclick="event.stopPropagation();openDrawer('${u.id}','${escHtml(u.name || '')}','${escHtml(u.email || '')}')">View Files →</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+        }
+
+        // ── File Drawer ────────────────────────────────────────────────────────────
+        async function openDrawer(userId, name, email) {
+            document.getElementById('drawer-name').textContent = name || 'Unknown';
+            document.getElementById('drawer-email').textContent = email || '';
+            document.getElementById('drawer-body').innerHTML = '<div class="loading-spinner"></div>';
+            document.getElementById('file-drawer').classList.add('open');
+            try {
+                const data = await api(`/users/${userId}/files`);
+                renderFiles(data.byCategory, userId, data.totalFiles);
+            } catch (e) {
+                document.getElementById('drawer-body').innerHTML = errMsg(e);
+            }
+        }
+
+        function closeDrawer() {
+            document.getElementById('file-drawer').classList.remove('open');
+        }
+
+        function renderFiles(byCategory, userId, total) {
+            const body = document.getElementById('drawer-body');
+            if (!total) { body.innerHTML = empty('No vault files for this user'); return; }
+            let html = '';
+            for (const [cat, files] of Object.entries(byCategory)) {
+                html += `<p style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:16px 0 8px">${cat} (${files.length})</p>`;
+                for (const f of files) {
+                    const icon = fileIcon(f.content_type || f.file_name);
+                    html += `
+          <div class="file-item">
+            <div class="file-icon" style="background:${icon.bg}">${icon.emoji}</div>
+            <div style="flex:1;min-width:0">
+              <div class="file-name">${escHtml(f.file_name)}</div>
+              <div class="file-meta">${fmtBytes(f.file_size_bytes)} · ${fmtDate(f.uploaded_at || f.created_at)}</div>
+            </div>
+            <div class="file-actions">
+              <button class="btn btn-ghost" style="padding:6px 10px;font-size:11px" onclick="downloadFile('${userId}','${f.id}','${escHtml(f.file_name)}')">⬇ Download</button>
+              <button class="btn btn-danger" style="padding:6px 10px;font-size:11px" onclick="deleteFile('${userId}','${f.id}',this)">✕</button>
+            </div>
+          </div>`;
+                }
+            }
+            body.innerHTML = html;
+        }
+
+        async function downloadFile(userId, fileId, fileName) {
+            try {
+                toast('Generating secure download link…', 'success');
+                const data = await api(`/users/${userId}/files/${fileId}/download-url`, { method: 'POST' });
+                const a = document.createElement('a');
+                a.href = data.downloadUrl; a.download = fileName; a.target = '_blank';
+                a.click();
+                toast('Download started', 'success');
+            } catch (e) { toast('Download failed: ' + e.message, 'error'); }
+        }
+
+        async function deleteFile(userId, fileId, btn) {
+            if (!confirm('Delete this file permanently? This cannot be undone.')) return;
+            btn.disabled = true; btn.textContent = '…';
+            try {
+                await api(`/users/${userId}/files/${fileId}`, { method: 'DELETE' });
+                btn.closest('.file-item').remove();
+                toast('File deleted', 'success');
+            } catch (e) { toast('Delete failed: ' + e.message, 'error'); btn.disabled = false; btn.textContent = '✕'; }
+        }
+
+        // ── Storage ────────────────────────────────────────────────────────────────
+        async function loadStorage() {
+            const el = document.getElementById('storage-content');
+            el.innerHTML = '<div class="loading-spinner"></div>';
+            try {
+                const data = await api('/vault/storage-summary');
+                const t = data.totals;
+                const cats = data.byCategory;
+                const maxBytes = Math.max(...cats.map(c => parseInt(c.total_bytes)));
+                el.innerHTML = `
+        <div class="kpi-grid" style="margin-bottom:32px">
+          ${kpi('Total Files', t.totalFiles, 'green')}
+          ${kpi('Total Storage', t.totalGB + ' GB', 'yellow')}
+          ${kpi('Active Uploaders', t.activeUsers, 'accent')}
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Category</th><th>Files</th><th>Storage</th><th>% Share</th></tr></thead>
+            <tbody>
+              ${cats.map(c => {
+                    const pct = t.totalBytes > 0 ? ((c.total_bytes / t.totalBytes) * 100).toFixed(1) : 0;
+                    return `<tr>
+                  <td><span class="badge badge-blue">${c.category}</span></td>
+                  <td>${c.file_count}</td>
+                  <td>${fmtBytes(c.total_bytes)}</td>
+                  <td style="min-width:160px">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="flex:1;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden">
+                        <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:4px"></div>
+                      </div>
+                      <span style="font-size:11px;color:var(--muted);min-width:36px">${pct}%</span>
+                    </div>
+                  </td>
+                </tr>`;
+                }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+            } catch (e) { el.innerHTML = errMsg(e); }
+        }
+
+        // ── Helpers ────────────────────────────────────────────────────────────────
+        function fmtBytes(b) {
+            if (!b || b === 0) return '0 B';
+            b = parseInt(b);
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let i = 0;
+            while (b >= 1024 && i < units.length - 1) { b /= 1024; i++; }
+            return b.toFixed(i > 0 ? 2 : 0) + ' ' + units[i];
+        }
+
+        function fmtDate(ts) {
+            if (!ts) return '—';
+            const d = typeof ts === 'number' ? new Date(ts) : new Date(ts);
+            return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function escHtml(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function fileIcon(hint) {
+            const h = (hint || '').toLowerCase();
+            if (h.includes('image') || h.endsWith('.jpg') || h.endsWith('.png')) return { emoji: '🖼️', bg: 'rgba(59,130,246,0.15)' };
+            if (h.includes('video') || h.endsWith('.mp4')) return { emoji: '🎬', bg: 'rgba(249,115,22,0.15)' };
+            if (h.includes('audio') || h.endsWith('.m4a')) return { emoji: '🎵', bg: 'rgba(34,197,94,0.15)' };
+            if (h.includes('pdf')) return { emoji: '📄', bg: 'rgba(239,68,68,0.15)' };
+            return { emoji: '📁', bg: 'rgba(100,116,139,0.15)' };
+        }
+
+        function empty(msg) {
+            return `<div class="empty-state">
+      <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 3H8v4h8V3z"/></svg>
+      <p>${msg}</p>
+    </div>`;
+        }
+
+        function errMsg(e) {
+            return `<div class="empty-state"><p style="color:var(--red)">⚠️ ${e.message || 'Something went wrong'}</p></div>`;
+        }
+
+        function toast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.className = 'show ' + type;
+            clearTimeout(t._tid);
+            t._tid = setTimeout(() => t.className = '', 3000);
+        }
+    </script>
+</body>
+
+</html>

@@ -72,7 +72,7 @@ class WebpageService {
 
       // Save as .txt for readability
       final directory = await getApplicationDocumentsDirectory();
-      final pageId = const Uuid().v4();
+      final pageId = Uuid().v4();
       final filePath = '${directory.path}/offline_pages/$pageId.txt';
       final file = File(filePath);
       await file.create(recursive: true);

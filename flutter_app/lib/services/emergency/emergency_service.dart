@@ -20,9 +20,12 @@ class EmergencyService extends ChangeNotifier {
   final LocalStorageService _storageService;
 
   bool _sosActive = false;
+  bool _survivalMode = false;
   bool _flashlightOn = false;
   DateTime? _sosStartTime;
   List<String> _emergencyContacts = [];
+
+  bool get isSurvivalMode => _survivalMode;
 
   EmergencyService({
     LocalStorageService? storageService,
@@ -31,6 +34,18 @@ class EmergencyService extends ChangeNotifier {
   })  : _storageService = storageService ?? LocalStorageService(),
         _evidenceService = evidenceService,
         _peerMeshService = peerMeshService;
+
+  Future<void> initialize() async {
+    _logger.i('EmergencyService initialized');
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    disableFlashlight();
+    _logger.i('EmergencyService disposed');
+    super.dispose();
+  }
 
   Future<void> activateSOS({
     required String userId,
@@ -60,7 +75,7 @@ class EmergencyService extends ChangeNotifier {
 
       // Requirement #5: Archive Exact SOS Message (Immutable Record)
       await _storageService.archiveSosMessage(
-        id: const Uuid().v4(),
+        id: Uuid().v4(),
         userId: userId,
         fullMessage: sosMessage,
         lat: position.latitude,
@@ -69,7 +84,7 @@ class EmergencyService extends ChangeNotifier {
 
       // Requirement #3: Log Activity for Analytics
       await _storageService.logActivity(
-        id: const Uuid().v4(),
+        id: Uuid().v4(),
         userId: userId,
         feature: 'SOS',
       );
@@ -95,6 +110,25 @@ class EmergencyService extends ChangeNotifier {
     } catch (e) {
       _logger.e('Failed to activate SOS: $e');
       rethrow;
+    }
+  }
+
+  Future<void> deactivateSOS({required String userId}) async {
+    try {
+      _sosActive = false;
+      _sosStartTime = null;
+
+      await WakelockPlus.disable();
+      await disableFlashlight();
+ 
+       if (_evidenceService != null) {
+         await _evidenceService!.stopCapture();
+       }
+
+      _logger.i('SOS deactivated for user: $userId');
+      notifyListeners();
+    } catch (e) {
+      _logger.e('Failed to deactivate SOS: $e');
     }
   }
 
@@ -155,6 +189,21 @@ class EmergencyService extends ChangeNotifier {
       await TorchLight.disableTorch();
       _flashlightOn = false;
     } catch (_) {}
+  }
+
+  Future<void> toggleFlashlight() async {
+    if (_flashlightOn) {
+      await disableFlashlight();
+    } else {
+      await enableFlashlight();
+    }
+    notifyListeners();
+  }
+
+  void setSurvivalMode(bool value) {
+    _survivalMode = value;
+    _logger.i('Survival Mode set to: $value');
+    notifyListeners();
   }
 
   bool get isSosActive => _sosActive;

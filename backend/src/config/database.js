@@ -1,56 +1,60 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const fs = require('fs');
+const { Pool } = require('pg');
 
-// Database configuration
-const dbPath = process.env.DB_PATH || path.join(__dirname, '../../data/offline_survival.db');
-
-// Ensure data directory exists
-const dataDir = path.dirname(dbPath);
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+if (!process.env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL environment variable is not set.');
+    process.exit(1);
 }
 
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Error opening database:', err.message);
-    } else {
-        console.log('Connected to SQLite database at', dbPath);
-        // Enable foreign keys
-        db.run('PRAGMA foreign_keys = ON');
-    }
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production'
+        ? { rejectUnauthorized: false }
+        : false,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
 });
 
-// Promisify database operations
-const dbRun = (sql, params = []) => {
-    return new Promise((resolve, reject) => {
-        db.run(sql, params, function (err) {
-            if (err) reject(err);
-            else resolve(this);
-        });
-    });
+pool.on('connect', () => {
+    console.log('✅ Connected to PostgreSQL database');
+});
+
+pool.on('error', (err) => {
+    console.error('❌ PostgreSQL pool error:', err.message);
+});
+
+/**
+ * Execute a write query (INSERT, UPDATE, DELETE, CREATE).
+ * Returns the pg result object (result.rows, result.rowCount, etc.)
+ */
+const dbRun = async (sql, params = []) => {
+    const client = await pool.connect();
+    try {
+        const result = await client.query(sql, params);
+        return result;
+    } finally {
+        client.release();
+    }
 };
 
-const dbGet = (sql, params = []) => {
-    return new Promise((resolve, reject) => {
-        db.get(sql, params, (err, row) => {
-            if (err) reject(err);
-            else resolve(row);
-        });
-    });
+/**
+ * Fetch a single row. Returns undefined if no row found.
+ */
+const dbGet = async (sql, params = []) => {
+    const result = await pool.query(sql, params);
+    return result.rows[0];
 };
 
-const dbAll = (sql, params = []) => {
-    return new Promise((resolve, reject) => {
-        db.all(sql, params, (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
-        });
-    });
+/**
+ * Fetch multiple rows. Returns an empty array if no rows found.
+ */
+const dbAll = async (sql, params = []) => {
+    const result = await pool.query(sql, params);
+    return result.rows;
 };
 
 module.exports = {
-    db,
+    pool,
     dbRun,
     dbGet,
     dbAll,

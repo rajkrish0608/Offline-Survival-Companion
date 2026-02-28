@@ -46,11 +46,24 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _controller.forward().then((_) => _navigateToNext());
   }
 
+  void _checkAndNavigate() {
+    if (!mounted) return;
+    final appState = context.read<AppBloc>().state;
+    if (appState is AppInitializing) {
+      // Still loading — wait for state change
+      context.read<AppBloc>().stream.first.then((_) => _checkAndNavigate());
+      return;
+    }
+    if (appState is AppUnauthenticated) {
+      context.go('/login');
+    } else {
+      context.go('/');
+    }
+  }
+
   Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) {
-      context.go('/'); 
-    }
+    _checkAndNavigate();
   }
 
   @override

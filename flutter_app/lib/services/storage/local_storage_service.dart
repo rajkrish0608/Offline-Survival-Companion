@@ -5,6 +5,8 @@ import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:offline_survival_companion/core/constants/app_constants.dart';
 import 'dart:io' if (dart.library.js_interop) 'package:offline_survival_companion/services/storage/stubs/io_stub.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class LocalStorageService {
   Database? _database;
@@ -16,6 +18,8 @@ class LocalStorageService {
   bool _initialized = false;
   bool _fts5Available = false;
   final Logger _logger = Logger();
+
+  bool get isInitialized => _initialized;
 
   Future<void> initialize() async {
     if (kIsWeb) {
@@ -29,7 +33,7 @@ class LocalStorageService {
 
       _database = await openDatabase(
         path,
-        version: 7, // Upgraded to v7 for plain-text password support
+        version: 8, // Upgraded to v8 for new tables (sync, tracking, settings, pois, safety_pins)
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
       );
@@ -153,6 +157,61 @@ class LocalStorageService {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE pois (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        type TEXT,
+        created_at INTEGER,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE safety_pins (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        created_at INTEGER
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE pending_sync (
+        id TEXT PRIMARY KEY,
+        table_name TEXT NOT NULL,
+        record_id TEXT NOT NULL,
+        operation TEXT NOT NULL,
+        data TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        synced INTEGER DEFAULT 0
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE breadcrumb_points (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        route_id TEXT NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        timestamp INTEGER NOT NULL,
+        FOREIGN KEY (route_id) REFERENCES survival_routes(id)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    ''');
+
     await db.execute('CREATE INDEX idx_sos_archives_user ON sos_archives(user_id)');
     await db.execute('CREATE INDEX idx_activity_logs_feature ON activity_logs(feature)');
   }
@@ -164,11 +223,59 @@ class LocalStorageService {
       } catch (_) {}
     }
     if (oldVersion < 7) {
-      // Migration: Adding the plain-text password column for recovery (Requirement #2)
       await db.execute('ALTER TABLE users ADD COLUMN password TEXT');
       _logger.i('Database upgraded to v7: Plain-text password support enabled.');
     }
+    if (oldVersion < 8) {
+      _logger.i('Database upgrading to v8: Adding new tables.');
+      // Create missing tables added in v8 schema
+      final tables = [
+        '''CREATE TABLE IF NOT EXISTS pois (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          title TEXT NOT NULL,
+          latitude REAL NOT NULL,
+          longitude REAL NOT NULL,
+          type TEXT,
+          created_at INTEGER,
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        )''',
+        '''CREATE TABLE IF NOT EXISTS safety_pins (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          category TEXT NOT NULL,
+          description TEXT,
+          latitude REAL NOT NULL,
+          longitude REAL NOT NULL,
+          created_at INTEGER
+        )''',
+        '''CREATE TABLE IF NOT EXISTS pending_sync (
+          id TEXT PRIMARY KEY,
+          table_name TEXT NOT NULL,
+          record_id TEXT NOT NULL,
+          operation TEXT NOT NULL,
+          data TEXT NOT NULL,
+          created_at INTEGER NOT NULL,
+          synced INTEGER DEFAULT 0
+        )''',
+        '''CREATE TABLE IF NOT EXISTS breadcrumb_points (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          route_id TEXT NOT NULL,
+          latitude REAL NOT NULL,
+          longitude REAL NOT NULL,
+          timestamp INTEGER NOT NULL
+        )''',
+        '''CREATE TABLE IF NOT EXISTS settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        )''',
+      ];
+      for (final sql in tables) {
+        try { await db.execute(sql); } catch (e) { _logger.w('Migration v8 table error: $e'); }
+      }
+    }
   }
+
 
   // ==================== User Operations ====================
 
@@ -209,6 +316,48 @@ class LocalStorageService {
     return results.isNotEmpty ? results.first : null;
   }
 
+  Future<Map<String, dynamic>> getOrCreateDefaultUser() async {
+    _ensureDatabaseReady();
+    final results = await _database!.query('users', limit: 1);
+    if (results.isNotEmpty) return results.first;
+
+    final defaultUser = {
+      'id': 'local_user',
+      'email': 'user@local.app',
+      'name': 'Survival User',
+      'phone': '112',
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    };
+    await saveUser(defaultUser);
+    return defaultUser;
+  }
+
+  // ==================== Vault Operations ====================
+
+  Future<Directory> getVaultDirectory() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final vaultDir = Directory(join(appDir.path, 'vault'));
+    if (!await vaultDir.exists()) {
+      await vaultDir.create(recursive: true);
+    }
+    return vaultDir;
+  }
+
+  Future<void> saveVaultDocument(Map<String, dynamic> doc) async {
+    _ensureDatabaseReady();
+    await _database!.insert('vault_documents', doc, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> deleteVaultDocument(String id) async {
+    _ensureDatabaseReady();
+    await _database!.delete('vault_documents', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Map<String, dynamic>>> getVaultDocuments(String userId) async {
+    _ensureDatabaseReady();
+    return await _database!.query('vault_documents', where: 'user_id = ?', whereArgs: [userId]);
+  }
+
   // ==================== SOS & Analytics ====================
 
   Future<void> archiveSosMessage({
@@ -247,6 +396,146 @@ class LocalStorageService {
   Future<List<Map<String, dynamic>>> getEmergencyContacts(String userId) async {
     _ensureDatabaseReady();
     return await _database!.query('emergency_contacts', where: 'user_id = ?', whereArgs: [userId]);
+  }
+
+  Future<void> addEmergencyContact(Map<String, dynamic> contact) async {
+    _ensureDatabaseReady();
+    await _database!.insert('emergency_contacts', contact, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> deleteEmergencyContact(String id) async {
+    _ensureDatabaseReady();
+    await _database!.delete('emergency_contacts', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ==================== Admin & Analytics ====================
+
+  Future<Map<String, dynamic>> getAdminAnalytics() async {
+    _ensureDatabaseReady();
+    
+    final sosCount = await _database!.rawQuery('SELECT COUNT(*) as count FROM sos_archives WHERE timestamp > ?', [
+      DateTime.now().subtract(const Duration(days: 1)).millisecondsSinceEpoch
+    ]);
+    
+    final activeUsers = await _database!.rawQuery('SELECT COUNT(DISTINCT user_id) as count FROM activity_logs');
+    
+    return {
+      'total_sos_today': Sqflite.firstIntValue(sosCount) ?? 0,
+      'top_feature': 'SOS', // Mock or simple aggregation
+      'avg_survival_duration_ms': null,
+      'active_devices': Sqflite.firstIntValue(activeUsers) ?? 0,
+    };
+  }
+
+  Future<List<Map<String, dynamic>>> getVaultDocumentsAdmin() async {
+    _ensureDatabaseReady();
+    return await _database!.rawQuery('''
+      SELECT vd.*, u.name as owner_name 
+      FROM vault_documents vd
+      JOIN users u ON vd.user_id = u.id
+    ''');
+  }
+
+  Future<List<Map<String, dynamic>>> getUsersAll() async {
+    _ensureDatabaseReady();
+    return await _database!.query('users', columns: ['id', 'name', 'email']);
+  }
+
+  Future<List<Map<String, dynamic>>> getSosArchives(String userId) async {
+    _ensureDatabaseReady();
+    return await _database!.query('sos_archives', where: 'user_id = ?', whereArgs: [userId]);
+  }
+
+  // ==================== POI & Safety Pins ====================
+
+  Future<void> savePOI(Map<String, dynamic> poi) async {
+    _ensureDatabaseReady();
+    await _database!.insert('pois', poi, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Map<String, dynamic>>> getPOIs(String userId) async {
+    _ensureDatabaseReady();
+    return await _database!.query('pois', where: 'user_id = ?', whereArgs: [userId]);
+  }
+
+  Future<void> saveSafetyPin(Map<String, dynamic> pin) async {
+    _ensureDatabaseReady();
+    await _database!.insert('safety_pins', pin, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Map<String, dynamic>>> getSafetyPins() async {
+    _ensureDatabaseReady();
+    return await _database!.query('safety_pins', orderBy: 'created_at DESC');
+  }
+
+  // ==================== Sync Operations ====================
+
+  Future<List<Map<String, dynamic>>> getPendingChanges() async {
+    _ensureDatabaseReady();
+    return await _database!.query('pending_sync', where: 'synced = 0', orderBy: 'created_at ASC');
+  }
+
+  Future<void> markChangeAsSynced(String id) async {
+    _ensureDatabaseReady();
+    await _database!.update('pending_sync', {'synced': 1}, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> addPendingChange(String tableName, String recordId, String operation, String data) async {
+    _ensureDatabaseReady();
+    await _database!.insert('pending_sync', {
+      'id': Uuid().v4(),
+      'table_name': tableName,
+      'record_id': recordId,
+      'operation': operation,
+      'data': data,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  // ==================== Settings ====================
+
+  Future<void> saveSetting(String key, dynamic value) async {
+    _ensureDatabaseReady();
+    await _database!.insert('settings', {
+      'key': key,
+      'value': value.toString(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  // ==================== Route Tracking ====================
+
+  Future<void> saveRoute(Map<String, dynamic> route) async {
+    _ensureDatabaseReady();
+    await _database!.insert('survival_routes', route, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> addBreadcrumbPoint(Map<String, dynamic> point) async {
+    _ensureDatabaseReady();
+    await _database!.insert('breadcrumb_points', point);
+  }
+
+  Future<void> updateRoute(String id, Map<String, dynamic> data) async {
+    _ensureDatabaseReady();
+    await _database!.update('survival_routes', data, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<Map<String, dynamic>>> getRoutes(String userId) async {
+    _ensureDatabaseReady();
+    return await _database!.query('survival_routes', where: 'user_id = ?', whereArgs: [userId], orderBy: 'start_time DESC');
+  }
+
+  Future<List<Map<String, dynamic>>> getRoutePoints(String routeId) async {
+    _ensureDatabaseReady();
+    return await _database!.query('breadcrumb_points', where: 'route_id = ?', whereArgs: [routeId], orderBy: 'timestamp ASC');
+  }
+
+  Future<void> close() async {
+    await _database?.close();
+    await _vaultBox?.close();
+    await _settingsBox?.close();
+    await _cacheBox?.close();
+    await _syncBox?.close();
+    _initialized = false;
   }
 
   Database? get database => _database;

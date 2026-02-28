@@ -84,7 +84,7 @@ class EvidenceService {
     try {
       if (await _audioRecorder.hasPermission()) {
         final directory = await getTemporaryDirectory();
-        final path = '${directory.path}/sos_audio_${const Uuid().v4()}.m4a';
+        final path = '${directory.path}/sos_audio_${Uuid().v4()}.m4a';
         
         const config = RecordConfig();
         await _audioRecorder.start(config, path: path);
@@ -125,7 +125,7 @@ class EvidenceService {
       await _cameraController!.initialize();
       
       final directory = await getTemporaryDirectory();
-      final path = '${directory.path}/sos_video_${const Uuid().v4()}.mp4';
+      final path = '${directory.path}/sos_video_${Uuid().v4()}.mp4';
 
       await _cameraController!.startVideoRecording();
       _logger.i('Video recording started...');
@@ -168,7 +168,7 @@ class EvidenceService {
 
       // Save metadata to DB
       await _storageService.saveVaultDocument({
-        'id': const Uuid().v4(),
+        'id': Uuid().v4(),
         'user_id': userId,
         'file_name': fileName,
         'file_path': newPath,

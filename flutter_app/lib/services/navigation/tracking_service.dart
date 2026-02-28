@@ -34,7 +34,7 @@ class TrackingService {
       }
 
       _activeUserId = userId;
-      _activeRouteId = const Uuid().v4();
+      _activeRouteId = Uuid().v4();
       final startTime = DateTime.now();
       _currentPoints = [];
       _totalDistance = 0.0;

@@ -212,7 +212,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     await _syncEngine.dispose();
     await _storageService.close();
     await _alarmService.dispose();
-    await _emergencyService.dispose();
+    _emergencyService.dispose();
     return super.close();
   }
 }

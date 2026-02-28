@@ -15,3 +15,17 @@ flutter_app/.env.*
 flutter_app/build/
 flutter_app/.dart_tool/
 flutter_app/.flutter-plugins-dependencies
+
+# Node.js
+node_modules/
+backend/node_modules/
+backend/package-lock.json
+npm-debug.log*
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Editor
+.vscode/
+.idea/

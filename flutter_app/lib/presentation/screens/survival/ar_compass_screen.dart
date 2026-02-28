@@ -55,7 +55,7 @@ class _ARCompassScreenState extends State<ARCompassScreen> {
   Future<void> _loadPois() async {
     final storage = context.read<LocalStorageService>();
     final user = await storage.getOrCreateDefaultUser();
-    final pois = await storage.getPOIs(user);
+    final pois = await storage.getPOIs(user['id']);
     if (mounted) {
       setState(() {
         _pois = pois.map((p) => POI.fromJson(p)).toList();

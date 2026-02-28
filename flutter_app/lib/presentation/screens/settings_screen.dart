@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:offline_survival_companion/core/theme/app_theme.dart';
 import 'package:offline_survival_companion/presentation/bloc/app_bloc/app_bloc.dart';
 import 'package:offline_survival_companion/presentation/screens/emergency_contacts_screen.dart';
@@ -34,10 +35,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final remaining = _requiredTaps - _versionTapCount;
 
     if (_versionTapCount >= _requiredTaps) {
-      // Unlock — navigate to admin
+      // Unlock — show dialog then navigate to admin
       _versionTapCount = 0;
       ScaffoldMessenger.of(context).clearSnackBars();
-      Navigator.of(context).pushNamed('/admin');
+      _showAdminUnlockDialog();
     } else if (remaining <= 3) {
       // Show countdown hint only in the last 3 taps
       ScaffoldMessenger.of(context).clearSnackBars();
@@ -50,6 +51,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
     }
+  }
+
+  void _showAdminUnlockDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _AdminUnlockDialog(
+        onProceed: () {
+          Navigator.of(ctx).pop();
+          context.push('/admin');
+        },
+      ),
+    );
   }
 
   Future<void> _clearAllData() async {
@@ -115,11 +129,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('Emergency Contacts'),
               subtitle: const Text('People notified when SOS is activated'),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const EmergencyContactsScreen(),
-                ),
-              ),
+              onTap: () => context.push('/emergency-contacts'),
             ),
           ),
 
@@ -179,8 +189,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: const Text('App User Manual'),
                   subtitle: const Text('How to use every feature'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () =>
-                      Navigator.of(context).pushNamed('/user-manual'),
+                  onTap: () => context.push('/user-manual'),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+          _buildSectionHeader('Account'),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.redAccent),
+                  title: const Text('Logout'),
+                  subtitle: const Text('Sign out of your account'),
+                  onTap: () {
+                    context.read<AppBloc>().add(const AppLoggedOut());
+                    context.go('/login');
+                  },
                 ),
               ],
             ),
@@ -209,6 +236,141 @@ class _SettingsScreenState extends State<SettingsScreen> {
           fontWeight: FontWeight.bold,
           color: Colors.grey,
           letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Secret Admin Unlock Dialog
+// ──────────────────────────────────────────────────────────────────────────────
+
+class _AdminUnlockDialog extends StatefulWidget {
+  final VoidCallback onProceed;
+  const _AdminUnlockDialog({required this.onProceed});
+
+  @override
+  State<_AdminUnlockDialog> createState() => _AdminUnlockDialogState();
+}
+
+class _AdminUnlockDialogState extends State<_AdminUnlockDialog>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+  late Animation<double> _glowAnim;
+  late Animation<double> _fadeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+
+    _scaleAnim = Tween<double>(begin: 0.95, end: 1.05).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _glowAnim = Tween<double>(begin: 0.3, end: 0.85).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: const Color(0xFF0A0A0F),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Pulsing shield icon with glow
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (_, __) => Transform.scale(
+                scale: _scaleAnim.value,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF0D1B2A),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF00E5FF).withOpacity(_glowAnim.value),
+                        blurRadius: 40,
+                        spreadRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.admin_panel_settings,
+                      size: 52, color: Color(0xFF00E5FF)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
+            // Title
+            const Text(
+              'Admin Mode Unlocked',
+              style: TextStyle(
+                color: Color(0xFF00E5FF),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Authorised access only.\nAll activity is logged.',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 13,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            // Enter button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: widget.onProceed,
+                icon: const Icon(Icons.arrow_forward_rounded),
+                label: const Text('Enter Dashboard',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00E5FF),
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  elevation: 8,
+                  shadowColor: const Color(0xFF00E5FF),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel',
+                  style: TextStyle(color: Colors.white.withOpacity(0.4))),
+            ),
+          ],
         ),
       ),
     );

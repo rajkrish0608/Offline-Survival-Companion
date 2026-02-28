@@ -10,7 +10,7 @@ router.get('/profile', async (req, res) => {
         const userId = req.userId;
 
         const user = await dbGet(
-            'SELECT id, email, name, phone, created_at, updated_at FROM users WHERE id = ?',
+            'SELECT id, email, name, phone, created_at, updated_at FROM users WHERE id = $1',
             [userId]
         );
 
@@ -18,22 +18,12 @@ router.get('/profile', async (req, res) => {
             throw new AppError('User not found', 404, 'Not Found');
         }
 
-        res.json({
-            message: 'User profile retrieved',
-            user,
-        });
+        res.json({ message: 'User profile retrieved', user });
     } catch (err) {
         if (err instanceof AppError) {
-            return res.status(err.statusCode).json({
-                error: err.error,
-                message: err.message,
-            });
+            return res.status(err.statusCode).json({ error: err.error, message: err.message });
         }
-
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: err.message,
-        });
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
@@ -52,40 +42,34 @@ router.put('/profile', async (req, res) => {
 
         const updates = [];
         const params = [];
+        let paramIndex = 1;
 
         if (name) {
-            updates.push('name = ?');
+            updates.push(`name = $${paramIndex++}`);
             params.push(name);
         }
-
         if (phone) {
-            updates.push('phone = ?');
+            updates.push(`phone = $${paramIndex++}`);
             params.push(phone);
         }
 
-        updates.push('updated_at = ?');
+        updates.push(`updated_at = $${paramIndex++}`);
         params.push(Date.now());
         params.push(userId);
 
         await dbRun(
-            `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+            `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
             params
         );
 
         const user = await dbGet(
-            'SELECT id, email, name, phone, created_at, updated_at FROM users WHERE id = ?',
+            'SELECT id, email, name, phone, created_at, updated_at FROM users WHERE id = $1',
             [userId]
         );
 
-        res.json({
-            message: 'User profile updated',
-            user,
-        });
+        res.json({ message: 'User profile updated', user });
     } catch (err) {
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: err.message,
-        });
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
@@ -95,22 +79,16 @@ router.get('/emergency-contacts', async (req, res) => {
         const userId = req.userId;
 
         const contacts = await dbAll(
-            `SELECT id, name, phone, relationship, is_primary, verified, created_at 
-       FROM emergency_contacts 
-       WHERE user_id = ? 
-       ORDER BY is_primary DESC, created_at ASC`,
+            `SELECT id, name, phone, relationship, is_primary, verified, created_at
+             FROM emergency_contacts
+             WHERE user_id = $1
+             ORDER BY is_primary DESC, created_at ASC`,
             [userId]
         );
 
-        res.json({
-            message: 'Emergency contacts retrieved',
-            contacts,
-        });
+        res.json({ message: 'Emergency contacts retrieved', contacts });
     } catch (err) {
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: err.message,
-        });
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
@@ -131,24 +109,18 @@ router.post('/emergency-contacts', async (req, res) => {
 
         await dbRun(
             `INSERT INTO emergency_contacts (id, user_id, name, phone, relationship, is_primary, verified, created_at)
-       VALUES (?, ?, ?, ?, ?, 0, 0, ?)`,
+             VALUES ($1, $2, $3, $4, $5, FALSE, FALSE, $6)`,
             [contactId, userId, name, phone, relationship, Date.now()]
         );
 
         const contact = await dbGet(
-            'SELECT * FROM emergency_contacts WHERE id = ?',
+            'SELECT * FROM emergency_contacts WHERE id = $1',
             [contactId]
         );
 
-        res.status(201).json({
-            message: 'Emergency contact added',
-            contact,
-        });
+        res.status(201).json({ message: 'Emergency contact added', contact });
     } catch (err) {
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: err.message,
-        });
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
@@ -161,62 +133,39 @@ router.put('/emergency-contacts/:contactId', async (req, res) => {
 
         // Verify contact belongs to user
         const contact = await dbGet(
-            'SELECT id FROM emergency_contacts WHERE id = ? AND user_id = ?',
+            'SELECT id FROM emergency_contacts WHERE id = $1 AND user_id = $2',
             [contactId, userId]
         );
 
         if (!contact) {
-            return res.status(404).json({
-                error: 'Not Found',
-                message: 'Contact not found',
-            });
+            return res.status(404).json({ error: 'Not Found', message: 'Contact not found' });
         }
 
         const updates = [];
         const params = [];
+        let paramIndex = 1;
 
-        if (name !== undefined) {
-            updates.push('name = ?');
-            params.push(name);
-        }
-
-        if (phone !== undefined) {
-            updates.push('phone = ?');
-            params.push(phone);
-        }
-
-        if (relationship !== undefined) {
-            updates.push('relationship = ?');
-            params.push(relationship);
-        }
-
-        if (is_primary !== undefined) {
-            updates.push('is_primary = ?');
-            params.push(is_primary ? 1 : 0);
-        }
+        if (name !== undefined) { updates.push(`name = $${paramIndex++}`); params.push(name); }
+        if (phone !== undefined) { updates.push(`phone = $${paramIndex++}`); params.push(phone); }
+        if (relationship !== undefined) { updates.push(`relationship = $${paramIndex++}`); params.push(relationship); }
+        if (is_primary !== undefined) { updates.push(`is_primary = $${paramIndex++}`); params.push(is_primary); }
 
         if (updates.length > 0) {
             params.push(contactId);
             await dbRun(
-                `UPDATE emergency_contacts SET ${updates.join(', ')} WHERE id = ?`,
+                `UPDATE emergency_contacts SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
                 params
             );
         }
 
         const updated = await dbGet(
-            'SELECT * FROM emergency_contacts WHERE id = ?',
+            'SELECT * FROM emergency_contacts WHERE id = $1',
             [contactId]
         );
 
-        res.json({
-            message: 'Emergency contact updated',
-            contact: updated,
-        });
+        res.json({ message: 'Emergency contact updated', contact: updated });
     } catch (err) {
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: err.message,
-        });
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 
@@ -226,32 +175,20 @@ router.delete('/emergency-contacts/:contactId', async (req, res) => {
         const userId = req.userId;
         const { contactId } = req.params;
 
-        // Verify contact belongs to user
         const contact = await dbGet(
-            'SELECT id FROM emergency_contacts WHERE id = ? AND user_id = ?',
+            'SELECT id FROM emergency_contacts WHERE id = $1 AND user_id = $2',
             [contactId, userId]
         );
 
         if (!contact) {
-            return res.status(404).json({
-                error: 'Not Found',
-                message: 'Contact not found',
-            });
+            return res.status(404).json({ error: 'Not Found', message: 'Contact not found' });
         }
 
-        await dbRun(
-            'DELETE FROM emergency_contacts WHERE id = ?',
-            [contactId]
-        );
+        await dbRun('DELETE FROM emergency_contacts WHERE id = $1', [contactId]);
 
-        res.json({
-            message: 'Emergency contact deleted',
-        });
+        res.json({ message: 'Emergency contact deleted' });
     } catch (err) {
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: err.message,
-        });
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }
 });
 

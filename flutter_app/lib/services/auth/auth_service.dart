@@ -44,7 +44,7 @@ class AuthService {
         return false;
       }
 
-      final userId = const Uuid().v4();
+      final userId = Uuid().v4();
 
       final user = {
         'id': userId,
