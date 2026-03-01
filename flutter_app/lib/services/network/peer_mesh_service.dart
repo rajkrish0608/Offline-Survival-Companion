@@ -69,7 +69,7 @@ class PeerMeshService {
               }
             }
             break;
-          case SessionState.connecting:
+            }
             break;
         }
       });

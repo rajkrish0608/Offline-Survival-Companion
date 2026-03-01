@@ -104,5 +104,6 @@ class VoiceSosService extends ChangeNotifier {
   void dispose() {
     _isEnabled = false;
     _speech.cancel();
+    super.dispose();
   }
 }
