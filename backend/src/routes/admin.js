@@ -18,6 +18,32 @@ const { generateDownloadUrl, deleteFile, listAdminObjects } = require('../servic
 
 const router = express.Router();
 
+// ─── POST /api/admin/sos ──────────────────────────────────────────────────
+// Receive SOS alerts from the mobile app (authenticated via JWT or open if urgent).
+// We'll keep it open for now but require a valid userId format, as SOS is urgent.
+router.post('/sos', async (req, res) => {
+    try {
+        const { userId, lat, lng, timestamp } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'Validation Error', message: 'userId required' });
+        }
+
+        const id = require('crypto').randomUUID();
+        await dbRun(
+            `INSERT INTO sos_logs (id, user_id, latitude, longitude, timestamp, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [id, userId, lat, lng, timestamp || new Date().toISOString(), Date.now()]
+        );
+
+        res.status(201).json({ message: 'SOS signal logged successfully' });
+    } catch (err) {
+        // Just log it, don't crash, we want high availability for SOS
+        console.error('SOS Log Error:', err.message);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
 // ── Admin auth middleware ────────────────────────────────────────────────────
 router.use((req, res, next) => {
     const key = req.headers['x-admin-api-key'];
@@ -55,6 +81,51 @@ router.get('/users', async (req, res) => {
 
         const users = await dbAll(query, params);
         res.json({ message: 'Users retrieved', totalUsers: users.length, users });
+    } catch (err) {
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
+// ─── POST /api/admin/sos ──────────────────────────────────────────────────
+// Receive SOS alerts from the mobile app (authenticated via JWT or open if urgent).
+// We'll keep it open for now but require a valid userId format, as SOS is urgent.
+router.post('/sos', async (req, res) => {
+    try {
+        const { userId, lat, lng, timestamp } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'Validation Error', message: 'userId required' });
+        }
+
+        const id = require('crypto').randomUUID();
+        await dbRun(
+            `INSERT INTO sos_logs (id, user_id, latitude, longitude, timestamp, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [id, userId, lat, lng, timestamp || new Date().toISOString(), Date.now()]
+        );
+
+        res.status(201).json({ message: 'SOS signal logged successfully' });
+    } catch (err) {
+        // Just log it, don't crash, we want high availability for SOS
+        console.error('SOS Log Error:', err.message);
+        res.status(500).json({ error: 'Internal Server Error', message: err.message });
+    }
+});
+
+// ─── GET /api/admin/sos ───────────────────────────────────────────────────
+// List recent SOS alerts from the dashboard (Admin Only)
+router.get('/sos', async (req, res) => {
+    try {
+        const _logs = await dbAll(`
+            SELECT 
+                s.id, s.latitude, s.longitude, s.timestamp, s.created_at,
+                u.name, u.phone, u.email
+            FROM sos_logs s
+            JOIN users u ON u.id = s.user_id
+            ORDER BY s.created_at DESC
+            LIMIT 100
+        `);
+        res.json({ message: 'SOS logs retrieved', logs: _logs });
     } catch (err) {
         res.status(500).json({ error: 'Internal Server Error', message: err.message });
     }

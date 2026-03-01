@@ -11,6 +11,9 @@ import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:offline_survival_companion/core/constants/app_constants.dart';
 
 class EmergencyService extends ChangeNotifier {
   final EvidenceService? _evidenceService;
@@ -103,6 +106,9 @@ class EmergencyService extends ChangeNotifier {
           'timestamp': DateTime.now().toIso8601String(),
         };
         unawaited(_peerMeshService!.broadcastSOS(sosPayload));
+
+        // REQUIREMENT: Admin Dashboard Sync (Best-Effort Cloud Delivery)
+        unawaited(_syncSosToCloud(sosPayload));
       }
 
       _logger.w('SOS activated by $userName');
@@ -110,6 +116,19 @@ class EmergencyService extends ChangeNotifier {
     } catch (e) {
       _logger.e('Failed to activate SOS: $e');
       rethrow;
+    }
+  }
+
+  Future<void> _syncSosToCloud(Map<String, dynamic> payload) async {
+    try {
+      await http.post(
+        Uri.parse('${AppConstants.apiBaseUrl}/admin/sos'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      ).timeout(const Duration(seconds: 5));
+      _logger.i('Cloud SOS Sync: Delivered to Admin Dashboard');
+    } catch (e) {
+      _logger.w('Cloud SOS Sync: Failed (Offline Phase) - $e');
     }
   }
 

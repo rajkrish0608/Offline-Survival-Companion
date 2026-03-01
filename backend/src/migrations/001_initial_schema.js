@@ -97,6 +97,8 @@ const migrations = [
 
     // Vault files — stores file metadata + the storage path on Backblaze B2.
     // Files are organized as: {userId}/{category}/{fileId}/{originalFileName}
+    // Vault files — stores file metadata + the storage path on Backblaze B2.
+    // Files are organized as: {userId}/{category}/{fileId}/{originalFileName}
     // Admin can retrieve any user's files by userId/category for legal compliance.
     `CREATE TABLE IF NOT EXISTS vault_files (
         id TEXT PRIMARY KEY,
@@ -115,6 +117,17 @@ const migrations = [
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )`,
 
+    // Cloud-synced SOS Logs for Admin Dashboard
+    `CREATE TABLE IF NOT EXISTS sos_logs (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        latitude REAL,
+        longitude REAL,
+        timestamp TEXT NOT NULL,
+        created_at BIGINT,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`,
+
     // Indexes
     `CREATE INDEX IF NOT EXISTS idx_emergency_contacts_user    ON emergency_contacts(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_sync_metadata_user         ON sync_metadata(user_id)`,
@@ -123,6 +136,7 @@ const migrations = [
     `CREATE INDEX IF NOT EXISTS idx_vault_files_user           ON vault_files(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_vault_files_category       ON vault_files(user_id, category)`,
     `CREATE INDEX IF NOT EXISTS idx_vault_files_email          ON vault_files(email)`,
+    `CREATE INDEX IF NOT EXISTS idx_sos_logs_user              ON sos_logs(user_id)`,
 ];
 
 const runMigrations = async () => {

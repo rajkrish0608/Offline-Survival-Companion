@@ -13,6 +13,8 @@ import 'package:offline_survival_companion/data/models/poi_model.dart';
 import 'package:offline_survival_companion/data/models/safety_pin_model.dart';
 import 'package:offline_survival_companion/data/models/route_model.dart';
 import 'package:offline_survival_companion/services/navigation/tracking_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'dart:async';
 import 'dart:math';
 
@@ -37,10 +39,10 @@ class _MapsScreenState extends State<MapsScreen> {
   StreamSubscription<SurvivalRoute?>? _trackingSubscription;
   SurvivalRoute? _activeRoute;
 
-  final List<Map<String, dynamic>> _regions = [
-    {'name': 'Delhi NCR', 'size': '45 MB', 'status': 'downloaded', 'progress': 1.0},
+  List<Map<String, dynamic>> _regions = [
+    {'name': 'Delhi NCR', 'size': '45 MB', 'status': 'available', 'progress': 0.0},
     {'name': 'London Central', 'size': '120 MB', 'status': 'available', 'progress': 0.0},
-    {'name': 'New York City', 'size': '210 MB', 'status': 'downloading', 'progress': 0.65},
+    {'name': 'New York City', 'size': '210 MB', 'status': 'available', 'progress': 0.0},
     {'name': 'Patna (Bihar)', 'size': '32 MB', 'status': 'available', 'progress': 0.0},
   ];
 
@@ -50,6 +52,34 @@ class _MapsScreenState extends State<MapsScreen> {
     _requestLocationPermission();
     _loadUserPois();
     _loadSafetyPins();
+    _loadPersistedRegions();
+  }
+
+  Future<void> _loadPersistedRegions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? regionsJson = prefs.getString('offline_map_regions');
+    if (regionsJson != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(regionsJson);
+        setState(() {
+          _regions = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
+        });
+      } catch (e) {
+        // Fallback to default if parsing fails
+      }
+    }
+  }
+
+  Future<void> _savePersistedRegions() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Reset any 'downloading' states back to 'available' on save to prevent getting stuck
+    final safeRegions = _regions.map((r) {
+      if (r['status'] == 'downloading') {
+        return {...r, 'status': 'available', 'progress': 0.0};
+      }
+      return r;
+    }).toList();
+    await prefs.setString('offline_map_regions', jsonEncode(safeRegions));
   }
 
   @override
@@ -185,23 +215,15 @@ class _MapsScreenState extends State<MapsScreen> {
       _mapController?.addCircle(
         CircleOptions(
           geometry: LatLng(pin.latitude, pin.longitude),
-          circleRadius: isGlobal ? 12.0 : 10.0,
+          circleRadius: isGlobal ? 14.0 : 12.0,
           circleColor: _getSafetyPinColor(pin.category),
           circleOpacity: 0.9,
-          circleStrokeWidth: isGlobal ? 3.0 : 1.5,
+          circleStrokeWidth: isGlobal ? 3.0 : 2.0,
           circleStrokeColor: isGlobal ? '#FFFFFF' : '#000000',
         ),
       );
-      _mapController?.addSymbol(
-        SymbolOptions(
-          geometry: LatLng(pin.latitude, pin.longitude),
-          iconImage: _getSafetyPinIcon(pin.category),
-          textField: isGlobal ? 'GLOBAL: ${pin.category.toUpperCase()}' : pin.category.toUpperCase(),
-          textOffset: const Offset(0, 1.5),
-          textColor: '#ffffff',
-          textSize: 10.0,
-        ),
-      );
+      // Removed the addSymbol call that was failing due to missing 'marker-15' icon in the offline style.
+      // Instead, we just rely on the colored circle above.
     }
 
     _drawRoute();
@@ -450,18 +472,24 @@ class _MapsScreenState extends State<MapsScreen> {
           _mapController?.animateCamera(
             CameraUpdate.newCameraPosition(CameraPosition(target: latLng, zoom: 15)),
           );
-          _mapController?.addSymbol(SymbolOptions(
-            geometry: latLng,
-            iconImage: 'marker-15',
-            textField: query,
-            textOffset: const Offset(0, 2),
-          ));
+          // Removed the addSymbol call for marker-15 since it doesn't exist in offline style
+          _mapController?.addCircle(
+            CircleOptions(
+              geometry: latLng,
+              circleRadius: 8.0,
+              circleColor: '#2196F3',
+              circleOpacity: 1.0,
+              circleStrokeWidth: 2.0,
+              circleStrokeColor: '#ffffff',
+            ),
+          );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Could not find location: "$query". Ensure you have internet for initial search.'),
+            content: Text('Offline search is limited. You need internet to search for exact addresses like "$query".'),
             backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 4),
           ));
         }
       }
@@ -492,6 +520,7 @@ class _MapsScreenState extends State<MapsScreen> {
     });
 
     _startDownloadShim(0);
+    _savePersistedRegions();
   }
 
   void _startDownloadShim(int index) async {
@@ -518,6 +547,8 @@ class _MapsScreenState extends State<MapsScreen> {
     setState(() {
       _regions[index]['status'] = 'downloaded';
     });
+    
+    _savePersistedRegions();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

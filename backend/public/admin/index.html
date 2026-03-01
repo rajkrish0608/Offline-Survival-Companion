@@ -739,6 +739,7 @@
             <button class="tab active" onclick="showSection('overview', this)">📊 Overview</button>
             <button class="tab" onclick="showSection('users', this)">👥 Users</button>
             <button class="tab" onclick="showSection('storage', this)">🗄️ Storage</button>
+            <button class="tab" onclick="showSection('sos', this)" style="color:var(--red)">🚨 SOS Alerts</button>
         </nav>
 
         <main>
@@ -752,6 +753,20 @@
                     <button class="btn btn-ghost" onclick="loadOverview()">↻ Refresh</button>
                 </div>
                 <div id="kpi-grid" class="kpi-grid">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+
+            <!-- ══ SOS ALERTS ══ -->
+            <div id="section-sos" class="section">
+                <div class="section-header">
+                    <div>
+                        <h2 style="color:var(--red)">Active SOS Alerts</h2>
+                        <p>Real-time emergency signals triggered by users</p>
+                    </div>
+                    <button class="btn btn-ghost" onclick="loadSos()">↻ Refresh</button>
+                </div>
+                <div id="sos-table-wrap" class="table-wrap">
                     <div class="loading-spinner"></div>
                 </div>
             </div>
@@ -886,6 +901,7 @@
             btn.classList.add('active');
             if (id === 'users') loadUsers();
             if (id === 'storage') loadStorage();
+            if (id === 'sos') loadSos();
         }
 
         // ── Overview ───────────────────────────────────────────────────────────────
@@ -950,6 +966,43 @@
               <td>${fmtBytes(u.total_bytes)}</td>
               <td style="color:var(--muted)">${fmtDate(u.created_at)}</td>
               <td><button class="btn btn-ghost" style="padding:6px 14px;font-size:12px" onclick="event.stopPropagation();openDrawer('${u.id}','${escHtml(u.name || '')}','${escHtml(u.email || '')}')">View Files →</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+        }
+
+        // ── SOS Alerts ──────────────────────────────────────────────────────────────
+        async function loadSos() {
+            const wrap = document.getElementById('sos-table-wrap');
+            wrap.innerHTML = '<div class="loading-spinner"></div>';
+            try {
+                const data = await api('/sos');
+                renderSos(data.logs || []);
+            } catch (e) { wrap.innerHTML = errMsg(e); }
+        }
+
+        function renderSos(logs) {
+            const wrap = document.getElementById('sos-table-wrap');
+            if (!logs.length) { wrap.innerHTML = empty('No active SOS signals'); return; }
+            wrap.innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Risk Level</th><th>User</th><th>Phone</th>
+          <th>Location</th><th>Time Triggered</th>
+        </tr></thead>
+        <tbody>
+          ${logs.map(s => `
+            <tr>
+              <td><span class="badge badge-red" style="animation: pulse 2s infinite">CRITICAL</span></td>
+              <td><strong>${escHtml(s.name || 'Unknown')}</strong><br><span style="font-size:11px;color:var(--muted)">${escHtml(s.email)}</span></td>
+              <td>${escHtml(s.phone || '—')}</td>
+              <td>
+                <a href="https://www.google.com/maps/search/?api=1&query=${s.latitude},${s.longitude}" target="_blank" style="color:var(--accent);text-decoration:none">
+                  ${s.latitude.toFixed(4)}, ${s.longitude.toFixed(4)} ↗
+                </a>
+              </td>
+              <td>${new Date(s.timestamp).toLocaleString()}</td>
             </tr>
           `).join('')}
         </tbody>
