@@ -109,8 +109,11 @@ class EmergencyService extends ChangeNotifier {
         };
         unawaited(_peerMeshService!.broadcastSOS(sosPayload));
 
-      // REQUIREMENT: Admin Dashboard Sync (Best-Effort Cloud Delivery)
-      unawaited(_syncSosToCloud(sosPayload));
+      // AGENTIC AI: Trigger Emergency Response Agent (Agent 1)
+      unawaited(AgentOrchestrator.instance.dispatch(
+        AgentType.emergencyResponse,
+        {'userId': userId},
+      ));
 
       // AGENTIC AI: Trigger Auto Caller Agent (Agent 9)
       unawaited(AgentOrchestrator.instance.dispatch(
