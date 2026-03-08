@@ -10,6 +10,7 @@ import 'package:offline_survival_companion/services/ai/agents/situation_awarenes
 import 'package:offline_survival_companion/services/ai/agents/rescue_coordinator_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/mental_health_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/vault_intelligence_agent.dart';
+import 'package:offline_survival_companion/services/ai/agents/weather_prediction_agent.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -27,6 +28,7 @@ enum AgentType {
   scheduler,
   rescueCoordinator,
   mentalHealth,
+  weatherPrediction,
 }
 
 class AgentOrchestrator {
@@ -52,6 +54,10 @@ class AgentOrchestrator {
     _agents[AgentType.rescueCoordinator] = RescueCoordinatorAgent();
     _agents[AgentType.mentalHealth] = MentalHealthAgent();
     _agents[AgentType.vaultIntelligence] = VaultIntelligenceAgent();
+    
+    final weather = WeatherPredictionAgent();
+    _agents[AgentType.weatherPrediction] = weather;
+    weather.startMonitoring(); // Auto-start background weather analysis
     
     final awareness = SituationAwarenessAgent();
     _agents[AgentType.situationAwareness] = awareness;

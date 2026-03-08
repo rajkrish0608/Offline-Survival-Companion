@@ -96,6 +96,7 @@ dependencies:
   sensors_plus: ^4.0.2
   battery_plus: ^6.1.0
   google_mlkit_text_recognition: ^0.13.0
+  environment_sensors: ^2.0.0
 
 dev_dependencies:
   flutter_test:
