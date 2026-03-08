@@ -13,7 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:offline_survival_companion/core/constants/app_constants.dart';
+import 'package:offline_survival_companion/services/ai/core/agent_orchestrator.dart';
 
 class EmergencyService extends ChangeNotifier {
   final EvidenceService? _evidenceService;
@@ -39,7 +39,9 @@ class EmergencyService extends ChangeNotifier {
         _peerMeshService = peerMeshService;
 
   Future<void> initialize() async {
+    await AgentOrchestrator.instance.initialize(storageService: _storageService);
     _logger.i('EmergencyService initialized');
+    _logger.i('AI Agent Orchestrator initialized');
     notifyListeners();
   }
 
@@ -107,9 +109,21 @@ class EmergencyService extends ChangeNotifier {
         };
         unawaited(_peerMeshService!.broadcastSOS(sosPayload));
 
-        // REQUIREMENT: Admin Dashboard Sync (Best-Effort Cloud Delivery)
-        unawaited(_syncSosToCloud(sosPayload));
-      }
+      // REQUIREMENT: Admin Dashboard Sync (Best-Effort Cloud Delivery)
+      unawaited(_syncSosToCloud(sosPayload));
+
+      // AGENTIC AI: Trigger Auto Caller Agent (Agent 9)
+      unawaited(AgentOrchestrator.instance.dispatch(
+        AgentType.autoCaller,
+        {
+          'userId': userId,
+          'severity': 'critical',
+          'location': {
+            'lat': position.latitude,
+            'lng': position.longitude,
+          },
+        },
+      ));
 
       _logger.w('SOS activated by $userName');
       notifyListeners();
