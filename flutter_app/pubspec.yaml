@@ -95,6 +95,7 @@ dependencies:
   flutter_local_notifications: ^17.0.0
   sensors_plus: ^4.0.2
   battery_plus: ^6.1.0
+  google_mlkit_text_recognition: ^0.13.0
 
 dev_dependencies:
   flutter_test:
