@@ -15,6 +15,7 @@ import 'package:offline_survival_companion/services/ai/agents/supply_tracker_age
 import 'package:offline_survival_companion/services/ai/agents/identity_obfuscation_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/map_intelligence_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/sync_intelligence_agent.dart';
+import 'package:offline_survival_companion/services/ai/agents/network_relay_agent.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -35,6 +36,7 @@ enum AgentType {
   weatherPrediction,
   supplyTracker,
   identityObfuscation,
+  networkRelay,
 }
 
 class AgentOrchestrator {
@@ -64,6 +66,7 @@ class AgentOrchestrator {
     _agents[AgentType.identityObfuscation] = IdentityObfuscationAgent();
     _agents[AgentType.mapIntelligence] = MapIntelligenceAgent();
     _agents[AgentType.sync] = SyncIntelligenceAgent();
+    _agents[AgentType.networkRelay] = NetworkRelayAgent();
     
     final weather = WeatherPredictionAgent();
     _agents[AgentType.weatherPrediction] = weather;
