@@ -1,0 +1,30 @@
+[
+  {
+    "topic": "Water Purification",
+    "content": "To purify water without equipment, filter it through a clean cloth or layers of sand and charcoal to remove debris. Then boil it for at least 1 minute (or 3 minutes at high altitudes). If boiling is impossible, use sunlight (SODIS method) by placing water in a clear plastic bottle in direct sunlight for 6 hours."
+  },
+  {
+    "topic": "Starting a Fire",
+    "content": "To start a fire without matches, you can use a fire plow, bow drill, or hand drill to create friction. Alternatively, focus sunlight through a magnifying glass, eyeglasses, or clear plastic bag filled with water onto dry tinder. Always gather tinder (dry grass, bark), kindling (small twigs), and fuel (larger branches) before starting."
+  },
+  {
+    "topic": "Building Shelter",
+    "content": "A basic lean-to shelter needs a sturdy crossbeam supported by two trees or Y-shaped sticks. Lean branches against the crossbeam closely together. Cover the branches with leaves, moss, or pine needles starting from the bottom up to create a shingled, waterproof effect. Insulate the ground with dry debris."
+  },
+  {
+    "topic": "Finding Food",
+    "content": "Avoid eating unknown plants or mushrooms. Focus on catching insects (crickets, grasshoppers, ants - cook them first), fishing, or setting simple snares if you know how. Edible plants often include dandelions, cattails, and pine needles (for tea). If you don't know it's safe, don't eat it. Humans can survive weeks without food, but only days without water."
+  },
+  {
+    "topic": "First Aid - Bleeding",
+    "content": "For severe bleeding, apply direct, firm pressure to the wound with a clean cloth. Elevate the injured area above the heart if possible. If bleeding soaks through, add another cloth on top without removing the first one. Use a tourniquet only as a last resort for life-threatening limb bleeding."
+  },
+  {
+    "topic": "First Aid - Burns",
+    "content": "For minor burns, cool the area with cool (not freezing) water or wet cloths for 10-15 minutes. Do not apply ice, butter, or ointments immediately. Protect the burn from friction and dirt. For severe burns, do not remove burned clothing stuck to the skin; cover lightly with a clean, dry cloth."
+  },
+  {
+    "topic": "Signaling for Help",
+    "content": "Use bright colors, a signal mirror, or a whistle. The universal distress signal is three of anything: three whistle blasts, three fires in a triangle, or three gunshots. At night, use a flashlight or fire. Ground-to-air signals include a large 'X' or 'V' (meaning 'require assistance') made of rocks or logs."
+  }
+]

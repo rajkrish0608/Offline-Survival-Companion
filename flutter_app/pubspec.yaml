@@ -112,6 +112,7 @@ flutter:
     - assets/audio/siren.wav
     - assets/maps/
     - assets/maps/style_google.json
+    - assets/ai/
     - .env
   #   - assets/images/
   #   - assets/icons/

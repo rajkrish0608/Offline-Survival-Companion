@@ -3,7 +3,9 @@ import 'package:offline_survival_companion/services/ai/core/agent_result.dart';
 import 'package:offline_survival_companion/services/ai/agents/auto_caller_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/emergency_response_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/voice_command_agent.dart';
+import 'package:offline_survival_companion/services/ai/agents/survival_advisor_agent.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 enum AgentType {
   emergencyResponse,
@@ -30,10 +32,17 @@ class AgentOrchestrator {
 
     final storage = storageService ?? LocalStorageService();
     
+    // Grab API key for agents that need it (Agent 2)
+    final geminiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+    
     // Register agents
     _agents[AgentType.autoCaller] = AutoCallerAgent(storageService: storage);
     _agents[AgentType.emergencyResponse] = EmergencyResponseAgent(storageService: storage);
     _agents[AgentType.voiceCommand] = VoiceCommandAgent();
+    
+    final advisor = SurvivalAdvisorAgent();
+    await advisor.initialize(geminiKey);
+    _agents[AgentType.survivalAdvisor] = advisor;
     
     _initialized = true;
   }

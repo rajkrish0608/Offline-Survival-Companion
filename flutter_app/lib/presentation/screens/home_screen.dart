@@ -393,6 +393,11 @@ class _HomeScreenContentState extends State<HomeScreenContent> with TickerProvid
                       : null,
                   ),
                   _ActionCard(
+                    icon: Icons.smart_toy,
+                    label: 'AI Advisor',
+                    onTap: () => context.push('/ai-advisor'),
+                  ),
+                  _ActionCard(
                     icon: Icons.volume_up,
                     label: 'Alarm',
                     onTap: () => context.read<AlarmService>().toggle(),
