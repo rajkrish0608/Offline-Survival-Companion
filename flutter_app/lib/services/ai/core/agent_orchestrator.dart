@@ -7,6 +7,7 @@ import 'package:offline_survival_companion/services/ai/agents/survival_advisor_a
 import 'package:offline_survival_companion/services/ai/agents/first_aid_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/scheduler_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/situation_awareness_agent.dart';
+import 'package:offline_survival_companion/services/ai/agents/rescue_coordinator_agent.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -22,6 +23,7 @@ enum AgentType {
   autoCaller,
   voiceCommand,
   scheduler,
+  rescueCoordinator,
 }
 
 class AgentOrchestrator {
@@ -44,6 +46,7 @@ class AgentOrchestrator {
     _agents[AgentType.emergencyResponse] = EmergencyResponseAgent(storageService: storage);
     _agents[AgentType.voiceCommand] = VoiceCommandAgent();
     _agents[AgentType.firstAid] = FirstAidAgent();
+    _agents[AgentType.rescueCoordinator] = RescueCoordinatorAgent();
     
     final awareness = SituationAwarenessAgent();
     _agents[AgentType.situationAwareness] = awareness;
