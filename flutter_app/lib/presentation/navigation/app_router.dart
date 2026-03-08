@@ -25,6 +25,7 @@ import 'package:offline_survival_companion/presentation/screens/auth/login_scree
 import 'package:offline_survival_companion/presentation/screens/auth/register_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/ai/ai_advisor_screen.dart';
 import 'package:offline_survival_companion/presentation/screens/ai/first_aid_screen.dart';
+import 'package:offline_survival_companion/presentation/screens/ai/calm_mode_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -136,6 +137,10 @@ class AppRouter {
       GoRoute(
         path: '/first-aid',
         builder: (context, state) => const FirstAidScreen(),
+      ),
+      GoRoute(
+        path: '/calm-mode',
+        builder: (context, state) => const CalmModeScreen(),
       ),
     ],
   );
