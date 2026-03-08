@@ -6,6 +6,7 @@ import 'package:offline_survival_companion/services/ai/agents/voice_command_agen
 import 'package:offline_survival_companion/services/ai/agents/survival_advisor_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/first_aid_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/scheduler_agent.dart';
+import 'package:offline_survival_companion/services/ai/agents/situation_awareness_agent.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -43,6 +44,11 @@ class AgentOrchestrator {
     _agents[AgentType.emergencyResponse] = EmergencyResponseAgent(storageService: storage);
     _agents[AgentType.voiceCommand] = VoiceCommandAgent();
     _agents[AgentType.firstAid] = FirstAidAgent();
+    
+    final awareness = SituationAwarenessAgent();
+    _agents[AgentType.situationAwareness] = awareness;
+    // Auto-start background monitoring immediately upon init
+    awareness.startMonitoring();
     
     final scheduler = SchedulerAgent(storageService: storage);
     await scheduler.initialize();
