@@ -5,6 +5,7 @@ import 'package:offline_survival_companion/services/ai/agents/emergency_response
 import 'package:offline_survival_companion/services/ai/agents/voice_command_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/survival_advisor_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/first_aid_agent.dart';
+import 'package:offline_survival_companion/services/ai/agents/scheduler_agent.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -19,6 +20,7 @@ enum AgentType {
   sync,
   autoCaller,
   voiceCommand,
+  scheduler,
 }
 
 class AgentOrchestrator {
@@ -41,6 +43,10 @@ class AgentOrchestrator {
     _agents[AgentType.emergencyResponse] = EmergencyResponseAgent(storageService: storage);
     _agents[AgentType.voiceCommand] = VoiceCommandAgent();
     _agents[AgentType.firstAid] = FirstAidAgent();
+    
+    final scheduler = SchedulerAgent(storageService: storage);
+    await scheduler.initialize();
+    _agents[AgentType.scheduler] = scheduler;
     
     final advisor = SurvivalAdvisorAgent();
     await advisor.initialize(geminiKey);

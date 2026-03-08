@@ -91,6 +91,8 @@ dependencies:
   url_launcher: ^6.3.0
   porcupine_flutter: ^3.0.0
   string_similarity: ^2.0.0
+  workmanager: ^0.5.2
+  flutter_local_notifications: ^17.0.0
 
 dev_dependencies:
   flutter_test:
