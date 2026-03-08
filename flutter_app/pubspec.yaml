@@ -89,6 +89,8 @@ dependencies:
   flutter_tts: ^3.8.5
   flutter_phone_direct_caller: ^2.1.1
   url_launcher: ^6.3.0
+  porcupine_flutter: ^3.0.0
+  string_similarity: ^2.0.0
 
 dev_dependencies:
   flutter_test:

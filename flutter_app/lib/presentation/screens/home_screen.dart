@@ -12,7 +12,8 @@ import 'package:offline_survival_companion/services/emergency/emergency_service.
 import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 import 'package:offline_survival_companion/presentation/widgets/safety/silent_sos_button.dart';
 import 'package:offline_survival_companion/services/network/peer_mesh_service.dart';
-import 'package:go_router/go_router.dart';
+import 'package:offline_survival_companion/services/network/peer_mesh_service.dart';
+import 'package:offline_survival_companion/presentation/screens/ai/voice_command_overlay.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -78,14 +79,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               body: _buildScreen(_selectedIndex),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: () => context.push('/emergency'),
-                backgroundColor: Colors.red,
-                heroTag: 'home_sos_fab',
-                label: const Text('SOS'),
-                icon: const Icon(Icons.emergency),
+              floatingActionButton: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  FloatingActionButton(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (context) => const VoiceCommandOverlay(),
+                      );
+                    },
+                    backgroundColor: Colors.blueAccent,
+                    heroTag: 'home_voice_fab',
+                    child: const Icon(Icons.mic, color: Colors.white),
+                  ),
+                  const SizedBox(height: 16),
+                  FloatingActionButton.extended(
+                    onPressed: () => context.push('/emergency'),
+                    backgroundColor: Colors.red,
+                    heroTag: 'home_sos_fab',
+                    label: const Text('SOS'),
+                    icon: const Icon(Icons.emergency),
+                  ),
+                ],
               ),
-              floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+              floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
               bottomNavigationBar: NavigationBar(
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: (index) {

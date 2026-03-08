@@ -2,6 +2,7 @@ import 'package:offline_survival_companion/services/ai/core/agent_base.dart';
 import 'package:offline_survival_companion/services/ai/core/agent_result.dart';
 import 'package:offline_survival_companion/services/ai/agents/auto_caller_agent.dart';
 import 'package:offline_survival_companion/services/ai/agents/emergency_response_agent.dart';
+import 'package:offline_survival_companion/services/ai/agents/voice_command_agent.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 
 enum AgentType {
@@ -14,6 +15,7 @@ enum AgentType {
   mapIntelligence,
   sync,
   autoCaller,
+  voiceCommand,
 }
 
 class AgentOrchestrator {
@@ -31,6 +33,7 @@ class AgentOrchestrator {
     // Register agents
     _agents[AgentType.autoCaller] = AutoCallerAgent(storageService: storage);
     _agents[AgentType.emergencyResponse] = EmergencyResponseAgent(storageService: storage);
+    _agents[AgentType.voiceCommand] = VoiceCommandAgent();
     
     _initialized = true;
   }
