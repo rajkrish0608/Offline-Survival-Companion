@@ -398,6 +398,11 @@ class _HomeScreenContentState extends State<HomeScreenContent> with TickerProvid
                     onTap: () => context.push('/ai-advisor'),
                   ),
                   _ActionCard(
+                    icon: Icons.healing,
+                    label: 'AI First Aid',
+                    onTap: () => context.push('/first-aid'),
+                  ),
+                  _ActionCard(
                     icon: Icons.volume_up,
                     label: 'Alarm',
                     onTap: () => context.read<AlarmService>().toggle(),
