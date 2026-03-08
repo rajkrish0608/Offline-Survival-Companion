@@ -128,7 +128,37 @@ graph TD
 
 ---
 
-## 📦 5. Local Development Setup
+## 🧠 5. Agentic AI Ecosystem
+
+The Offline Survival Companion isn't just a toolkit—it's an autonomous AI ecosystem designed to protect you completely offline. A specialized `AgentOrchestrator` manages 16 unique AI agents that run efficiently on the edge:
+
+### 🚨 Critical Response
+1. **Emergency Response Agent** — Orchestrates the master SOS sequence (hardware signals, offline routing, location beacons).
+2. **Rescue Coordinator Agent** — Manages multi-party SMS SOS communication and role assignments.
+3. **Auto Caller Agent** — Autonomously dials emergency contacts and plays Text-to-Speech distress messages.
+4. **Mesh Network Relay Agent** — Establishes P2P Bluetooth/Wi-Fi mesh networks (`nearby_connections`) to bounce data out of dead zones.
+
+### 🩺 Health & Survival
+5. **Survival Advisor Agent** — Offline LLM (RAG) that answers complex survival queries referencing a local knowledge base.
+6. **First Aid Diagnosis Agent** — Analyzes symptoms offline to provide step-by-step trauma response and CPR guides.
+7. **Mental Health & Calm Agent** — Audio-guided breathing exercises and grounding techniques for high-stress scenarios.
+8. **Supply & Resource Tracker Agent** — Manages offline inventory, computes burn rates, and alerts on critical hydration/food levels.
+
+### 📡 Environmental & Spatial
+9. **Map Intelligence Agent** — Projects vector map overlays for danger zones (floods, fires) and computes maximum-safety paths offline.
+10. **Situation Awareness Agent** — Background sensor-fusion daemon listening for anomalies like device drops (falls) or sudden battery death.
+11. **Weather Prediction Agent** — Uses the device barometer to detect pressure drops indicative of incoming storms.
+
+### 🛡️ Security & Utility
+12. **Vault Intelligence Agent** — Uses ML Kit OCR to auto-categorize scanned IDs/medical docs and extract expiry dates.
+13. **Identity Obfuscation Agent** — "Panic PIN" system that wipes tracks and launches a fake UI under duress while triggering a silent SOS.
+14. **Intelligent Sync Agent** — A priority queue system that caches operations and syncs them smartly when connectivity returns.
+15. **Voice Command Agent** — Hands-free offline NLP interface parsing phrases like "Send SOS" or "Turn on flashlight".
+16. **Intelligent Scheduler Agent** — Headless task runner firing automated check-in reminders and background pings.
+
+---
+
+## 📦 6. Local Development Setup
 
 ### Prerequisites
 - Flutter SDK 3.x (`flutter --version`)
