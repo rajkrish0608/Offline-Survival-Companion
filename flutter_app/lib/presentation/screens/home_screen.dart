@@ -13,7 +13,6 @@ import 'package:offline_survival_companion/services/audio/alarm_service.dart';
 import 'package:offline_survival_companion/presentation/widgets/safety/silent_sos_button.dart';
 import 'package:offline_survival_companion/services/network/peer_mesh_service.dart';
 import 'package:offline_survival_companion/services/network/peer_mesh_service.dart';
-import 'package:offline_survival_companion/presentation/screens/ai/voice_command_overlay.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -83,20 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  FloatingActionButton(
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        backgroundColor: Colors.transparent,
-                        isScrollControlled: true,
-                        builder: (context) => const VoiceCommandOverlay(),
-                      );
-                    },
-                    backgroundColor: Colors.blueAccent,
-                    heroTag: 'home_voice_fab',
-                    child: const Icon(Icons.mic, color: Colors.white),
-                  ),
-                  const SizedBox(height: 16),
+
                   FloatingActionButton.extended(
                     onPressed: () => context.push('/emergency'),
                     backgroundColor: Colors.red,
@@ -392,21 +378,13 @@ class _HomeScreenContentState extends State<HomeScreenContent> with TickerProvid
                       ? context.read<EmergencyService>().toggleFlashlight()
                       : null,
                   ),
-                  _ActionCard(
-                    icon: Icons.smart_toy,
-                    label: 'AI Advisor',
-                    onTap: () => context.push('/ai-advisor'),
-                  ),
+
                   _ActionCard(
                     icon: Icons.healing,
                     label: 'AI First Aid',
                     onTap: () => context.push('/first-aid'),
                   ),
-                  _ActionCard(
-                    icon: Icons.self_improvement,
-                    label: 'Calm AI',
-                    onTap: () => context.push('/calm-mode'),
-                  ),
+
                   _ActionCard(
                     icon: Icons.volume_up,
                     label: 'Alarm',

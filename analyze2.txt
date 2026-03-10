@@ -1,0 +1,107 @@
+Analyzing flutter_app...                                        
+
+warning • The value of the field '_pbkdf2KeyId' isn't used • lib/core/encryption/encryption_service.dart:15:23 • unused_field
+   info • The variable name 'user_id' isn't a lowerCamelCase identifier • lib/data/models/poi_model.dart:12:16 • non_constant_identifier_names
+   info • The variable name 'user_id' isn't a lowerCamelCase identifier • lib/data/models/poi_model.dart:31:19 • non_constant_identifier_names
+warning • Unused import: 'dart:async' • lib/main.dart:1:8 • unused_import
+warning • The value of the field '_encryptionService' isn't used • lib/presentation/bloc/app_bloc/app_bloc.dart:22:27 • unused_field
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/ai/calm_mode_screen.dart:145:64 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/ai/calm_mode_screen.dart:158:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/ai/calm_mode_screen.dart:164:58 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/ai/first_aid_screen.dart:105:55 • deprecated_member_use
+warning • Unused import: 'package:offline_survival_companion/services/ai/core/agent_base.dart' • lib/presentation/screens/ai/voice_command_overlay.dart:5:8 • unused_import
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/ai/voice_command_overlay.dart:113:47 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/ai/voice_command_overlay.dart:121:52 • deprecated_member_use
+warning • Unused import: 'package:offline_survival_companion/core/theme/app_theme.dart' • lib/presentation/screens/auth/register_screen.dart:4:8 • unused_import
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/presentation/screens/emergency_contacts_screen.dart:128:31 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/presentation/screens/emergency_contacts_screen.dart:161:23 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/emergency_contacts_screen.dart:235:45 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/emergency_contacts_screen.dart:251:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/emergency_contacts_screen.dart:252:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/emergency_contacts_screen.dart:271:55 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/presentation/screens/emergency_screen.dart:234:52 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/presentation/screens/emergency_screen.dart:254:53 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/presentation/screens/emergency_screen.dart:349:25 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/guide_screen.dart:66:75 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/guide_screen.dart:78:58 • deprecated_member_use
+warning • Unused import: 'package:offline_survival_companion/presentation/screens/webpage_saver_screen.dart' • lib/presentation/screens/home_screen.dart:8:8 • unused_import
+warning • Unused import: 'package:offline_survival_companion/presentation/screens/emergency_contacts_screen.dart' • lib/presentation/screens/home_screen.dart:9:8 • unused_import
+warning • Duplicate import • lib/presentation/screens/home_screen.dart:15:8 • duplicate_import
+   info • Don't use 'BuildContext's across async gaps • lib/presentation/screens/home_screen.dart:50:35 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/home_screen.dart:145:54 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/home_screen.dart:273:40 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/home_screen.dart:275:59 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/home_screen.dart:330:48 • deprecated_member_use
+warning • The declaration '_getSafetyPinIcon' isn't referenced • lib/presentation/screens/maps_screen.dart:250:10 • unused_element
+   info • Statements in an if should be enclosed in a block • lib/presentation/screens/maps_screen.dart:452:38 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/presentation/screens/maps_screen.dart:453:38 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/presentation/screens/maps_screen.dart:454:41 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/presentation/screens/maps_screen.dart:455:35 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/presentation/screens/maps_screen.dart:456:35 • curly_braces_in_flow_control_structures
+   info • Uses 'await' on an instance of 'LatLng', which is not a subtype of 'Future' • lib/presentation/screens/maps_screen.dart:500:20 • await_only_futures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/maps_screen.dart:708:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/maps_screen.dart:821:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/maps_screen.dart:859:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/saved_qr_codes_screen.dart:105:66 • deprecated_member_use
+warning • Unused import: 'package:offline_survival_companion/presentation/screens/emergency_contacts_screen.dart' • lib/presentation/screens/settings_screen.dart:6:8 • unused_import
+warning • The value of the field '_fadeAnim' isn't used • lib/presentation/screens/settings_screen.dart:262:26 • unused_field
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/settings_screen.dart:314:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/settings_screen.dart:341:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/settings_screen.dart:371:56 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/splash_screen.dart:93:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/splash_screen.dart:119:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/splash_screen.dart:138:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/splash_screen.dart:168:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/splash_screen.dart:178:51 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/survival/signal_tools_screen.dart:200:36 • deprecated_member_use
+warning • Duplicate import • lib/presentation/screens/user_manual_screen.dart:6:8 • duplicate_import
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/user_manual_screen.dart:123:78 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/presentation/screens/vault_screen.dart:88:21 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/vault_screen.dart:139:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/vault_screen.dart:188:33 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/presentation/screens/vault_screen.dart:224:50 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/presentation/screens/vault_screen.dart:261:29 • use_build_context_synchronously
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/webpage_saver_screen.dart:211:66 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/fake_call_screen.dart:192:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/fake_call_screen.dart:192:65 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/fake_call_screen.dart:340:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/helpline_directory_screen.dart:51:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/helpline_directory_screen.dart:53:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/helpline_directory_screen.dart:131:42 • deprecated_member_use
+   info • The import of 'package:flutter_bloc/flutter_bloc.dart' is unnecessary because all of the used elements are also provided by the import of 'package:provider/provider.dart' • lib/presentation/screens/women_safety/safety_timer_screen.dart:6:8 • unnecessary_import
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/safety_timer_screen.dart:231:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/safety_timer_screen.dart:233:55 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/self_defense_screen.dart:72:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/self_defense_screen.dart:74:57 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/women_safety_dashboard.dart:65:61 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/women_safety_dashboard.dart:248:43 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/screens/women_safety/women_safety_dashboard.dart:298:24 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/widgets/low_battery_toggle.dart:59:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/presentation/widgets/safety/silent_sos_button.dart:157:74 • deprecated_member_use
+warning • Unused import: 'package:url_launcher/url_launcher.dart' • lib/services/ai/agents/auto_caller_agent.dart:3:8 • unused_import
+   info • 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings • lib/services/ai/agents/emergency_response_agent.dart:55:48 • deprecated_member_use
+warning • The value of the field '_isAdvertising' isn't used • lib/services/ai/agents/network_relay_agent.dart:9:8 • unused_field
+warning • The value of the field '_isDiscovering' isn't used • lib/services/ai/agents/network_relay_agent.dart:10:8 • unused_field
+warning • The value of the field '_storageService' isn't used • lib/services/ai/agents/scheduler_agent.dart:17:29 • unused_field
+warning • This default clause is covered by the previous cases • lib/services/ai/agents/scheduler_agent.dart:103:9 • unreachable_switch_default
+   info • Don't invoke 'print' in production code • lib/services/ai/agents/scheduler_agent.dart:143:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/services/ai/agents/scheduler_agent.dart:144:5 • avoid_print
+  error • The method 'getSetting' isn't defined for the type 'LocalStorageService' • lib/services/ai/agents/supply_tracker_agent.dart:51:40 • undefined_method
+   info • The member 'dispose' overrides an inherited member but isn't annotated with '@override' • lib/services/ai/agents/vault_intelligence_agent.dart:92:8 • annotate_overrides
+   info • 'onDevice' is deprecated and shouldn't be used. Use SpeechListenOptions.onDevice instead • lib/services/ai/agents/voice_command_agent.dart:80:7 • deprecated_member_use
+warning • Unused import: 'package:permission_handler/permission_handler.dart' • lib/services/emergency/emergency_service.dart:12:8 • unused_import
+warning • The value of the field '_battery' isn't used • lib/services/emergency/emergency_service.dart:22:17 • unused_field
+warning • The value of the field '_sosStartTime' isn't used • lib/services/emergency/emergency_service.dart:29:13 • unused_field
+warning • The declaration '_syncSosToCloud' isn't referenced • lib/services/emergency/emergency_service.dart:141:16 • unused_element
+   info • 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings • lib/services/emergency/emergency_service.dart:211:48 • deprecated_member_use
+   info • Function literals shouldn't be passed to 'forEach' • lib/services/network/peer_mesh_service.dart:45:19 • avoid_function_literals_in_foreach_calls
+warning • The value of the local variable 'path' isn't used • lib/services/safety/evidence_service.dart:128:13 • unused_local_variable
+   info • 'accelerometerEvents' is deprecated and shouldn't be used. Use accelerometerEventStream() instead • lib/services/safety/shake_detector_service.dart:28:21 • deprecated_member_use
+   info • 'partialResults' is deprecated and shouldn't be used. Use SpeechListenOptions.partialResults instead • lib/services/safety/voice_sos_service.dart:64:9 • deprecated_member_use
+   info • 'cancelOnError' is deprecated and shouldn't be used. Use SpeechListenOptions.cancelOnError instead • lib/services/safety/voice_sos_service.dart:65:9 • deprecated_member_use
+   info • 'listenMode' is deprecated and shouldn't be used. Use SpeechListenOptions.listenMode instead • lib/services/safety/voice_sos_service.dart:66:9 • deprecated_member_use
+warning • The value of the field '_webSettings' isn't used • lib/services/storage/local_storage_service.dart:17:30 • unused_field
+   info • The private field _fts5Available could be 'final' • lib/services/storage/local_storage_service.dart:19:8 • prefer_final_fields
+warning • The value of the field '_fts5Available' isn't used • lib/services/storage/local_storage_service.dart:19:8 • unused_field
+warning • The value of the local variable 'data' isn't used • lib/services/sync/sync_engine.dart:101:11 • unused_local_variable
+

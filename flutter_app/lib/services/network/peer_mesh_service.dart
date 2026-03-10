@@ -69,8 +69,6 @@ class PeerMeshService {
               }
             }
             break;
-            }
-            break;
         }
       });
     });

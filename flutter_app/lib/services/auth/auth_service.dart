@@ -3,9 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:offline_survival_companion/core/constants/app_constants.dart';
+import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 
 class AuthService {
   final SharedPreferences _prefs;
+  final LocalStorageService _storage;
   final Logger _logger = Logger();
 
   static const String _tokenKey = 'auth_token';
@@ -14,7 +16,7 @@ class AuthService {
   Map<String, dynamic>? _currentUser;
   String? _token;
 
-  AuthService(this._prefs) {
+  AuthService(this._prefs, this._storage) {
     _loadSession();
   }
 
@@ -63,8 +65,36 @@ class AuthService {
         return false;
       }
     } catch (e) {
-      _logger.e('Registration error: $e');
-      return false;
+      _logger.e('Registration API failed or unreachable: $e. Falling back to local auth.');
+      // Local Auth Fallback
+      try {
+        final existingUser = await _storage.getUserByEmail(email);
+        if (existingUser != null) {
+          _logger.w('Local registration failed: Email already exists');
+          return false;
+        }
+
+        final localUserId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+        final userObj = {
+          'id': localUserId,
+          'email': email,
+          'name': name,
+          'phone': phone ?? '',
+          'password': password, // Store plain-text just for offline fallback demo purposes
+        };
+
+        await _storage.insertUser(userObj);
+
+        _token = 'offline_token_$localUserId';
+        _currentUser = userObj;
+        await _prefs.setString(_tokenKey, _token!);
+        await _prefs.setString(_userKey, jsonEncode(_currentUser));
+        _logger.i('User registered LOCALLY: $email');
+        return true;
+      } catch (e2) {
+        _logger.e('Local fallback registration also failed: $e2');
+        return false;
+      }
     }
   }
 
@@ -90,8 +120,25 @@ class AuthService {
         return false;
       }
     } catch (e) {
-      _logger.e('Login error: $e');
-      return false;
+      _logger.e('Login API failed or unreachable: $e. Falling back to local auth.');
+      // Local Auth Fallback
+      try {
+        final existingUser = await _storage.getUserByEmail(email);
+        if (existingUser != null && existingUser['password'] == password) {
+          _token = 'offline_token_${existingUser['id']}';
+          _currentUser = existingUser;
+          await _prefs.setString(_tokenKey, _token!);
+          await _prefs.setString(_userKey, jsonEncode(_currentUser));
+          _logger.i('User logged in LOCALLY: $email');
+          return true;
+        } else {
+          _logger.w('Local login failed: Invalid credentials');
+          return false;
+        }
+      } catch (e2) {
+        _logger.e('Local fallback login also failed: $e2');
+        return false;
+      }
     }
   }
 

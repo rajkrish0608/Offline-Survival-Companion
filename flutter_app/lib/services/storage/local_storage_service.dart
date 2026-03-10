@@ -332,6 +332,27 @@ class LocalStorageService {
     return defaultUser;
   }
 
+  // ==================== User & Auth (Local Fallback) ====================
+
+  Future<void> insertUser(Map<String, dynamic> userMap) async {
+    _ensureDatabaseReady();
+    await _database!.insert(
+      'users',
+      {
+        'id': userMap['id'],
+        'email': userMap['email'],
+        'name': userMap['name'],
+        'phone': userMap['phone'],
+        'password': userMap['password'],
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+
+
   // ==================== Vault Operations ====================
 
   Future<Directory> getVaultDirectory() async {
@@ -500,6 +521,12 @@ class LocalStorageService {
       'key': key,
       'value': value.toString(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<String?> getSetting(String key) async {
+    _ensureDatabaseReady();
+    final results = await _database!.query('settings', where: 'key = ?', whereArgs: [key]);
+    return results.isNotEmpty ? results.first['value'] as String : null;
   }
 
   // ==================== Route Tracking ====================

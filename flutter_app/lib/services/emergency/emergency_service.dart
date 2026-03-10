@@ -7,6 +7,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:offline_survival_companion/services/storage/local_storage_service.dart';
 import 'package:offline_survival_companion/services/safety/evidence_service.dart';
 import 'package:offline_survival_companion/services/network/peer_mesh_service.dart';
+import 'package:offline_survival_companion/core/constants/app_constants.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/foundation.dart';
@@ -108,24 +109,12 @@ class EmergencyService extends ChangeNotifier {
           'timestamp': DateTime.now().toIso8601String(),
         };
         unawaited(_peerMeshService!.broadcastSOS(sosPayload));
+      }
 
       // AGENTIC AI: Trigger Emergency Response Agent (Agent 1)
       unawaited(AgentOrchestrator.instance.dispatch(
         AgentType.emergencyResponse,
         {'userId': userId},
-      ));
-
-      // AGENTIC AI: Trigger Auto Caller Agent (Agent 9)
-      unawaited(AgentOrchestrator.instance.dispatch(
-        AgentType.autoCaller,
-        {
-          'userId': userId,
-          'severity': 'critical',
-          'location': {
-            'lat': position.latitude,
-            'lng': position.longitude,
-          },
-        },
       ));
 
       _logger.w('SOS activated by $userName');
